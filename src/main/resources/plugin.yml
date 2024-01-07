@@ -1,0 +1,8 @@
+name: BlueFox
+version: '${version}'
+main: co.akoot.plugins.bluefox.BlueFox
+api-version: '1.20'
+prefix: BF
+author: Akoot_
+website: https://akoot.cp/plugins/bluefox
+loadbefore: [ 'AlleyCat', 'Viveri' ]
