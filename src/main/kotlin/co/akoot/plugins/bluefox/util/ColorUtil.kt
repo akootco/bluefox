@@ -112,7 +112,7 @@ class ColorUtil {
             val x = points.size // Number of points
             val y = x - 1       // Number of relations
 
-            val a = size - x       // Total number of midpoints
+            val a = size - x    // Total number of midpoints
             val b = a / y       // Minimum number of midpoints per relation
             var c = a - (b * y) // Total number of extra midpoints
 
