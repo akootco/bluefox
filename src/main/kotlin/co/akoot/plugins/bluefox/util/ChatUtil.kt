@@ -1,14 +1,12 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.api.User
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.Bukkit
 
 class ChatUtil {
     companion object {
@@ -43,49 +41,49 @@ class ChatUtil {
         /**
          * Parse text using color and text formatting codes
          */
-        fun hashify(message: String, sender: User?): String {
-            var text = message
-
-            // Green text
-            if (text[0] == '>') {
-                text = "&a$text"
-            }
-
-            // URLS
-            for (result in URL_REGEX.findAll(text)) {
-                val match = result.groups[0] ?: continue
-                text = text.replace(match.value, "[__*&{url}${match}*__]($match)")
-            }
-
-            // Pings
-            for (result in PING_REGEX.findAll(text)) {
-                val match = result.groups[0] ?: continue
-                val searchString = result.groupValues[1]
-                val selector = searchString.singleOrNull()
-                var replacement = text
-
-                // Players
-                if (selector == null) {
-                    val user = BlueFox.instance.getUser(searchString) ?: continue
-                    replacement =
-                        "[&{player}@$searchString](\"${user.username}\n${user.uuid}\" !/msg ${user.username} )"
-                }
-
-                // Selectors
-                when (selector) {
-                    'a' -> replacement =
-                        Bukkit.getOnlinePlayers().joinToString { it.name } //TODO: Replace with getUserList()
-                    'r' -> replacement = Bukkit.getOnlinePlayers().randomOrNull()?.name ?: ""
-                    's' -> replacement = sender?.username ?: "CONSOLE"
-                }
-
-                text = text.replace(match.value, replacement)
-            }
-
-            //TODO: Emojis, Stickers, Channels
-
-            return text
-        }
+//        fun hashify(sender: User? = BlueFox.instance.console, message: String): String {
+//            var text = message
+//
+//            // Green text
+//            if (text[0] == '>') {
+//                text = "&a$text"
+//            }
+//
+//            // URLS
+//            for (result in URL_REGEX.findAll(text)) {
+//                val match = result.groups[0] ?: continue
+//                text = text.replace(match.value, "[__*&{url}${match}*__]($match)")
+//            }
+//
+//            // Pings
+//            for (result in PING_REGEX.findAll(text)) {
+//                val match = result.groups[0] ?: continue
+//                val searchString = result.groupValues[1]
+//                val selector = searchString.singleOrNull()
+//                var replacement = text
+//
+//                // Players
+//                if (selector == null) {
+//                    val user = BlueFox.instance.getUser(searchString) ?: continue
+//                    replacement =
+//                        "[&(player)@$searchString](\"${user.username}\n${user.uuid}\" !/msg ${user.username} )"
+//                }
+//
+//                // Selectors
+//                when (selector) {
+//                    'a' -> replacement =
+//                        Bukkit.getOnlinePlayers().joinToString { it.name } //TODO: Replace with getUserList()
+//                    'r' -> replacement = Bukkit.getOnlinePlayers().randomOrNull()?.name ?: ""
+//                    's' -> replacement = sender?.username ?: "CONSOLE"
+//                }
+//
+//                text = text.replace(match.value, replacement)
+//            }
+//
+//            //TODO: Emojis, Stickers, Channels
+//
+//            return text
+//        }
 
         /**
          * Converts a string to a text component
