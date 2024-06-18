@@ -8,6 +8,9 @@ class BlueFox : JavaPlugin() {
 
     companion object {
         lateinit var instance: BlueFox
+        fun trace(message: String) {
+            instance.logger.info(message)
+        }
     }
 
 

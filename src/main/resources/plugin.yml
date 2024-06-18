@@ -1,8 +1,8 @@
-name: BlueFox
+name: '${name}'
 version: '${version}'
-main: co.akoot.plugins.bluefox.BlueFox
-api-version: '1.20'
-prefix: BF
-author: Akoot_
-website: https://akoot.cp/plugins/bluefox
-loadbefore: [ 'AlleyCat', 'Viveri' ]
+main: '${group}.${name}'
+api-version: 1.20
+prefix: '${name}'
+authors: [ Akoot_ ]
+description: Food plugin
+website: 'https://akoot.co/plugins/${name}'

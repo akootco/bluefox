@@ -21,21 +21,24 @@ repositories {
         name = 'jitpack'
         url = 'https://jitpack.io/'
     }
-    maven {
-        url "https://plugins.gradle.org/m2/"
-    }
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    // Paper
     compileOnly 'io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT'
+
+    // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
+
+    // Libraries
     implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'joda-time:joda-time:2.12.7'
+    implementation 'com.typesafe:config:1.4.3'
+
+    // Discord4J but without opus-java and also use the latest version of okhttp3 pls ty
     implementation('net.dv8tion:JDA:5.0.0-beta.24') {
         exclude module: 'opus-java'
     }
-    implementation 'joda-time:joda-time:2.12.7'
-    implementation 'com.typesafe:config:1.4.3'
     implementation 'com.squareup.okhttp3:okhttp'
     constraints {
         implementation('com.squareup.okhttp3:okhttp:5.0.0-alpha.14') {
@@ -45,6 +48,9 @@ dependencies {
 
     // Dependency plugins
     compileOnly 'net.luckperms:api:5.4'
+
+    // Test
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 }
 
 processResources {
@@ -57,21 +63,7 @@ processResources {
 }
 
 shadowJar {
-    dependencies {
-        exclude(dependency('com.mojang:brigadier'))
-    }
-
-    relocate 'me.lucko.commodore', project.property('group')
-
     destinationDirectory = file('../test/server/plugins')
     archiveBaseName.set(project.property('modulename'))
     archiveClassifier.set('')
-}
-
-java {
-    sourceCompatibility = "21"
-    targetCompatibility = "21"
-}
-kotlin {
-    jvmToolchain(21)
 }
