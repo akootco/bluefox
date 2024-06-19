@@ -50,27 +50,27 @@ class ColorUtil {
         /**
          * @return A lighter color
          */
-        fun lighten(color: Int, percentage: Double = 0.1): Int {
+        fun lighten(color: Int, percentage: Double = 0.1): Color {
             val col = Color(color)
             val min = (255 * percentage).toInt()
             return Color(
                 (col.red + (col.red * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
                 (col.green + (col.green * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
                 (col.blue + (col.blue * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min)
-            ).rgb
+            )
         }
 
         /**
          * @return A darker color
          */
-        fun darken(color: Int, percentage: Double = 0.1): Int {
+        fun darken(color: Int, percentage: Double = 0.1): Color {
             val col = Color(color).darker()
             val factor = 1 - percentage
             return Color(
                 (col.red * factor).toInt().coerceAtLeast(0),
                 (col.green * factor).toInt().coerceAtLeast(0),
                 (col.blue * factor).toInt().coerceAtLeast(0)
-            ).rgb
+            )
         }
 
         /**
@@ -90,7 +90,7 @@ class ColorUtil {
         /**
          * @return The resulting color of mixing color1 and color2
          */
-        fun mix(color1: Int, color2: Int): Int {
+        fun mix(color1: Color, color2: Color): Color {
             return getGradient(3, color1, color2)[1]
         }
 
@@ -102,9 +102,9 @@ class ColorUtil {
          * @param points The colors to mix
          * @return A list of colors
          */
-        fun getGradient(size: Int, vararg points: Int): MutableList<Int> {
+        fun getGradient(size: Int, vararg points: Color): MutableList<Color> {
 
-            val gradient: MutableList<Int> = mutableListOf()
+            val gradient: MutableList<Color> = mutableListOf()
 
             val cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
             val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
@@ -127,8 +127,8 @@ class ColorUtil {
 
                 val to = points[i + 1]
 
-                val cieFrom = cie.fromRGB(Color(from).getRGBColorComponents(null))
-                val cieTo = cie.fromRGB(Color(to).getRGBColorComponents(null))
+                val cieFrom = cie.fromRGB(from.getRGBColorComponents(null))
+                val cieTo = cie.fromRGB(to.getRGBColorComponents(null))
 
                 val k = if (c-- > 0) b + 1 else b // Number of colors to generate for this relation
                 val m = k + 1 // We only need to include the colors IN BETWEEN
@@ -142,7 +142,7 @@ class ColorUtil {
                             cieFrom[2] + (l * (1.0f / m)) * (cieTo[2] - cieFrom[2])
                         )
                     )
-                    if (j < k) gradient += Color(rgb[0], rgb[1], rgb[2]).rgb
+                    if (j < k) gradient += Color(rgb[0], rgb[1], rgb[2])
                 }
             }
 
