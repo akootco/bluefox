@@ -8,8 +8,11 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 
-class ChatUtil {
+class TextUtil {
     companion object {
+
+        // Constants
+        val EMPTY = Component.text("")
 
         // Misc regex
         val URL_REGEX = Regex("(?:https?://|www\\.)\\S+") // Very simple regex
