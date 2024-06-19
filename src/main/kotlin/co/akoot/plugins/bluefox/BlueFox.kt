@@ -1,10 +1,11 @@
 package co.akoot.plugins.bluefox
 
+import co.akoot.plugins.bluefox.api.FoxPlugin
 import org.bukkit.plugin.java.JavaPlugin
 import java.sql.Connection
 import java.sql.DriverManager
 
-class BlueFox : JavaPlugin() {
+class BlueFox : FoxPlugin() {
 
     companion object {
         lateinit var instance: BlueFox
@@ -13,10 +14,9 @@ class BlueFox : JavaPlugin() {
         }
     }
 
-
     lateinit var connection: Connection
 
-    override fun onEnable() {
+    override fun register() {
         instance = this
 
         // Setup MySQL
@@ -28,7 +28,7 @@ class BlueFox : JavaPlugin() {
         logger.info("Good day!")
     }
 
-    override fun onDisable() {
+    override fun unregister() {
         // Plugin shutdown logic
         connection.close()
     }

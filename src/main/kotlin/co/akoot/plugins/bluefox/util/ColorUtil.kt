@@ -7,6 +7,8 @@ import kotlin.random.Random
 class ColorUtil {
     companion object {
 
+        val DEFAULT_COLOR = Color.WHITE
+
         /**
          * @return The hue of a color in degrees
          */
