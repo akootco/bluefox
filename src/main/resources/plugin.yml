@@ -6,3 +6,6 @@ prefix: '${name}'
 authors: [ Akoot_ ]
 description: Food plugin
 website: 'https://akoot.co/plugins/${name}'
+loadbefore:
+  - AlleyCat
+  - Commedore

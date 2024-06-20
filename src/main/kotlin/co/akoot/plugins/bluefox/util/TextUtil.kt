@@ -7,6 +7,7 @@ import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import java.awt.Color
 
 class TextUtil {
     companion object {
@@ -98,12 +99,12 @@ class TextUtil {
         /**
          * @return A colored TextComponent using the specified colors
          */
-        fun color(text: String, vararg colors: Int): TextComponent {
+        fun color(text: String, vararg colors: TextColor): TextComponent {
             if (colors.isEmpty()) return Component.text(text)
 
             return if (colors.size == 1) {
                 val color = colors[0]
-                Component.text(text).color(if (color == -1) null else TextColor.color(color))
+                Component.text(text).color(color)
             } else {
                 val gradient = ColorUtil.getGradient(text.length - text.count { it == ' ' }, *colors)
                 val component = Component.text()
@@ -111,7 +112,7 @@ class TextUtil {
 
                 for (c in text) {
                     component.append(
-                        if (c != ' ') Component.text(c).color(TextColor.color(gradient[j++])) else Component.text(" ")
+                        if (c != ' ') Component.text(c).color(gradient[j++]) else Component.text(" ")
                     )
                 }
 
@@ -206,7 +207,7 @@ class TextUtil {
             for (result in COLOR_REGEX.findAll(text)) {
                 val match = result.groups[0] ?: continue
                 val values = result.groupValues
-                val colors = values[1].split("+").map { BlueFox.instance.getColor(it) }.toIntArray()
+                val colors = values[1].split("+").map { ColorUtil.getColor(it) }.toTypedArray()
                 val content = values[2].trimStart()
                 val component = color(content, *colors)
                 rangedComponents += RangedComponent(component, match.range)

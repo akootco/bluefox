@@ -8,20 +8,11 @@ import java.sql.DriverManager
 
 class BlueFox : FoxPlugin() {
 
-    companion object {
-        lateinit var instance: BlueFox
-        fun trace(message: String) {
-            instance.logger.info(message)
-        }
-    }
-
     lateinit var connection: Connection
 
     val monthColor = Color.CYAN
 
     override fun register() {
-        instance = this
-
         // Setup MySQL
         Class.forName("com.mysql.cj.jdbc.Driver")
         connection =
@@ -34,9 +25,5 @@ class BlueFox : FoxPlugin() {
     override fun unregister() {
         // Plugin shutdown logic
         connection.close()
-    }
-
-    fun getColor(name: String): Int {
-        return 0x00ff00 //TODO: Read from config
     }
 }

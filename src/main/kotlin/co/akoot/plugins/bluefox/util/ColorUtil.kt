@@ -1,13 +1,61 @@
 package co.akoot.plugins.bluefox.util
 
+import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 import java.awt.color.ColorSpace
+import java.util.*
 import kotlin.random.Random
 
 class ColorUtil {
     companion object {
 
         val DEFAULT_COLOR = Color.WHITE
+
+        val color = mapOf(
+            "text" to TextColor.color(0xfcf7f4),
+            "accent" to TextColor.color(0x97d4fc),
+            "player" to TextColor.color(0xfc97c9),
+            "number" to TextColor.color(0xfce497),
+            "error_text" to TextColor.color(0xfc5f5f),
+            "error_accent" to TextColor.color(0xfc8888),
+            "error_player" to TextColor.color(0xfc88c2),
+            "error_number" to TextColor.color(0xfcae5f),
+        )
+
+        val colorBedrock = mapOf(
+            "text" to TextColor.color(0xFFFFFF),
+            "accent" to TextColor.color(0x55FFFF),
+            "player" to TextColor.color(0xFF55FF),
+            "number" to TextColor.color(0xFFFF55),
+            "error_text" to TextColor.color(0xAA0000),
+            "error_accent" to TextColor.color(0xFF5555),
+            "error_player" to TextColor.color(0xFF5555),
+            "error_number" to TextColor.color(0xFF5555),
+        )
+
+        val MONTH_COLOR = when (Calendar.getInstance().get(Calendar.MONTH)) {
+            Calendar.JANUARY -> TextColor.color(0x77BBE9)
+            Calendar.FEBRUARY -> TextColor.color(0xFC81B0)
+            Calendar.MARCH -> TextColor.color(0x44E881)
+            Calendar.APRIL -> TextColor.color(0xB198FC)
+            Calendar.MAY -> TextColor.color(0x8DD232)
+            Calendar.JUNE -> TextColor.color(0xf9ba23)
+            Calendar.JULY -> TextColor.color(0xfca873)
+            Calendar.AUGUST -> TextColor.color(0xfbd17a)
+            Calendar.SEPTEMBER -> TextColor.color(0x86aefc)
+            Calendar.OCTOBER -> TextColor.color(0xfc9449)
+            Calendar.NOVEMBER -> TextColor.color(0xdd9d78)
+            Calendar.DECEMBER -> TextColor.color(0xfc4b55)
+            else -> TextColor.color(0xffffff)
+        }
+
+        val colorTinted = color.mapValues { (_, color) ->
+           mix(color, MONTH_COLOR)
+        }
+
+        fun getColor(name: String, bedrock: Boolean = false): TextColor {
+            return (if(bedrock) colorBedrock[name] else color[name]) ?: TextColor.color(0xffffff)
+        }
 
         /**
          * @return The hue of a color in degrees
@@ -42,18 +90,18 @@ class ColorUtil {
         /**
          * @return A hex string representation of the color
          */
-        fun getHexString(color: Color, lowercase: Boolean = true): String {
-            return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+        fun getHexString(color: TextColor, lowercase: Boolean = true): String {
+            return String.format("#%02x%02x%02x", color.red(), color.green(), color.blue())
                 .let { if (lowercase) it.lowercase() else it.uppercase() }
         }
 
         /**
          * @return A lighter color
          */
-        fun lighten(color: Int, percentage: Double = 0.1): Color {
+        fun lighten(color: Int, percentage: Double = 0.1): TextColor {
             val col = Color(color)
             val min = (255 * percentage).toInt()
-            return Color(
+            return TextColor.color(
                 (col.red + (col.red * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
                 (col.green + (col.green * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
                 (col.blue + (col.blue * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min)
@@ -63,10 +111,10 @@ class ColorUtil {
         /**
          * @return A darker color
          */
-        fun darken(color: Int, percentage: Double = 0.1): Color {
+        fun darken(color: Int, percentage: Double = 0.1): TextColor {
             val col = Color(color).darker()
             val factor = 1 - percentage
-            return Color(
+            return TextColor.color(
                 (col.red * factor).toInt().coerceAtLeast(0),
                 (col.green * factor).toInt().coerceAtLeast(0),
                 (col.blue * factor).toInt().coerceAtLeast(0)
@@ -76,8 +124,8 @@ class ColorUtil {
         /**
          * @return A random color
          */
-        fun randomColor(saturation: Float = 0.9f, brightness: Float = 0.9f): Color {
-            return Color.getHSBColor(Random.nextFloat(), saturation, brightness)
+        fun randomColor(saturation: Float = 0.9f, brightness: Float = 0.9f): TextColor {
+            return TextColor.color(Color.getHSBColor(Random.nextFloat(), saturation, brightness).rgb)
         }
 
         /**
@@ -90,7 +138,7 @@ class ColorUtil {
         /**
          * @return The resulting color of mixing color1 and color2
          */
-        fun mix(color1: Color, color2: Color): Color {
+        fun mix(color1: TextColor, color2: TextColor): TextColor {
             return getGradient(3, color1, color2)[1]
         }
 
@@ -102,9 +150,9 @@ class ColorUtil {
          * @param points The colors to mix
          * @return A list of colors
          */
-        fun getGradient(size: Int, vararg points: Color): MutableList<Color> {
+        fun getGradient(size: Int, vararg points: TextColor): MutableList<TextColor> {
 
-            val gradient: MutableList<Color> = mutableListOf()
+            val gradient: MutableList<TextColor> = mutableListOf()
 
             val cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
             val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
@@ -127,8 +175,8 @@ class ColorUtil {
 
                 val to = points[i + 1]
 
-                val cieFrom = cie.fromRGB(from.getRGBColorComponents(null))
-                val cieTo = cie.fromRGB(to.getRGBColorComponents(null))
+                val cieFrom = cie.fromRGB(Color(from.value()).getRGBColorComponents(null))
+                val cieTo = cie.fromRGB(Color(to.value()).getRGBColorComponents(null))
 
                 val k = if (c-- > 0) b + 1 else b // Number of colors to generate for this relation
                 val m = k + 1 // We only need to include the colors IN BETWEEN
@@ -142,7 +190,7 @@ class ColorUtil {
                             cieFrom[2] + (l * (1.0f / m)) * (cieTo[2] - cieFrom[2])
                         )
                     )
-                    if (j < k) gradient += Color(rgb[0], rgb[1], rgb[2])
+                    if (j < k) gradient += TextColor.color(rgb[0], rgb[1], rgb[2])
                 }
             }
 

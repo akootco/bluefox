@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 import org.bukkit.command.defaults.BukkitCommand
 
-abstract class FoxCommand(val name: String, vararg val aliases: String): BukkitCommand(name) {
+abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String): BukkitCommand(id) {
 
     override fun tabComplete(
         sender: CommandSender, cmd: String, args: Array<out String>?
