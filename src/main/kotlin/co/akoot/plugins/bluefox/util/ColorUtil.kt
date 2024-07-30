@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.util
 
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 import java.awt.color.ColorSpace
@@ -9,7 +10,7 @@ import kotlin.random.Random
 class ColorUtil {
     companion object {
 
-        val DEFAULT_COLOR = Color.WHITE
+        val WHITE = TextColor.color(0xffffff)
 
         val color = mapOf(
             "text" to TextColor.color(0xfcf7f4),
@@ -33,7 +34,8 @@ class ColorUtil {
             "error_number" to TextColor.color(0xFF5555),
         )
 
-        val MONTH_COLOR = when (Calendar.getInstance().get(Calendar.MONTH)) {
+        private val month = Calendar.getInstance().get(Calendar.MONTH)
+        val MONTH_COLOR = when (month) {
             Calendar.JANUARY -> TextColor.color(0x77BBE9)
             Calendar.FEBRUARY -> TextColor.color(0xFC81B0)
             Calendar.MARCH -> TextColor.color(0x44E881)
@@ -53,11 +55,21 @@ class ColorUtil {
            mix(color, MONTH_COLOR)
         }
 
+        /**
+         * Get the TextColor with the specified name
+         *
+         * @param name The name of the color
+         * @param bedrock Whether the player viewing the color is bedrock
+         * @return A TextColor object if it exists in the list of colors, WHITE otherwise
+         */
         fun getColor(name: String, bedrock: Boolean = false): TextColor {
-            return (if(bedrock) colorBedrock[name] else color[name]) ?: TextColor.color(0xffffff)
+            return (if(bedrock) colorBedrock[name] else color[name]) ?: WHITE
         }
 
         /**
+         * Get the hue of a color
+         *
+         * @param color The color
          * @return The hue of a color in degrees
          */
         fun getHue(color: Int): Float {
@@ -77,6 +89,11 @@ class ColorUtil {
         }
 
         /**
+         * Check if a color is a shade of gray
+         *
+         * @param color The color
+         * @param tolerance The threshold of what is considered "gray" (0-255).
+         * Example: tolerance=10, r=100, g=110 b=90, isGray=true. If tolerance was 5, isGray=false
          * @return Whether a color is gray or not
          */
         fun isGray(color: Int, tolerance: Int = 10): Boolean {
@@ -88,6 +105,10 @@ class ColorUtil {
         }
 
         /**
+         * Gets a hex string representation of a color
+         *
+         * @param color The color
+         * @param lowercase Whether the hex string should be lowercase
          * @return A hex string representation of the color
          */
         fun getHexString(color: TextColor, lowercase: Boolean = true): String {
@@ -96,11 +117,15 @@ class ColorUtil {
         }
 
         /**
+         * Lightens a color
+         *
+         * @param color The color to darken
+         * @param percentage How dark it should be
          * @return A lighter color
          */
         fun lighten(color: Int, percentage: Double = 0.1): TextColor {
             val col = Color(color)
-            val min = (255 * percentage).toInt()
+            val min = (255 * percentage.coerceAtMost(1.0)).toInt()
             return TextColor.color(
                 (col.red + (col.red * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
                 (col.green + (col.green * percentage)).toInt().coerceAtMost(255).coerceAtLeast(min),
@@ -109,6 +134,10 @@ class ColorUtil {
         }
 
         /**
+         * Darkens a color
+         *
+         * @param color The color to darken
+         * @param percentage How dark it should be
          * @return A darker color
          */
         fun darken(color: Int, percentage: Double = 0.1): TextColor {
@@ -122,6 +151,10 @@ class ColorUtil {
         }
 
         /**
+         * Get a random color
+         *
+         * @param saturation The desired saturation of the color
+         * @param brightness The desired brightness of the color
          * @return A random color
          */
         fun randomColor(saturation: Float = 0.9f, brightness: Float = 0.9f): TextColor {
@@ -129,6 +162,10 @@ class ColorUtil {
         }
 
         /**
+         * Get a random color as a hex string
+         *
+         * @param saturation The desired saturation of the color
+         * @param brightness The desired brightness of the color
          * @return A random color in the form of a hex string
          */
         fun randomColorHex(saturation: Float = 0.9f, brightness: Float = 0.9f): String {
@@ -136,6 +173,10 @@ class ColorUtil {
         }
 
         /**
+         * Mix 2 colors
+         *
+         * @param color1 Color 1
+         * @param color2 Color 2
          * @return The resulting color of mixing color1 and color2
          */
         fun mix(color1: TextColor, color2: TextColor): TextColor {
@@ -146,6 +187,7 @@ class ColorUtil {
          * Generates a gradient based on the color points provided.
          * This method mixes the colors in the CIE color space, which
          * results in more vibrant colors
+         *
          * @param size The number of colors to generate
          * @param points The colors to mix
          * @return A list of colors

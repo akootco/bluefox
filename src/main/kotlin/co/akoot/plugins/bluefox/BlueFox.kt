@@ -10,8 +10,6 @@ class BlueFox : FoxPlugin() {
 
     lateinit var connection: Connection
 
-    val monthColor = Color.CYAN
-
     override fun register() {
         // Setup MySQL
         Class.forName("com.mysql.cj.jdbc.Driver")

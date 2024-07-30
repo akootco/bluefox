@@ -25,10 +25,10 @@ repositories {
 
 dependencies {
     // Paper
-    compileOnly 'io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
 
     // Libraries
     implementation 'org.postgresql:postgresql:42.7.3'
@@ -66,4 +66,8 @@ shadowJar {
     destinationDirectory = file('../test/server/plugins')
     archiveBaseName.set(project.property('modulename'))
     archiveClassifier.set('')
+    exclude 'META-INF/*.kotlin_module'
+    exclude 'kotlin/**'
+    exclude 'org/jetbrains/**'
+    exclude 'org/intellij/**'
 }
