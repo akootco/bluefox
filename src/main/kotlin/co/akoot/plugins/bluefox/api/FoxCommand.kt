@@ -1,17 +1,12 @@
 package co.akoot.plugins.bluefox.api
 
-import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Txt
 import net.kyori.adventure.text.Component
-import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
-import org.bukkit.command.TabExecutor
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
-import org.checkerframework.checker.regex.qual.Regex
 
-abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String): BukkitCommand(id) {
+abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String) : BukkitCommand(id) {
 
     val REGEX = Regex("([$@^#])(\\w+)")
 
@@ -32,7 +27,12 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
         sender.sendMessage(getMessage(sender, message, *args, error = error))
     }
 
-    fun getMessage(sender: CommandSender, message: String, vararg args: Pair<String, Any>, error: Boolean = false): Component {
+    fun getMessage(
+        sender: CommandSender,
+        message: String,
+        vararg args: Pair<String, Any>,
+        error: Boolean = false
+    ): Component {
         if (sender !is Player) return Component.text(message)
 
         val errorPrefix = if (error) "error_" else ""
@@ -51,7 +51,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
                 result.append(value)
                 continue
             }
-            val code = when(match.groupValues[1]) {
+            val code = when (match.groupValues[1]) {
                 "$" -> "accent"
                 "#" -> "number"
                 "^" -> "text"
@@ -64,6 +64,6 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
     }
 
     fun getErrorMessage(sender: CommandSender, message: String, vararg args: Pair<String, Any>): Component {
-        return getMessage(sender, message, *args, error=true)
+        return getMessage(sender, message, *args, error = true)
     }
 }

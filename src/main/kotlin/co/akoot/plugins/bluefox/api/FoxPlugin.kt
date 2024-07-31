@@ -1,15 +1,9 @@
 package co.akoot.plugins.bluefox.api
 
-import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.util.ColorUtil
-import net.kyori.adventure.text.format.TextColor
-import org.bukkit.command.Command
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
-import java.awt.Color
-import java.util.*
 
-abstract class FoxPlugin: JavaPlugin() {
+abstract class FoxPlugin : JavaPlugin() {
 
     override fun onEnable() {
         // TODO: stuff
@@ -17,6 +11,7 @@ abstract class FoxPlugin: JavaPlugin() {
         registerCommands()
         registerEvents()
     }
+
     override fun onDisable() {
         // TODO: Stuff
         unregister()

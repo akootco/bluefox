@@ -11,7 +11,10 @@ class Txt(val string: String, val color: TextColor) {
     constructor(string: String) : this(string, ColorUtil.WHITE)
     constructor(string: String, color: Int) : this(string, TextColor.color(color))
     constructor(string: String, color: Color) : this(string, TextColor.color(color.rgb))
-    constructor(string: String, color: String, bedrock: Boolean = false): this(string, ColorUtil.getColor(color, bedrock))
+    constructor(string: String, color: String, bedrock: Boolean = false) : this(
+        string,
+        ColorUtil.getColor(color, bedrock)
+    )
 
     private val builder = Component.text(string).color(color).toBuilder()
 

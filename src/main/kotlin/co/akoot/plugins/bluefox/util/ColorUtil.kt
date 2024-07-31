@@ -1,6 +1,5 @@
 package co.akoot.plugins.bluefox.util
 
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 import java.awt.color.ColorSpace
@@ -52,7 +51,7 @@ class ColorUtil {
         }
 
         val colorTinted = color.mapValues { (_, color) ->
-           mix(color, MONTH_COLOR)
+            mix(color, MONTH_COLOR)
         }
 
         /**
@@ -63,7 +62,7 @@ class ColorUtil {
          * @return A TextColor object if it exists in the list of colors, WHITE otherwise
          */
         fun getColor(name: String, bedrock: Boolean = false): TextColor {
-            return (if(bedrock) colorBedrock[name] else color[name]) ?: WHITE
+            return (if (bedrock) colorBedrock[name] else color[name]) ?: WHITE
         }
 
         /**

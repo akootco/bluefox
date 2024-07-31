@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
 
     // Kotlin
-    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
 
     // Libraries
     implementation 'org.postgresql:postgresql:42.7.3'
@@ -45,12 +45,6 @@ dependencies {
             because 'L'
         }
     }
-
-    // Dependency plugins
-    compileOnly 'net.luckperms:api:5.4'
-
-    // Test
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 }
 
 processResources {
@@ -66,8 +60,4 @@ shadowJar {
     destinationDirectory = file('../test/server/plugins')
     archiveBaseName.set(project.property('modulename'))
     archiveClassifier.set('')
-    exclude 'META-INF/*.kotlin_module'
-    exclude 'kotlin/**'
-    exclude 'org/jetbrains/**'
-    exclude 'org/intellij/**'
 }
