@@ -204,9 +204,6 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
         val parts = PLACEHOLDER_REGEX.split(message).filterNot { it.isBlank() }
         val matches = PLACEHOLDER_REGEX.findAll(message)
 
-        println(parts.joinToString(""){"[$it]"})
-        println(matches.toMutableList().map { it.groupValues[2] })
-
         val startsWithPlaceholder = message[0] in PLACEHOLDER_CHARS
 
         // Iterate through the matches
