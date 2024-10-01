@@ -1,8 +1,10 @@
 package co.akoot.plugins.bluefox.util
 
+import co.akoot.plugins.bluefox.BlueFox
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -154,5 +156,17 @@ object TimeUtil {
             totalTime += number * multiplier
         }
         return totalTime
+    }
+
+    fun getTimeZone(ip: String): TimeZone? {
+        return try {
+            val url = URI("https://api.ipdata.co/$ip?api-key=${BlueFox.getAPIKey("ipdata")}").toURL()
+            val config = WebUtil.getConfig(url) ?: return null
+            val zoneId = config.getString("time_zone.name")
+            TimeZone.getTimeZone(zoneId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

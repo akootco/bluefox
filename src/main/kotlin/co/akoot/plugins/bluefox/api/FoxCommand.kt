@@ -9,7 +9,8 @@ import org.bukkit.entity.Player
 abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String) : BukkitCommand(id) {
 
     companion object {
-        private val PLACEHOLDER_REGEX = Regex("([$@^#])(\\w+)")
+        private val PLACEHOLDER_CHARS = "$@^#"
+        private val PLACEHOLDER_REGEX = Regex("([$PLACEHOLDER_CHARS])\\{?(\\w+)}?")
         val SELECTORS = setOf("@a", "@s", "@r")
         val OFFLINE_SELECTORS = setOf("@ao", "@ro")
         val ALL_SELECTORS = SELECTORS + OFFLINE_SELECTORS
@@ -134,7 +135,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      * @return Whether the execution was a success, I guess
      */
     override fun execute(sender: CommandSender, cmd: String, args: Array<out String>?): Boolean {
-        return onCommand(sender, args)
+        return onCommand(sender, cmd, args)
     }
 
     /**
@@ -155,7 +156,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      *
      * @return Whether the execution was a success, I guess
      */
-    abstract fun onCommand(sender: CommandSender, args: Array<out String>?): Boolean
+    abstract fun onCommand(sender: CommandSender, alias: String, args: Array<out String>?): Boolean
 
     /**
      * Send a message to the [sender]
@@ -200,8 +201,13 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
         val map = placeholders.toMap()
 
         // ...Variables
-        val parts = PLACEHOLDER_REGEX.split(message)
+        val parts = PLACEHOLDER_REGEX.split(message).filterNot { it.isBlank() }
         val matches = PLACEHOLDER_REGEX.findAll(message)
+
+        println(parts.joinToString(""){"[$it]"})
+        println(matches.toMutableList().map { it.groupValues[2] })
+
+        val startsWithPlaceholder = message[0] in PLACEHOLDER_CHARS
 
         // Iterate through the matches
         for ((i, match) in matches.withIndex()) {
@@ -213,6 +219,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
 
             // If the placeholder value is a Component, just skip the rest and add that to the result
             if (value is Component) {
+                component.append(Txt(parts[i], "text").c)
                 component.append(value)
                 continue
             }
@@ -225,9 +232,23 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
                 else -> "text"
             }
 
-            // Append the value with the color to the result
-            component.append(Txt(parts[i], "text").c)
+            // Helper variables to help with scenarios that the message starts with a placeholder character
+            val startWithPlaceholderMode = i == 0 && startsWithPlaceholder
+            val partComponent = Txt(parts[i], "text").c
+
+            // If the message did nit start with a placeholder prefix, append the part now
+            if(!startWithPlaceholderMode) component.append(partComponent)
+
+            // Append the value with the color
             component.append(Txt(value.toString(), "${errorPrefix}${code}").c)
+
+            // If the message started with a placeholder prefix, append the part later
+            if(startWithPlaceholderMode) component.append(partComponent)
+        }
+
+        // Append any remaining part of the message after the last placeholder
+        if (matches.count() < parts.size) {
+            component.append(Txt(parts.last(), "text").c)
         }
 
         // Return the component
