@@ -6,6 +6,7 @@ import co.akoot.plugins.bluefox.util.IOUtil
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
+import org.bukkit.Material
 import java.io.File
 import kotlin.io.path.Path
 import kotlin.reflect.KProperty
@@ -18,21 +19,24 @@ class BlueFox : FoxPlugin() {
         lateinit var auth: FoxConfig
 
         fun getAPIKey(name: String): String? {
-            return auth.getString("tokens.$name")
+            if (!this::auth.isInitialized) return null
+            return auth.getString("api-keys.$name")
         }
 
         fun getToken(name: String): String? {
+            if (!this::auth.isInitialized) return null
             return auth.getString("tokens.$name")
         }
 
-        val test get() = settings.getString("test")
+        val enumTest get() = settings.getEnum(Material::class.java, "enumTest")
+
     }
 
-    override fun register() {
+    override fun load() {
         logger.info("Good day!")
     }
 
-    override fun unregister() {
+    override fun unload() {
         // Plugin shutdown logic
     }
 

@@ -9,11 +9,11 @@ import org.bukkit.entity.Player
 abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String) : BukkitCommand(id) {
 
     companion object {
-        private val PLACEHOLDER_CHARS = "$@^#"
+        private const val PLACEHOLDER_CHARS = "$@^#"
         private val PLACEHOLDER_REGEX = Regex("([$PLACEHOLDER_CHARS])\\{?(\\w+)}?")
-        val SELECTORS = setOf("@a", "@s", "@r")
-        val OFFLINE_SELECTORS = setOf("@ao", "@ro")
-        val ALL_SELECTORS = SELECTORS + OFFLINE_SELECTORS
+        private val SELECTORS = setOf("@a", "@s", "@r")
+        private val OFFLINE_SELECTORS = setOf("@ao", "@ro")
+        private val ALL_SELECTORS = SELECTORS + OFFLINE_SELECTORS
     }
 
     private val permissionNode = "${plugin.name}.command.$id"
@@ -166,7 +166,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      * @param placeholders The placeholders
      * @param error Whether to use error colors or not
      */
-    fun sendMessage(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any>, error: Boolean = false) {
+    fun sendMessage(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any?>, error: Boolean = false) {
         sender.sendMessage(getMessage(sender, message, *placeholders, error = error))
     }
 
@@ -185,7 +185,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
     fun getMessage(
         sender: CommandSender,
         message: String,
-        vararg placeholders: Pair<String, Any>,
+        vararg placeholders: Pair<String, Any?>,
         error: Boolean = false
     ): Component {
         // Add the "error_" prefix if it's an error message

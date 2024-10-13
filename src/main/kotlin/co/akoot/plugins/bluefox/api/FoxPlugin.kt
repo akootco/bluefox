@@ -1,33 +1,30 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
-import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.nio.file.Path
 
-abstract class FoxPlugin : JavaPlugin() {
+abstract class FoxPlugin() : JavaPlugin() {
 
-    val configs: MutableMap<String, FoxConfig> = mutableMapOf()
+    protected val configs: MutableMap<String, FoxConfig> = mutableMapOf()
 
     override fun onEnable() {
-        // TODO: stuff
         if(dataFolder.mkdirs()) logger.info("Created data folder")
-        register()
+        load()
         registerConfigs()
         registerCommands()
         registerEvents()
     }
 
     override fun onDisable() {
-        // TODO: Stuff
-        unregister()
+        unload()
+        unregisterConfigs()
     }
 
-    abstract fun register()
-    abstract fun unregister()
+    abstract fun load()
+    abstract fun unload()
     open fun registerCommands() {}
     open fun registerEvents() {}
     open fun registerConfigs() {}
@@ -47,9 +44,13 @@ abstract class FoxPlugin : JavaPlugin() {
                 logger.info("Loaded config '$name' from jar")
             }
         }
-        val config = ConfigFactory.parseFile(configFile)
-        val foxConfig = FoxConfig(config)
-        configs[name] = foxConfig
-        return foxConfig
+        val config = FoxConfig(configFile)
+        configs[name] = config
+        return config
+    }
+
+    open fun unregisterConfigs() {
+        configs.values.forEach(FoxConfig::unload)
+        configs.clear()
     }
 }
