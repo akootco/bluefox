@@ -12,8 +12,8 @@ abstract class FoxPlugin() : JavaPlugin() {
 
     override fun onEnable() {
         if(dataFolder.mkdirs()) logger.info("Created data folder")
-        load()
         registerConfigs()
+        load()
         registerCommands()
         registerEvents()
     }

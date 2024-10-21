@@ -31,7 +31,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
 
     // Libraries
-    implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'com.mysql:mysql-connector-j:9.0.0'
+    implementation 'com.zaxxer:HikariCP:6.0.0'
     implementation 'joda-time:joda-time:2.12.7'
     implementation 'com.typesafe:config:1.4.3'
 

@@ -2,14 +2,11 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
-import co.akoot.plugins.bluefox.util.IOUtil
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigException
-import com.typesafe.config.ConfigFactory
+import co.akoot.plugins.bluefox.util.DbConfig
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.bukkit.Material
-import java.io.File
-import kotlin.io.path.Path
-import kotlin.reflect.KProperty
+import java.sql.Connection
 
 class BlueFox : FoxPlugin() {
 
@@ -17,6 +14,7 @@ class BlueFox : FoxPlugin() {
 
         lateinit var settings: FoxConfig
         lateinit var auth: FoxConfig
+        lateinit var usersDb: Connection
 
         fun getAPIKey(name: String): String? {
             if (!this::auth.isInitialized) return null
@@ -32,12 +30,30 @@ class BlueFox : FoxPlugin() {
 
     }
 
+    private lateinit var usersDataSource: HikariDataSource
+    private fun setupDatabases() {
+        val hikariConfig = HikariConfig().apply {
+            jdbcUrl = "jdbc:mysql://${auth.getString("mysql.url")}:3306/${auth.getString("mysql.database")}"
+            username = auth.getString("mysql.username")
+            password = auth.getString("mysql.password")
+            driverClassName = "com.mysql.cj.jdbc.Driver"
+            maximumPoolSize = 10
+            minimumIdle = 2
+            idleTimeout = 10000
+            connectionTimeout = 30000
+        }
+        usersDataSource = HikariDataSource(hikariConfig)
+        usersDb = usersDataSource.connection
+    }
+
     override fun load() {
+        setupDatabases()
         logger.info("Good day!")
     }
 
     override fun unload() {
-        // Plugin shutdown logic
+        if (!this::usersDataSource.isInitialized) return
+        usersDataSource.close()
     }
 
     override fun registerConfigs() {
