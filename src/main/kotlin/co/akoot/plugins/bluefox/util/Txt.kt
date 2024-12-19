@@ -8,6 +8,11 @@ import java.awt.Color
 
 class Txt(val string: String, val color: TextColor) {
 
+    companion object {
+        val CR = Txt("\n")
+    }
+
+    constructor(): this("")
     constructor(string: String) : this(string, ColorUtil.WHITE)
     constructor(string: String, color: Int) : this(string, TextColor.color(color))
     constructor(string: String, color: Color) : this(string, TextColor.color(color.rgb))
@@ -41,6 +46,25 @@ class Txt(val string: String, val color: TextColor) {
     fun url(url: String): Txt {
         builder.clickEvent(ClickEvent.openUrl(url))
         return this
+    }
+
+    fun color(color: TextColor): Txt {
+        builder.color(color)
+        return this
+    }
+
+    fun color(colorName: String, bedrock: Boolean = false): Txt {
+        builder.color(ColorUtil.getColor(colorName, bedrock))
+        return this
+    }
+
+    operator fun plus(txt: Txt): Txt {
+        builder.append(txt.c)
+        return this
+    }
+
+    operator fun plusAssign(txt: Txt) {
+        builder.append(txt.c)
     }
 
     val c: Component get() = builder.build()

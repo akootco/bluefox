@@ -1,12 +1,14 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.util.Txt
 import net.kyori.adventure.text.Component
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
 
-abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val aliases: String) : BukkitCommand(id) {
+abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: String = "", defaultUsage: String = "/$id", vararg aliases: String) : BukkitCommand(id, description, defaultUsage, aliases.toList()) {
 
     companion object {
         private const val PLACEHOLDER_CHARS = "$@^#"
@@ -14,9 +16,93 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
         private val SELECTORS = setOf("@a", "@s", "@r")
         private val OFFLINE_SELECTORS = setOf("@ao", "@ro")
         private val ALL_SELECTORS = SELECTORS + OFFLINE_SELECTORS
+
+        /**
+         * Computes a [Component] using the provided [message] and [placeholders].
+         *
+         * @param message The message to send which includes [placeholders]. If there is a string that starts with
+         * a placeholder symbol, it will be replaced with the placeholder. For example "Your health is $health"
+         * @param placeholders The placeholders. A [Pair] of type [String] and [Any] where A maps to B, for example
+         * Pair("$health", player.getHealth())
+         * @param error Whether to use error colors or not
+         *
+         * @return The computed [Component]
+         */
+        fun getMessage(
+            message: String,
+            vararg placeholders: Pair<String, Any?>,
+            error: Boolean = false
+        ): Component {
+            // Add the "error_" prefix if it's an error message
+            val errorPrefix = if (error) "error_" else ""
+
+            // Skip the whole placeholders parsing if the message doesn't contain anything
+            if (placeholders.isEmpty()) return Txt(message, "${errorPrefix}text").c
+
+            // Final component
+            val component = Component.text()
+
+            // Convert the list of placeholder Pairs to a Map
+            val map = placeholders.toMap()
+
+            // ...Variables
+            val parts = PLACEHOLDER_REGEX.split(message).filterNot { it.isBlank() }
+            val matches = PLACEHOLDER_REGEX.findAll(message)
+
+            val startsWithPlaceholder = message[0] in PLACEHOLDER_CHARS
+
+            // Iterate through the matches
+            for ((i, match) in matches.withIndex()) {
+
+                // Get the key and value from the matches and the placeholders
+                val key = match.groupValues[2]
+                val value = map[key]
+
+
+                // If the placeholder value is a Component, just skip the rest and add that to the result
+                if (value is Component) {
+                    component.append(Txt(parts[i], "text").c)
+                    component.append(value)
+                    continue
+                }
+
+                // Get the color from the code
+                val code = when (match.groupValues[1]) {
+                    "$" -> "accent"
+                    "#" -> "number"
+                    "@" -> "player"
+                    else -> "text"
+                }
+
+                // Helper variables to help with scenarios that the message starts with a placeholder character
+                val startWithPlaceholderMode = i == 0 && startsWithPlaceholder
+                val partComponent = Txt(parts[i], "text").c
+
+                // If the message did nit start with a placeholder prefix, append the part now
+                if(!startWithPlaceholderMode) component.append(partComponent)
+
+                // Append the value with the color
+                component.append(Txt(value.toString(), "${errorPrefix}${code}").c)
+
+                // If the message started with a placeholder prefix, append the part later
+                if(startWithPlaceholderMode) component.append(partComponent)
+            }
+
+            // Append any remaining part of the message after the last placeholder
+            if (matches.count() < parts.size) {
+                component.append(Txt(parts.last(), "text").c)
+            }
+
+            // Return the component
+            return component.build()
+        }
     }
 
     private val permissionNode = "${plugin.name}.command.$id"
+
+    init {
+        permission = permissionNode
+    }
 
     /**
      * Convert a list of arguments into one single argument separated by spaces
@@ -39,15 +125,24 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      *
      * @return A list of suggestions which contain offline player names
      */
-    fun getOfflinePlayerSuggestions(args: Array<out String>? = null): MutableList<String> {
-        val offlinePlayerNames = plugin.server.offlinePlayers.mapNotNull { it.name }.toMutableList()
-        if (args?.last()?.startsWith(".") == false) offlinePlayerNames.removeIf {it.startsWith(".")}
-        if (args.isNullOrEmpty()) return offlinePlayerNames
-        return offlinePlayerNames.filterNot { it in args }.toMutableList()
+    fun getOfflinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf()): MutableList<String> {
+        val offlinePlayerNames = plugin.server.offlinePlayers.mapNotNull { it.name }.minus(exclude).toMutableList()
+        return getPlayerSuggestions(offlinePlayerNames, args)
+    }
+
+    fun getOnlinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf()): MutableList<String> {
+        val onlinePlayerNames = plugin.server.onlinePlayers.mapNotNull { it.name }.minus(exclude).toMutableList()
+        return getPlayerSuggestions(onlinePlayerNames, args)
+    }
+
+    fun getPlayerSuggestions(players: MutableList<String>, args: Array<out String>? = null): MutableList<String> {
+        if (args?.last()?.startsWith(".") == false) players.removeIf {it.startsWith(".")}
+        if (args.isNullOrEmpty()) return players
+        return players.filterNot { it in args }.toMutableList()
     }
 
     /**
-     * Perform a check on the [sender] and returns null if they are not of type [org.bukkit.entity.Player]. This is used to quickly exit
+     * Perform a check on the [sender] and returns null if they are not of type [Player]. This is used to quickly exit
      * [onCommand] if the [sender] is not a player
      *
      * @param sender The command sender
@@ -55,7 +150,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      * "You need to be a player in order to run /[id]". If null, no message will be sent
      * @param placeholders The placeholders, if any, to replace in the [message]
      *
-     * @return The [sender] cast to [org.bukkit.entity.Player] if the sender is a player, null otherwise
+     * @return The [sender] cast to [Player] if the sender is a player, null otherwise
      */
     fun playerCheck(sender: CommandSender, message: String? = "You need to be a player in order to run /$id.", vararg placeholders: Pair<String, Any>): Player? {
         if (sender !is Player) {
@@ -166,90 +261,9 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      * @param placeholders The placeholders
      * @param error Whether to use error colors or not
      */
-    fun sendMessage(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any?>, error: Boolean = false) {
-        sender.sendMessage(getMessage(sender, message, *placeholders, error = error))
-    }
-
-    /**
-     * Computes a [net.kyori.adventure.text.Component] using the provided [message] and [placeholders].
-     *
-     * @param sender The command sender
-     * @param message The message to send which includes [placeholders]. If there is a string that starts with
-     * a placeholder symbol, it will be replaced with the placeholder. For example "Your health is $health"
-     * @param placeholders The placeholders. A [Pair] of type [String] and [Any] where A maps to B, for example
-     * Pair("$health", player.getHealth())
-     * @param error Whether to use error colors or not
-     *
-     * @return The computed [net.kyori.adventure.text.Component]
-     */
-    fun getMessage(
-        sender: CommandSender,
-        message: String,
-        vararg placeholders: Pair<String, Any?>,
-        error: Boolean = false
-    ): Component {
-        // Add the "error_" prefix if it's an error message
-        val errorPrefix = if (error) "error_" else ""
-
-        // Skip the whole placeholders parsing if the message doesn't contain anything
-        if (placeholders.isEmpty()) return Txt(message, "${errorPrefix}text").c
-
-        // Final component
-        val component = Component.text()
-
-        // Convert the list of placeholder Pairs to a Map
-        val map = placeholders.toMap()
-
-        // ...Variables
-        val parts = PLACEHOLDER_REGEX.split(message).filterNot { it.isBlank() }
-        val matches = PLACEHOLDER_REGEX.findAll(message)
-
-        val startsWithPlaceholder = message[0] in PLACEHOLDER_CHARS
-
-        // Iterate through the matches
-        for ((i, match) in matches.withIndex()) {
-
-            // Get the key and value from the matches and the placeholders
-            val key = match.groupValues[2]
-            val value = map[key]
-
-
-            // If the placeholder value is a Component, just skip the rest and add that to the result
-            if (value is Component) {
-                component.append(Txt(parts[i], "text").c)
-                component.append(value)
-                continue
-            }
-
-            // Get the color from the code
-            val code = when (match.groupValues[1]) {
-                "$" -> "accent"
-                "#" -> "number"
-                "@" -> "player"
-                else -> "text"
-            }
-
-            // Helper variables to help with scenarios that the message starts with a placeholder character
-            val startWithPlaceholderMode = i == 0 && startsWithPlaceholder
-            val partComponent = Txt(parts[i], "text").c
-
-            // If the message did nit start with a placeholder prefix, append the part now
-            if(!startWithPlaceholderMode) component.append(partComponent)
-
-            // Append the value with the color
-            component.append(Txt(value.toString(), "${errorPrefix}${code}").c)
-
-            // If the message started with a placeholder prefix, append the part later
-            if(startWithPlaceholderMode) component.append(partComponent)
-        }
-
-        // Append any remaining part of the message after the last placeholder
-        if (matches.count() < parts.size) {
-            component.append(Txt(parts.last(), "text").c)
-        }
-
-        // Return the component
-        return component.build()
+    fun sendMessage(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any?>, error: Boolean = false): Boolean {
+        sender.sendMessage(getMessage(message, *placeholders, error = error))
+        return true
     }
 
     /**
@@ -261,23 +275,100 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, vararg val alia
      * @param placeholders The placeholders. A [Pair] of type [String] and [Any] where A maps to B, for example
      * Pair("$health", player.getHealth())
      */
-    fun sendError(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any>) {
-        return sendMessage(sender, message, *placeholders, error = true)
+    fun sendError(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any>): Boolean {
+        sendMessage(sender, message, *placeholders, error = true)
+        return false
     }
 
     /**
      *
-     * Computes a [net.kyori.adventure.text.Component] using the provided [message] and [placeholders].
+     * Computes a [Component] using the provided [message] and [placeholders].
      *
-     * @param sender The command sender
      * @param message The message to send which includes [placeholders]. If there is a string that starts with
      * a placeholder symbol, it will be replaced with the placeholder. For example "Your health is $health"
      * @param placeholders The placeholders. A [Pair] of type [String] and [Any] where A maps to B, for example
      * Pair("$health", player.getHealth())
      *
-     * @return The computed [net.kyori.adventure.text.Component]
+     * @return The computed [Component]
      */
-    fun getErrorMessage(sender: CommandSender, message: String, vararg placeholders: Pair<String, Any>): Component {
-        return getMessage(sender, message, *placeholders, error = true)
+    fun getErrorMessage(message: String, vararg placeholders: Pair<String, Any>): Component {
+        return getMessage(message, *placeholders, error = true)
+    }
+
+    open fun sendUsage(sender: CommandSender, vararg usages: String = arrayOf("/$name")): Boolean {
+        if (usage.length == 1) {
+            sendMessage(sender, "Usage: \$USAGE", "USAGE" to usage)
+            return false
+        }
+        sendMessage(sender, "Usage:")
+        for (usage in usages) {
+            sendMessage(sender, "\t$usage")
+        }
+        return false
+    }
+
+    fun getPlayer(name: String): Result<Player?> {
+        val player = BlueFox.getPlayer(name)
+        if (player == null) {
+            return Result.fail(null, "Player \$PLAYER not online!", "PLAYER" to name)
+        }
+        return Result(player)
+    }
+
+    fun getOfflinePlayer(name: String): Result<OfflinePlayer?> {
+        val player = BlueFox.getOfflinePlayer(name)
+        if (player == null) {
+            return Result.fail(null, "Player \$PLAYER does not exist!", "PLAYER" to name)
+        }
+        return Result(player)
+    }
+
+    fun getPlayerSender(sender: CommandSender): Result<Player?> {
+        if (sender !is Player) {
+            return Result.fail(null, "You must be a player to use this command!")
+        }
+        return Result(sender)
+    }
+
+    class Result<T>(val value: T, val message: Component? = null) {
+
+        constructor(value: T, message: String, vararg placeholders: Pair<String, Any>):
+            this(value, getMessage(message, *placeholders, error=(value == null || value == false)))
+
+        companion object {
+
+            val FAIL = Result(false)
+            val SUCCESS = Result(true)
+
+            fun<T> fail(value: T, message: String, vararg placeholders: Pair<String, Any>): Result<T> {
+                return Result(value, message, *placeholders)
+            }
+
+            fun<T> fail(value: T, message: Component): Result<T> {
+                return Result(value, message)
+            }
+
+            fun fail(message: String, vararg placeholders: Pair<String, Any>): Result<Boolean> {
+                return Result(false, message, *placeholders)
+            }
+
+            fun fail(message: Component): Result<Boolean> {
+                return Result(false, message)
+            }
+
+            fun success(message: String, obj: Any? = null, vararg placeholders: Pair<String, Any>): Result<Boolean> {
+                return Result(true, message, *placeholders)
+            }
+
+            fun success(message: Component, obj: Any? = null): Result<Boolean> {
+                return Result(true, message)
+            }
+        }
+
+        fun send(sender: CommandSender): Result<T> {
+            message?.let { sender.sendMessage(it) }
+            return this
+        }
+
     }
 }

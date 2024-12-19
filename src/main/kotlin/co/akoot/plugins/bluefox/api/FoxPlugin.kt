@@ -6,7 +6,7 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
-abstract class FoxPlugin() : JavaPlugin() {
+abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     protected val configs: MutableMap<String, FoxConfig> = mutableMapOf()
 
@@ -28,6 +28,7 @@ abstract class FoxPlugin() : JavaPlugin() {
     open fun registerCommands() {}
     open fun registerEvents() {}
     open fun registerConfigs() {}
+    open fun onCrash() {}
 
     fun registerCommand(command: FoxCommand) {
         server.commandMap.register(command.name, command)
@@ -52,5 +53,10 @@ abstract class FoxPlugin() : JavaPlugin() {
     open fun unregisterConfigs() {
         configs.values.forEach(FoxConfig::unload)
         configs.clear()
+    }
+
+    fun crash() {
+        logger.warning("Sorry, but I am crashing the server now!")
+        onCrash()
     }
 }

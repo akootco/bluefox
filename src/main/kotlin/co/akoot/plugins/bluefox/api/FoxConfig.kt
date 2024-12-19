@@ -4,6 +4,9 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValueFactory
+import org.bukkit.Bukkit
+import org.bukkit.Location
+import org.bukkit.WorldCreator
 import java.io.File
 
 class FoxConfig(private val file: File) {
@@ -84,6 +87,21 @@ class FoxConfig(private val file: File) {
 
     fun getBoolean(path: String) = get(path, Config::getBoolean)
     fun getBooleanList(path: String) = getList(path, Config::getBooleanList)
+
+    fun getLocation(path: String): Location? {
+        val world = getString("$path.world")?.let { Bukkit.getWorld(it) } ?: return null
+        val coordinates = getDoubleList("$path.xyz")
+        val target = getDoubleList("$path.target")
+        if (coordinates.size != 3) return null
+        return if(target.size != 2) Location(world, coordinates[0], coordinates[1], coordinates[2])
+        else Location(world, coordinates[0], coordinates[1], coordinates[2], target[0].toFloat(), target[1].toFloat())
+    }
+
+    fun setLocation(path: String, location: Location) {
+        set("$path.world", location.world.name)
+        set("$path.xyz", listOf(location.x, location.y, location.z))
+        set("$path.target", listOf(location.pitch, location.yaw))
+    }
 
     fun increment(path: String, amount: Long = 1, max: Long = Long.MAX_VALUE) {
         val value = getLong(path) ?: 0
