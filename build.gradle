@@ -1,23 +1,23 @@
-group = project.property('group')
-version = project.property('version')
+group = project.group
+version = project.version
 
 dependencies {
-    // Kotlin
+    // Kotlin is implemented and included in the final jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}"
 
     // Libraries
-    implementation 'com.mysql:mysql-connector-j:9.0.0'
+    implementation 'com.mysql:mysql-connector-j:9.1.0'
     implementation 'com.zaxxer:HikariCP:6.0.0'
-    implementation 'joda-time:joda-time:2.12.7'
+    implementation 'joda-time:joda-time:2.13.0'
     implementation 'com.typesafe:config:1.4.3'
 
     // Discord4J but without opus-java and also use the latest version of okhttp3 pls ty
-    implementation('net.dv8tion:JDA:5.0.0-beta.24') {
+    implementation('net.dv8tion:JDA:5.2.1') {
         exclude module: 'opus-java'
     }
     implementation 'com.squareup.okhttp3:okhttp'
     constraints {
-        implementation('com.squareup.okhttp3:okhttp:5.0.0-alpha.14') {
+        implementation('com.squareup.okhttp3:okhttp:4.12.0') {
             because 'L'
         }
     }
