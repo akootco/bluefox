@@ -1,6 +1,8 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.BlueFox
 import org.bukkit.Location
+import org.bukkit.World
 
 class XYZ(val x: Double, val y: Double, val z: Double) {
 
@@ -27,5 +29,9 @@ class XYZ(val x: Double, val y: Double, val z: Double) {
     fun ifZero(location: Location): XYZ {
         if (isZero()) return XYZ(location.x, location.y, location.z)
         return this
+    }
+
+    fun toLocation(world: World): Location {
+        return Location(world, x, y, z)
     }
 }

@@ -105,6 +105,14 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
     }
 
     /**
+     * Filter the strings in the list to include only the ones the sender has permission to use.
+     * This is typically used for generating sub-command tab-completion
+     */
+    protected fun MutableList<String>.permissionCheck(sender: CommandSender): MutableList<String> {
+        return this.filter { permissionCheck(sender, it) == true }.toMutableList()
+    }
+
+    /**
      * Convert a list of arguments into one single argument separated by spaces
      *
      * @param args A list of arguments
@@ -189,7 +197,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * @return Whether the [sender] has the permission node
      */
     fun hasPermission(sender: CommandSender, node: String? = null): Boolean {
-        node ?: sender.hasPermission(permissionNode)
+        node ?: return sender.hasPermission(permissionNode)
         return sender.hasPermission("$permissionNode.$node")
     }
 

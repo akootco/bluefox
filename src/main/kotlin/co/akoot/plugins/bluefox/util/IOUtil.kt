@@ -5,6 +5,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.util.jar.JarFile
 import kotlin.io.path.exists
 
 object IOUtil {
@@ -16,6 +17,7 @@ object IOUtil {
      * @param source The source path from within the jar (src/main/resources/[source]).
      * @param dest The destination of the extracted file.
      * @param overwrite To overwrite or not to overwrite.
+     * @return Whether the file was successfully extracted
      */
     fun extractFile(loader: ClassLoader, source: String, dest: Path, overwrite: Boolean = false): Boolean {
         val exists: Boolean = dest.exists()
@@ -29,6 +31,19 @@ object IOUtil {
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    /**
+     * Checks whether a jar file contains a file within it
+     * @param jarPath The path to the jar file
+     * @param fileName The name of the file to look for in the jar file
+     * @return Whether the specified file exists within the jar file
+     */
+    fun jarContainsFile(jarPath: String, fileName: String): Boolean {
+        val jarFile = JarFile(File(jarPath))
+        jarFile.use {
+            return it.getJarEntry(fileName) != null
         }
     }
 }
