@@ -31,7 +31,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     open fun onCrash() {}
 
     fun registerCommand(command: FoxCommand) {
-        server.commandMap.register(command.name, command)
+        server.commandMap.register(id, command)
     }
 
     fun registerEventListener(listener: Listener) {

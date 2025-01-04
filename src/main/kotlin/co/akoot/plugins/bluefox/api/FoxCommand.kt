@@ -212,11 +212,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * @return The list of tab-completion suggestions that only send the suggestions that contain the last argument
      * (case-insensitive)
      */
-    override fun tabComplete(
-        sender: CommandSender, cmd: String, args: Array<out String>?
-    ): MutableList<String> {
-        // If args is null return an empty list
-        args ?: return mutableListOf()
+    override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
 
         // Suggestions variable
         val suggestions = onTabComplete(sender, args)
@@ -237,7 +233,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return Whether the execution was a success, I guess
      */
-    override fun execute(sender: CommandSender, cmd: String, args: Array<out String>?): Boolean {
+    override fun execute(sender: CommandSender, cmd: String, args: Array<out String>): Boolean {
         return onCommand(sender, cmd, args)
     }
 
@@ -249,7 +245,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return A list of tab-completion suggestions
      */
-    abstract fun onTabComplete(sender: CommandSender, args: Array<out String>?): MutableList<String>
+    abstract fun onTabComplete(sender: CommandSender, args: Array<out String>): MutableList<String>
 
     /**
      * Execute the command
@@ -259,7 +255,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return Whether the execution was a success, I guess
      */
-    abstract fun onCommand(sender: CommandSender, alias: String, args: Array<out String>?): Boolean
+    abstract fun onCommand(sender: CommandSender, alias: String, args: Array<out String>): Boolean
 
     /**
      * Send a message to the [sender]
@@ -364,11 +360,11 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
                 return Result(false, message)
             }
 
-            fun success(message: String, obj: Any? = null, vararg placeholders: Pair<String, Any>): Result<Boolean> {
+            fun success(message: String, vararg placeholders: Pair<String, Any>): Result<Boolean> {
                 return Result(true, message, *placeholders)
             }
 
-            fun success(message: Component, obj: Any? = null): Result<Boolean> {
+            fun success(message: Component): Result<Boolean> {
                 return Result(true, message)
             }
         }

@@ -6,14 +6,23 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 
-class Txt(val string: String, val color: TextColor) {
+class Txt(val string: String = "", val color: TextColor? = null) {
 
     companion object {
         val CR = Txt("\n")
+
+        fun list(items: List<String>, separator: String = "\n", itemColor: String = "accent", textColor: String = "text", prefix: String = "", postfix: String = ""): Txt {
+            if(items.isEmpty()) return Txt()
+            val result = Txt(prefix, textColor)
+            for ((i, item) in items.withIndex()) {
+                result += Txt(item, itemColor)
+                if(i == items.size - 1) break
+                result += Txt(separator, textColor)
+            }
+            return result + Txt(postfix, textColor)
+        }
     }
 
-    constructor(): this("")
-    constructor(string: String) : this(string, ColorUtil.WHITE)
     constructor(string: String, color: Int) : this(string, TextColor.color(color))
     constructor(string: String, color: Color) : this(string, TextColor.color(color.rgb))
     constructor(string: String, color: String, bedrock: Boolean = false) : this(
