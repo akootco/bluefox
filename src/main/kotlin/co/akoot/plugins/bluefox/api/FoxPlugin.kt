@@ -39,9 +39,10 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     }
 
     fun registerConfig(name: String, path: String? = null): FoxConfig {
-        val configFile = File(dataFolder, path ?: "$name.conf")
+        val conf = path ?: "$name.conf"
+        val configFile = File(dataFolder, conf)
         if (!configFile.exists()) {
-            if (IOUtil.extractFile(classLoader, configFile.name, configFile.toPath())) {
+            if (IOUtil.extractFile(classLoader, conf, configFile.toPath())) {
                 logger.info("Loaded config '$name' from jar")
             }
         }
