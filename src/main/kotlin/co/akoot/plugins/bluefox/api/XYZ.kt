@@ -1,7 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
-import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.util.Txt
+import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.World
@@ -57,6 +56,6 @@ class XYZ(val x: Double, val y: Double, val z: Double) {
     }
 
     fun toComponent(separator: String = ", ", color: String = "accent", textColor: String = "text", prefix: String = "", postfix: String = "", trailingZeros: Boolean = false): Component {
-        return Txt.list(toStringList(trailingZeros), separator, color, textColor, prefix, postfix).c
+        return Text.list(toStringList(trailingZeros), separator, color, textColor, prefix, postfix).component
     }
 }

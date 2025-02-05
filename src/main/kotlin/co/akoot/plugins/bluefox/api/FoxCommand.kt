@@ -1,12 +1,15 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.util.Txt
+import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.Text.Companion.plus
+import co.akoot.plugins.bluefox.util.Text.Companion.plusAssign
 import net.kyori.adventure.text.Component
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
+import net.kyori.adventure.text.TextComponent
 
 abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: String = "", defaultUsage: String = "/$id", vararg aliases: String) : BukkitCommand(id, description, defaultUsage, aliases.toList()) {
 
@@ -31,13 +34,14 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
         fun getMessage(
             message: String,
             vararg placeholders: Pair<String, Any?>,
-            error: Boolean = false
+            error: Boolean = false,
+            bedrock: Boolean = false
         ): Component {
             // Add the "error_" prefix if it's an error message
             val errorPrefix = if (error) "error_" else ""
 
             // Skip the whole placeholders parsing if the message doesn't contain anything
-            if (placeholders.isEmpty()) return Txt(message, "${errorPrefix}text").c
+            if (placeholders.isEmpty()) return Text(message, "${errorPrefix}text").component
 
             // Final component
             val component = Component.text()
@@ -61,8 +65,8 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
 
                 // If the placeholder value is a Component, just skip the rest and add that to the result
                 if (value is Component) {
-                    component.append(Txt(parts[i], "text").c)
-                    component.append(value)
+                    component += Text(parts[i], "text", bedrock)
+                    component += value
                     continue
                 }
 
@@ -76,21 +80,21 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
 
                 // Helper variables to help with scenarios that the message starts with a placeholder character
                 val startWithPlaceholderMode = i == 0 && startsWithPlaceholder
-                val partComponent = Txt(parts[i], "text").c
+                val partComponent = Text(parts[i], "text")
 
                 // If the message did nit start with a placeholder prefix, append the part now
-                if(!startWithPlaceholderMode) component.append(partComponent)
+                if(!startWithPlaceholderMode) component += partComponent
 
                 // Append the value with the color
-                component.append(Txt(value.toString(), "${errorPrefix}${code}").c)
+                component += Text(value.toString(), "${errorPrefix}${code}")
 
                 // If the message started with a placeholder prefix, append the part later
-                if(startWithPlaceholderMode) component.append(partComponent)
+                if(startWithPlaceholderMode) component += partComponent
             }
 
             // Append any remaining part of the message after the last placeholder
             if (matches.count() < parts.size) {
-                component.append(Txt(parts.last(), "text").c)
+                component += Text(parts.last(), "text")
             }
 
             // Return the component
