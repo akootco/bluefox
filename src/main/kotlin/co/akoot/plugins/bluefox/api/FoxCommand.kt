@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.Text.Companion.plus
 import co.akoot.plugins.bluefox.util.Text.Companion.plusAssign
@@ -219,7 +220,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
     override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
 
         // Suggestions variable
-        val suggestions = onTabComplete(sender, args)
+        val suggestions = onTabComplete(sender, alias, args)
 
         // If the last argument is empty, return all suggestions
         if(args.last().isEmpty()) return suggestions
@@ -249,7 +250,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return A list of tab-completion suggestions
      */
-    abstract fun onTabComplete(sender: CommandSender, args: Array<out String>): MutableList<String>
+    abstract fun onTabComplete(sender: CommandSender, alias: String, args: Array<out String>): MutableList<String>
 
     /**
      * Execute the command
@@ -303,15 +304,9 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
         return getMessage(message, *placeholders, error = true)
     }
 
-    open fun sendUsage(sender: CommandSender, vararg usages: String = arrayOf("/$name")): Boolean {
-        if (usage.length == 1) {
-            sendMessage(sender, "Usage: \$USAGE", "USAGE" to usage)
-            return false
-        }
+    open fun sendUsage(sender: CommandSender): Boolean {
         sendMessage(sender, "Usage:")
-        for (usage in usages) {
-            sendMessage(sender, "\t$usage")
-        }
+        //TODO idk
         return false
     }
 
@@ -343,6 +338,8 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
         constructor(value: T, message: String, vararg placeholders: Pair<String, Any>):
             this(value, getMessage(message, *placeholders, error=(value == null || value == false)))
 
+        constructor(value: T, message: Text): this(value, message?.component)
+
         companion object {
 
             val FAIL = Result(false)
@@ -364,12 +361,20 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
                 return Result(false, message)
             }
 
+            fun fail(message: Text): Result<Boolean> {
+                return Result(false, message.component.colorIfAbsent(ColorUtil.getColor("error_text")))
+            }
+
             fun success(message: String, vararg placeholders: Pair<String, Any>): Result<Boolean> {
                 return Result(true, message, *placeholders)
             }
 
             fun success(message: Component): Result<Boolean> {
                 return Result(true, message)
+            }
+
+            fun success(message: Text): Result<Boolean> {
+                return Result(true, message.component)
             }
         }
 

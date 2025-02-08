@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.User
+import co.akoot.plugins.bluefox.api.XYZ
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
@@ -10,15 +11,13 @@ import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.Nameable
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.awt.Color
-import java.util.*
 
-class Text(val string: String = "", val color: TextColor? = null, vararg decorations: TextDecoration) : Audience {
+class Text(val string: String = "", val color: TextColor? = null, vararg decorations: TextDecoration) {
 
     enum class EnumOption {
         SPACES, TITLE_CASE, LOWERCASE, NO_ACCENT
@@ -28,6 +27,22 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         val newline = Text("\n")
         val space = Text(" ")
 
+        fun accent(string: String, bedrock: Boolean = false): Text {
+            return Text(string, "accent", bedrock)
+        }
+
+        fun player(string: String, bedrock: Boolean = false): Text {
+            return Text(string, "accent", bedrock)
+        }
+
+        fun number(string: String, bedrock: Boolean = false): Text {
+            return Text(string, "number", bedrock)
+        }
+
+        fun error(sender: CommandSender, bedrock: Boolean = false, erm: (Text) -> Text) {
+            erm(Text("", "error_text", bedrock)).send(sender)
+        }
+
         fun newline(audience: Audience) {
             audience.sendMessage(Component.newline())
         }
@@ -36,6 +51,10 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
             BlueFox.server.apply {
                 permission?.let { broadcast(Component.newline(), it) }
             }
+        }
+
+        fun broadcast(permission: String? = null, erm: (Text) -> Text) {
+            erm(Text()).broadcast(permission)
         }
 
         fun list(items: List<String>, separator: String = "\n", itemColor: String = "accent", textColor: String = "text", prefix: String = "", postfix: String = ""): Text {
@@ -63,6 +82,95 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
             return string
         }
 
+        fun String.color(colorName: String, bedrock: Boolean = false): Text {
+            return Text(this, colorName, bedrock)
+        }
+
+        fun String.color(color: TextColor): Text {
+            return Text(this, color)
+        }
+
+        fun String.accented(bedrock: Boolean = false): Text {
+            return Text(this).color("accent")
+        }
+
+        fun String.error(colorName: String? = "text", bedrock: Boolean = false): Text {
+            return Text(this).color("error_$colorName")
+        }
+
+        fun String.errorAccented(bedrock: Boolean = false): Text {
+            return Text(this).color("error_accent")
+        }
+
+        fun String.hover(text: Text): Text {
+            return Text(this).hover(text)
+        }
+
+        fun String.hover(string: String, color: TextColor? = null): Text {
+            return Text(this).hover(Text(string, color))
+        }
+
+        fun String.hover(string: String, colorName: String, bedrock: Boolean = false): Text {
+            return Text(this).hover(Text(string, colorName, bedrock))
+        }
+
+        fun String.decorate(vararg decorations: TextDecoration): Text {
+            return Text(this).decorate(*decorations)
+        }
+
+        fun String.copy(string: String = this): Text {
+            return Text(this).copy(string)
+        }
+
+        fun String.bold(): Text {
+            return Text(this).bold()
+        }
+
+        fun String.italic(): Text {
+            return Text(this).italic()
+        }
+
+        fun String.boldItalic(): Text {
+            return Text(this).boldItalic()
+        }
+
+        fun String.underlined(): Text {
+            return Text(this).underlined()
+        }
+
+        fun String.strikethrough(): Text {
+            return Text(this).strikethrough()
+        }
+
+        fun String.obfuscated(): Text {
+            return Text(this).obfuscated()
+        }
+
+        fun String.open(url: String): Text {
+            return Text(this).open(url)
+        }
+
+        fun String.execute(command: String): Text {
+            return Text(this).execute(command)
+        }
+
+        fun String.suggest(command: String): Text {
+            return Text(this).suggest(command)
+        }
+
+        fun Number.copy(): Text {
+            return number(this.toString()).hover("Click to copy!", "accent").copy(this.toString())
+        }
+
+        operator fun String.invoke(color: String = "text", bedrock: Boolean = false): Text {
+            return Text(this, color, bedrock)
+        }
+
+        operator fun Text.plus(any: Any): Text {
+            builder.append(accent(any.toString()).component)
+            return this
+        }
+
         operator fun Component.plus(text: Text): Component {
             return this.append(text.component)
         }
@@ -71,7 +179,24 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
             return this.append(component)
         }
 
-        operator fun Component.plus(builder: TextComponent.Builder): Component = append(builder)
+        operator fun Component.plus(xyz: XYZ): Component {
+            this.append(xyz.toComponent())
+            return this
+        }
+
+        operator fun Builder.plus(xyz: XYZ): Builder {
+            return this.append(xyz.toComponent())
+        }
+
+        operator fun Component.plusAssign(xyz: XYZ) {
+            this.append(xyz.toComponent())
+        }
+
+        operator fun Builder.plusAssign(xyz: XYZ) {
+            this.append(xyz.toComponent())
+        }
+
+        operator fun Component.plus(builder: Builder): Component = append(builder)
 
         operator fun Component.plusAssign(text: Text) {
             this.append(text.component)
@@ -81,33 +206,43 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
             this.append(component)
         }
 
-        operator fun Component.plusAssign(builder: TextComponent.Builder) {
+        operator fun Component.plusAssign(builder: Builder) {
             this.append(builder)
         }
 
-        operator fun TextComponent.Builder.plus(text: Text): TextComponent.Builder {
+        operator fun Builder.plus(text: Text): Builder {
             return this.append(text.component)
         }
 
-        operator fun TextComponent.Builder.plus(component: Component): TextComponent.Builder {
+        operator fun Builder.plus(component: Component): Builder {
             return this.append(component)
         }
 
-        operator fun TextComponent.Builder.plus(builder: TextComponent.Builder): TextComponent.Builder {
+        operator fun Builder.plus(builder: Builder): Builder {
             return this.append(builder)
         }
 
-        operator fun TextComponent.Builder.plusAssign(text: Text) {
+        operator fun Builder.plusAssign(text: Text) {
             this.append(text.component)
         }
 
-        operator fun TextComponent.Builder.plusAssign(component: Component) {
+        operator fun Builder.plusAssign(component: Component) {
             this.append(component)
         }
 
-        operator fun TextComponent.Builder.plusAssign(builder: TextComponent.Builder) {
+        operator fun Builder.plusAssign(builder: Builder) {
             this.append(builder)
         }
+    }
+
+    fun copy(string: String): Text {
+        builder.clickEvent(ClickEvent.copyToClipboard(string))
+        return this
+    }
+
+    fun open(url: String): Text {
+        builder.clickEvent(ClickEvent.openUrl(url))
+        return this
     }
 
     constructor(string: String, color: Int, vararg decorations: TextDecoration) : this(string, TextColor.color(color), *decorations)
@@ -120,9 +255,15 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
     constructor(vararg options: EnumOption) : this("") {
         enumOptions = options
     }
+    constructor(erm: (Text) -> Text): this() {
+        erm(this)
+    }
+    constructor(sender: CommandSender, erm: (Text) -> Text): this() {
+        (erm(this)).send(sender)
+    }
 
     private val builder = Component.text(string).color(color).toBuilder().decorate(*decorations)
-    var enumOptions: Array<out EnumOption> = arrayOf()
+    private var enumOptions: Array<out EnumOption> = arrayOf()
 
     fun enumOptions(vararg options: EnumOption) {
         this.enumOptions = options
@@ -133,7 +274,7 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         return this
     }
 
-    fun run(command: String): Text {
+    fun execute(command: String): Text {
         builder.clickEvent(ClickEvent.runCommand(command))
         return this
     }
@@ -288,6 +429,14 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         builder.append(builder)
     }
 
+    operator fun plusAssign(xyz: XYZ) {
+        builder.append(xyz.toComponent())
+    }
+
+    operator fun plus(xyz: XYZ): Text {
+        builder.append(xyz.toComponent())
+        return this
+    }
 
     operator fun inc(): Text {
         fillStart()

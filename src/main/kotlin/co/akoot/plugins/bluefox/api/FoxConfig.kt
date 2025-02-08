@@ -9,7 +9,7 @@ import org.bukkit.Location
 import org.bukkit.WorldCreator
 import java.io.File
 
-class FoxConfig(private val file: File) {
+class FoxConfig(val file: File) {
 
     private var config = ConfigFactory.parseFile(file)
     private val options = ConfigRenderOptions.concise().setFormatted(true)
