@@ -6,6 +6,9 @@ import org.bukkit.NamespacedKey
 import org.bukkit.persistence.PersistentDataAdapterContext
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.charset.StandardCharsets
 
 class PrimitiveType<T : Any>(private val primitiveType: Class<T>): PersistentDataType<T, T> {
     override fun getPrimitiveType(): Class<T> {
@@ -25,6 +28,24 @@ class PrimitiveType<T : Any>(private val primitiveType: Class<T>): PersistentDat
     }
 }
 
+class LocationDataType(): PersistentDataType<ByteArray, Location> {
+    override fun getPrimitiveType(): Class<ByteArray> {
+        return ByteArray::class.java
+    }
+
+    override fun getComplexType(): Class<Location> {
+        return Location::class.java
+    }
+
+    override fun fromPrimitive(primitive: ByteArray, context: PersistentDataAdapterContext): Location {
+        return getLocation(primitive)
+    }
+
+    override fun toPrimitive(complex: Location, context: PersistentDataAdapterContext): ByteArray {
+        return complex.getBytes()
+    }
+}
+
 inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey, value: T?): T? {
     if(value == null) removePDC(key)
     return value
@@ -37,7 +58,7 @@ inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey
 
 inline fun <reified T : Any> PersistentDataHolder.getPDC(key: NamespacedKey): T? {
     when(T::class) {
-        Location::class -> return getPDCLocation(key) as T?
+        Location::class -> return persistentDataContainer.get(key, LocationDataType()) as T?
     }
     return persistentDataContainer.get(key, PrimitiveType(T::class.java))
 }
@@ -50,7 +71,7 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
     val v: T = removeIfNull(key, value) ?: return
     when(T::class) {
         Location::class -> {
-            setPDCLocation(key, value as Location?)
+            persistentDataContainer.set(key, LocationDataType(), value as Location)
             return
         }
     }
@@ -66,24 +87,38 @@ fun PersistentDataHolder.removePDC(key: NamespacedKey) {
     persistentDataContainer.remove(key)
 }
 
-fun PersistentDataHolder.getPDCLocation(key: NamespacedKey): Location? {
-    val world = getPDC<String>(key + "world")?.let { Bukkit.getWorld(it) } ?: return null
-    val x = getPDC<Double>(key + "x") ?: return null
-    val y = getPDC<Double>(key + "y") ?: return null
-    val z = getPDC<Double>(key + "z") ?: return null
-    val yaw = getPDC<Float>(key + "yaw") ?: return null
-    val pitch = getPDC<Float>(key + "pitch") ?: return null
-    return Location(world, x, y, z, yaw, pitch)
+fun Location.getBytes(): ByteArray {
+    val worldBytes = world.name.toByteArray(StandardCharsets.UTF_8)
+    val buffer = ByteBuffer.allocate(
+        36 + worldBytes.size // 4 + worldBytes.size + 8 + 8 + 8 + 4 + 4
+    )
+
+    buffer.putInt(worldBytes.size) // Store the length of the world string
+    buffer.put(worldBytes) // Store the world string bytes
+    buffer.putDouble(x)
+    buffer.putDouble(y)
+    buffer.putDouble(z)
+    buffer.putFloat(pitch)
+    buffer.putFloat(yaw)
+
+    return buffer.array()
 }
 
-fun PersistentDataHolder.setPDCLocation(key: NamespacedKey, location: Location?) {
-    val value: Location = removeIfNull(key, location) ?: return
-    setPDC(key + "world", value.world.name)
-    setPDC(key + "x", value.x)
-    setPDC(key + "y", value.y)
-    setPDC(key + "z", value.z)
-    setPDC(key + "yaw", value.yaw)
-    setPDC(key + "pitch", value.pitch)
+fun getLocation(bytes: ByteArray): Location {
+    val buffer = ByteBuffer.wrap(bytes)
+
+    val worldSize = buffer.int // Read the world string size
+    val worldBytes = ByteArray(worldSize)
+    buffer.get(worldBytes) // Read the world string bytes
+    val world = String(worldBytes, StandardCharsets.UTF_8)
+
+    val x = buffer.double
+    val y = buffer.double
+    val z = buffer.double
+    val pitch = buffer.float
+    val yaw = buffer.float
+
+    return Location(Bukkit.getWorld(world), x, y, z, pitch, yaw)
 }
 
 fun NamespacedKey.value(newValue: String): NamespacedKey {
