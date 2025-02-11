@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox.extensions
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
+import org.bukkit.Server
 import org.bukkit.persistence.PersistentDataAdapterContext
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
@@ -90,7 +91,7 @@ fun PersistentDataHolder.removePDC(key: NamespacedKey) {
 fun Location.getBytes(): ByteArray {
     val worldBytes = world.name.toByteArray(StandardCharsets.UTF_8)
     val buffer = ByteBuffer.allocate(
-        36 + worldBytes.size // 4 + worldBytes.size + 8 + 8 + 8 + 4 + 4
+        4 + worldBytes.size + 8 + 8 + 8 + 4 + 4
     )
 
     buffer.putInt(worldBytes.size) // Store the length of the world string
@@ -98,8 +99,8 @@ fun Location.getBytes(): ByteArray {
     buffer.putDouble(x)
     buffer.putDouble(y)
     buffer.putDouble(z)
-    buffer.putFloat(pitch)
     buffer.putFloat(yaw)
+    buffer.putFloat(pitch)
 
     return buffer.array()
 }
@@ -115,10 +116,10 @@ fun getLocation(bytes: ByteArray): Location {
     val x = buffer.double
     val y = buffer.double
     val z = buffer.double
-    val pitch = buffer.float
     val yaw = buffer.float
+    val pitch = buffer.float
 
-    return Location(Bukkit.getWorld(world), x, y, z, pitch, yaw)
+    return Location(Bukkit.getWorld(world), x, y, z, yaw, pitch)
 }
 
 fun NamespacedKey.value(newValue: String): NamespacedKey {
