@@ -33,7 +33,7 @@ class PersistentDataHolderExtensionsTest {
 
 
     @Test
-    fun testSerialization() {
+    fun `test serialization of Location with random values`() {
         val original = Location(
             world,
             Random.nextDouble(),
@@ -43,7 +43,6 @@ class PersistentDataHolderExtensionsTest {
             Random.nextFloat()
         )
 
-
         val bytes = original.getBytes()
         val restored = getLocation(bytes)
 
@@ -51,7 +50,7 @@ class PersistentDataHolderExtensionsTest {
     }
 
     @Test
-    fun testValues() {
+    fun `test serialization of Location with max and min values`() {
         val original =
             Location(endWorld, Double.MAX_VALUE, Double.MIN_VALUE, -Double.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE)
 
