@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.util
 
+import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 import java.awt.color.ColorSpace
@@ -9,6 +10,7 @@ import kotlin.random.Random
 object ColorUtil {
 
     val WHITE = TextColor.color(0xffffff)
+    val TRANSPARENT = ShadowColor.shadowColor(0x000000)
 
     val color = mapOf(
         "text" to TextColor.color(0xfcf7f4),
@@ -61,6 +63,18 @@ object ColorUtil {
      */
     fun getColor(name: String, bedrock: Boolean = false): TextColor {
         return (if (bedrock) colorBedrock[name] else color[name]) ?: WHITE
+    }
+
+    /**
+     * Get the TextColor with the specified name
+     *
+     * @param name The name of the color
+     * @param bedrock Whether the player viewing the color is bedrock
+     * @param alpha The alpha of the shadow color
+     * @return A ShadowColor object if it exists in the list of colors, WHITE otherwise
+     */
+    fun getShadowColor(name: String, alpha: Double = 1.0, bedrock: Boolean = false): ShadowColor {
+        return getColor(name, bedrock).toShadowColor(alpha)
     }
 
     /**
@@ -235,4 +249,22 @@ object ColorUtil {
 
         return gradient
     }
+}
+
+fun TextColor.toShadowColor(alpha: Double = 1.0): ShadowColor {
+    return ShadowColor.shadowColor(this, (alpha * 255).toInt())
+}
+
+val String.color: TextColor get() = TextColor.fromHexString(this) ?: ColorUtil.WHITE
+val String.shadow: ShadowColor get() = ShadowColor.fromHexString(this) ?: ColorUtil.WHITE.toShadowColor()
+
+val Int.color: TextColor get() = TextColor.color(this)
+val Int.shadow: ShadowColor get() = ShadowColor.shadowColor(this)
+
+fun String.shadow(alpha: Double): ShadowColor {
+    return TextColor.fromHexString(this)?.toShadowColor(alpha) ?: ColorUtil.WHITE.toShadowColor()
+}
+
+fun Int.shadow(alpha: Double): ShadowColor {
+    return TextColor.color(this).toShadowColor(alpha)
 }

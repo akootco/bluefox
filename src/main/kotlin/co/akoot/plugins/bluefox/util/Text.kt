@@ -3,14 +3,17 @@ package co.akoot.plugins.bluefox.util
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.User
 import co.akoot.plugins.bluefox.api.XYZ
+import co.akoot.plugins.bluefox.util.Text.Companion.noShadow
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TextComponent.Builder
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
+import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.serializer.json.JSONOptions.ShadowColorEmitMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -82,12 +85,21 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
             return string
         }
 
-        fun String.color(colorName: String, bedrock: Boolean = false): Text {
-            return Text(this, colorName, bedrock)
+        fun String.noShadow(): Text {
+            return Text(this).noShadow()
+        }
+
+        fun String.color(colorName: String, shadowColor: String? = null, shadowAlpha: Double = 1.0, bedrock: Boolean = false): Text {
+            val text = Text(this, colorName, bedrock)
+            return if(shadowColor != null) text.shadowColor(shadowColor, shadowAlpha, bedrock) else text
         }
 
         fun String.color(color: TextColor): Text {
             return Text(this, color)
+        }
+
+        fun String.color(color: TextColor, shadowColor: ShadowColor): Text {
+            return Text(this, color).shadowColor(shadowColor)
         }
 
         fun String.accented(bedrock: Boolean = false): Text {
@@ -235,6 +247,20 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         }
     }
 
+    fun noShadow(): Text {
+        builder.shadowColor(ColorUtil.TRANSPARENT)
+        return this
+    }
+
+    fun shadowColor(colorName: String, alpha: Double = 1.0, bedrock: Boolean = false): Text {
+        builder.shadowColor(ColorUtil.getShadowColor(colorName, alpha, bedrock))
+        return this
+    }
+
+    fun shadowColor(shadowColor: ShadowColor): Text {
+        builder.shadowColor(shadowColor)
+        return this
+    }
     fun copy(string: String): Text {
         builder.clickEvent(ClickEvent.copyToClipboard(string))
         return this
