@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.typesafe.config.ConfigFactory
+import org.bukkit.NamespacedKey
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -60,5 +61,9 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     fun crash() {
         logger.warning("Sorry, but I am crashing the server now!")
         onCrash()
+    }
+
+    fun key(key: String): NamespacedKey {
+        return NamespacedKey(this, key)
     }
 }

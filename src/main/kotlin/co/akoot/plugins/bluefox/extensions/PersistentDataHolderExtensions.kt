@@ -3,13 +3,11 @@ package co.akoot.plugins.bluefox.extensions
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
-import org.bukkit.Server
 import org.bukkit.persistence.PersistentDataAdapterContext
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
 
 /**
@@ -127,7 +125,39 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
  */
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: List<T>?) {
     val v: List<T> = removeIfNull(key, value) ?: return
+    when(T::class) {
+        Location::class -> {
+            persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(LocationDataType()), value as List<Location>)
+            return
+        }
+    }
     persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(PrimitiveType(T::class.java)), v)
+}
+
+/**
+ * Removes a value from a [PersistentDataContainer] [List]
+ * @param key The [NamespacedKey] to remove from
+ * @param value The [Object] to remove from the [PersistentDataContainer]
+ * @return If the value was removed successfully
+ */
+inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: NamespacedKey, value: T): Boolean {
+    val list = getPDCList<T>(key)?.toMutableSet() ?: return false
+    val success = list.remove(value)
+    setPDC(key, list)
+    return success
+}
+
+/**
+ * Adds a value to a [PersistentDataContainer] [List]
+ * @param key The [NamespacedKey] to remove from
+ * @param value The [Object] to remove from the [PersistentDataContainer]
+ * @return If the value was added successfully
+ */
+inline fun <reified T : Any>  PersistentDataHolder.addToPDCList(key: NamespacedKey, value: T): Boolean {
+    val list = getPDCList<T>(key)?.toMutableSet() ?: return false
+    val success = list.add(value)
+    setPDC(key, list)
+    return success
 }
 
 /**

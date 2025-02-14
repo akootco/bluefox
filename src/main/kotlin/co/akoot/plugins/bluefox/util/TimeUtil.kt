@@ -170,3 +170,8 @@ object TimeUtil {
         }
     }
 }
+
+val Number.ticks: Long get() = this.toLong()
+val Number.seconds: Long get() = this.toDouble().times(20).toLong()
+val Number.minutes: Long get() = this.toDouble().times(1200).toLong()
+val Number.hours: Long get() = this.toDouble().times(72000).toLong()
