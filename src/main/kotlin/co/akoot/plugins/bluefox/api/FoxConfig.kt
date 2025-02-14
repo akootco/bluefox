@@ -50,6 +50,12 @@ class FoxConfig(val file: File) {
         if (autosave) save()
     }
 
+    fun getKeys(path: String? = null): MutableSet<String> {
+        if (autoload) load()
+        return if (path == null) config.root().keys
+        else config.getConfig(path)?.root()?.keys ?: mutableSetOf()
+    }
+
     // Generic function for single values
     private inline fun <reified T> get(path: String, getter: (Config, String) -> T): T? {
         if(autoload) load()
