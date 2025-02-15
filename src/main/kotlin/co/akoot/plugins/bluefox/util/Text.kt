@@ -1,7 +1,6 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.api.User
 import co.akoot.plugins.bluefox.api.XYZ
 import co.akoot.plugins.bluefox.util.Text.Companion.noShadow
 import net.kyori.adventure.audience.Audience
@@ -434,11 +433,6 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
     operator fun plus(player: Player): Text {
         fillStart()
         return this + player.displayName()
-    }
-
-    operator fun plus(user: User): Text {
-        fillStart()
-        return this + user.displayName
     }
 
     operator fun plus(entity: Entity): Text {

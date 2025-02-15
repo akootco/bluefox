@@ -18,7 +18,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
         lateinit var settings: FoxConfig
         lateinit var auth: FoxConfig
-        lateinit var usersDb: Connection
+        var usersDb: Connection? = null
         lateinit var server: Server
         lateinit var overworld: World
         lateinit var spawnLocation: Location
@@ -63,9 +63,8 @@ class BlueFox : FoxPlugin("bluefox") {
             }
             usersDataSource = HikariDataSource(hikariConfig)
             usersDb = usersDataSource.connection
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            crash()
+        } catch (_: Exception) {
+            logger.severe("Failed to connect to the database, related features disabled.")
         }
     }
 
@@ -136,12 +135,9 @@ class BlueFox : FoxPlugin("bluefox") {
             commandMapField.isAccessible = true
             listenersField.isAccessible = true
 
-            @Suppress("UNCHECKED_CAST")
             val plugins = pluginsField.get(pluginManager) as MutableList<*>
-            @Suppress("UNCHECKED_CAST")
             val lookupNames = lookupNamesField.get(pluginManager) as MutableMap<*, *>
             val commandMap = commandMapField.get(pluginManager)
-            @Suppress("UNCHECKED_CAST")
             val listeners = listenersField.get(pluginManager) as MutableMap<*, *>
 
             // Remove from plugins and lookupNames
