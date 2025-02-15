@@ -111,7 +111,7 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
     val v: T = removeIfNull(key, value) ?: return
     when(T::class) {
         Location::class -> {
-            persistentDataContainer.set(key, LocationDataType(), value as Location)
+            persistentDataContainer.set(key, LocationDataType(), v as Location)
             return
         }
     }
@@ -123,11 +123,12 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
  * @param key The [NamespacedKey] of the value to set in this [PersistentDataContainer]
  * @param value The [List] to set
  */
+@Suppress("UNCHECKED_CAST") // pesky pesky...
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: List<T>?) {
     val v: List<T> = removeIfNull(key, value) ?: return
     when(T::class) {
         Location::class -> {
-            persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(LocationDataType()), value as List<Location>)
+            persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(LocationDataType()), v as List<Location>)
             return
         }
     }
