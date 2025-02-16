@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
-class DbConfig(private val connection: Connection, private val table: String, private val keyName: String, private val keyValue: String, private val andTableName: String? = null, private val andTableKeyName: String? = null) {
+class DbConfig(val connection: Connection, val table: String, val keyName: String, val keyValue: String? = null, private val andTableName: String? = null, private val andTableKeyName: String? = null) {
 
     private val hasAndTable = andTableName != null && andTableKeyName != null
 
@@ -26,7 +26,7 @@ class DbConfig(private val connection: Connection, private val table: String, pr
         statement.executeUpdate()
     }
 
-    fun set(key: String, value: Any?) {
+    inline fun <reified T> set(key: String, value: T?) {
         if (value == null) {
             unset(key)
             return
@@ -66,7 +66,7 @@ class DbConfig(private val connection: Connection, private val table: String, pr
         updateInt(key, statement, amount)
     }
 
-    private fun getResultSet(key: String): ResultSet {
+    fun getResultSet(key: String): ResultSet {
         val statement = connection.prepareStatement("SELECT ? from ? WHERE ? = ?")
         statement.setString(1, key)
         statement.setString(2, table)
@@ -75,16 +75,9 @@ class DbConfig(private val connection: Connection, private val table: String, pr
         return statement.executeQuery()
     }
 
-    fun get(key: String): Any? {
+    inline fun <reified T> get(key: String): T? {
         val result = getResultSet(key)
-        val value = if (result.next()) result.getObject(key) else null
-        result.close()
-        return value
-    }
-
-    fun getString(key: String): String? {
-        val result = getResultSet(key)
-        val value = if (result.next()) result.getString(key) else null
+        val value = if(result.next()) result.getObject(key, T::class.java) else null
         result.close()
         return value
     }

@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
+import co.akoot.plugins.bluefox.util.DbConfig
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -18,7 +19,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
         lateinit var settings: FoxConfig
         lateinit var auth: FoxConfig
-        var usersDb: Connection? = null
+        var profiles: DbConfig? = null
         lateinit var server: Server
         lateinit var overworld: World
         lateinit var spawnLocation: Location
@@ -48,7 +49,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
     }
 
-    private lateinit var usersDataSource: HikariDataSource
+    private lateinit var mainDataSource: HikariDataSource
     private fun setupDatabases() {
         try {
             val hikariConfig = HikariConfig().apply {
@@ -61,8 +62,10 @@ class BlueFox : FoxPlugin("bluefox") {
                 idleTimeout = 10000
                 connectionTimeout = 30000
             }
-            usersDataSource = HikariDataSource(hikariConfig)
-            usersDb = usersDataSource.connection
+            mainDataSource = HikariDataSource(hikariConfig)
+            val mainDb = mainDataSource.connection
+            profiles = DbConfig(mainDb, "profiles", "uuid") //TODO fix this
+            //logger.info("Database - Loaded $userCount users.")
         } catch (_: Exception) {
             logger.severe("Failed to connect to the database, related features disabled.")
         }
@@ -182,8 +185,8 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     override fun unload() {
-        if (!this::usersDataSource.isInitialized) return
-        usersDataSource.close()
+        if (!this::mainDataSource.isInitialized) return
+        mainDataSource.close()
     }
 
     override fun registerConfigs() {
