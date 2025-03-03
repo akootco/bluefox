@@ -13,3 +13,7 @@ fun OfflinePlayer.getDataFile(): File {
 
 val OfflinePlayer.profile: Profile
     get() = Profile(this)
+
+fun List<OfflinePlayer>.names(): List<String> {
+    return this.mapNotNull { it.name }
+}
