@@ -2,17 +2,14 @@ package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.XYZ
-import co.akoot.plugins.bluefox.util.Text.Companion.noShadow
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TextComponent.Builder
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.serializer.json.JSONOptions.ShadowColorEmitMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -58,6 +55,9 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         fun broadcast(permission: String? = null, erm: (Text) -> Text) {
             erm(Text()).broadcast(permission)
         }
+
+        val Boolean.now: String get() = if(this) "now" else "no longer"
+        val Boolean.nowAccented: Text get() = now.color("accented")
 
         fun list(items: List<String>, separator: String = "\n", itemColor: String = "accent", textColor: String = "text", prefix: String = "", postfix: String = ""): Text {
             if(items.isEmpty()) return Text()
@@ -180,6 +180,10 @@ class Text(val string: String = "", val color: TextColor? = null, vararg decorat
         operator fun Text.plus(any: Any): Text {
             builder.append(accent(any.toString()).component)
             return this
+        }
+
+        operator fun Component.plus(string: String): Component {
+            return this.append(string().component)
         }
 
         operator fun Component.plus(text: Text): Component {

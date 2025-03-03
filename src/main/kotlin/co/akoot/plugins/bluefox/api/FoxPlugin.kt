@@ -1,12 +1,12 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
-import com.typesafe.config.ConfigFactory
 import org.bukkit.NamespacedKey
+import org.bukkit.event.Event
+import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import kotlin.io.path.relativeTo
 
 abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
@@ -38,6 +38,14 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     fun registerEventListener(listener: Listener) {
         server.pluginManager.registerEvents(listener, this)
+    }
+
+    fun unregisterEventListener(event: Event, listener: Listener) {
+        event.handlers.unregister(listener)
+    }
+
+    fun unregisterEventListener(listener: Listener) {
+        HandlerList.unregisterAll(listener)
     }
 
     fun registerConfig(name: String, path: String? = null): FoxConfig {
