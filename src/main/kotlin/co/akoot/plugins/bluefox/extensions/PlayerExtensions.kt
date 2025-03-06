@@ -17,3 +17,5 @@ val OfflinePlayer.profile: Profile
 fun List<OfflinePlayer>.names(): List<String> {
     return this.mapNotNull { it.name }
 }
+
+val Player.isBedrock: Boolean get() = false // TODO: Geyser API

@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.util
 
+import co.akoot.plugins.bluefox.extensions.brighten
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
@@ -11,28 +12,6 @@ object ColorUtil {
 
     val WHITE = TextColor.color(0xffffff)
     val TRANSPARENT = ShadowColor.shadowColor(0x000000)
-
-    val color = mapOf(
-        "text" to TextColor.color(0xfcf7f4),
-        "accent" to TextColor.color(0x97d4fc),
-        "player" to TextColor.color(0xfc97c9),
-        "number" to TextColor.color(0xfce497),
-        "error_text" to TextColor.color(0xfc5f5f),
-        "error_accent" to TextColor.color(0xfc8888),
-        "error_player" to TextColor.color(0xfc88c2),
-        "error_number" to TextColor.color(0xfcae5f),
-    )
-
-    val colorBedrock = mapOf(
-        "text" to TextColor.color(0xFFFFFF),
-        "accent" to TextColor.color(0x55FFFF),
-        "player" to TextColor.color(0xFF55FF),
-        "number" to TextColor.color(0xFFFF55),
-        "error_text" to TextColor.color(0xAA0000),
-        "error_accent" to TextColor.color(0xFF5555),
-        "error_player" to TextColor.color(0xFF5555),
-        "error_number" to TextColor.color(0xFF5555),
-    )
 
     val MONTH_COLOR = when (TimeUtil.MONTH) {
         Calendar.JANUARY -> TextColor.color(0x77BBE9)
@@ -50,31 +29,10 @@ object ColorUtil {
         else -> TextColor.color(0xffffff)
     }
 
-    val colorTinted = color.mapValues { (_, color) ->
-        mix(color, MONTH_COLOR)
-    }
-
-    /**
-     * Get the TextColor with the specified name
-     *
-     * @param name The name of the color
-     * @param bedrock Whether the player viewing the color is bedrock
-     * @return A TextColor object if it exists in the list of colors, WHITE otherwise
-     */
-    fun getColor(name: String, bedrock: Boolean = false): TextColor {
-        return (if (bedrock) colorBedrock[name] else color[name]) ?: WHITE
-    }
-
-    /**
-     * Get the TextColor with the specified name
-     *
-     * @param name The name of the color
-     * @param bedrock Whether the player viewing the color is bedrock
-     * @param alpha The alpha of the shadow color
-     * @return A ShadowColor object if it exists in the list of colors, WHITE otherwise
-     */
-    fun getShadowColor(name: String, alpha: Double = 1.0, bedrock: Boolean = false): ShadowColor {
-        return getColor(name, bedrock).toShadowColor(alpha)
+    fun month(color: TextColor, mix: Double = 0.25, brighten: Double = 0.15): TextColor {
+        val result = mix(color, MONTH_COLOR, mix, 10)
+        return if(brighten <= 0.0) result
+        else result.brighten(brighten)
     }
 
     /**
@@ -134,7 +92,7 @@ object ColorUtil {
      * @param percentage How dark it should be
      * @return A lighter color
      */
-    fun lighten(color: Int, percentage: Double = 0.1): TextColor {
+    fun brighten(color: Int, percentage: Double = 0.1): TextColor {
         val col = Color(color)
         val min = (255 * percentage.coerceAtMost(1.0)).toInt()
         return TextColor.color(
@@ -190,8 +148,8 @@ object ColorUtil {
      * @param color2 Color 2
      * @return The resulting color of mixing color1 and color2
      */
-    fun mix(color1: TextColor, color2: TextColor): TextColor {
-        return getGradient(3, color1, color2)[1]
+    fun mix(color1: TextColor, color2: TextColor, percentage: Double = 0.5, points: Int = 3): TextColor {
+        return getGradient(points, color1, color2)[(points * percentage).toInt()]
     }
 
     /**

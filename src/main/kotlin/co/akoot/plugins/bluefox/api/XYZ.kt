@@ -25,12 +25,10 @@ class XYZ(val x: Double, val y: Double, val z: Double) {
     constructor(xyz: Double): this(xyz, xyz, xyz)
     constructor(x: Double, z: Double): this(x, 0.0, z)
 
-    fun isZero(): Boolean {
-        return x == 0.0 && y == 0.0 && z == 0.0
-    }
+    val isZero: Boolean get() = x == 0.0 && y == 0.0 && z == 0.0
 
     fun ifZero(location: Location): XYZ {
-        if (isZero()) return XYZ(location.x, location.y, location.z)
+        if (isZero) return XYZ(location.x, location.y, location.z)
         return this
     }
 
@@ -55,7 +53,7 @@ class XYZ(val x: Double, val y: Double, val z: Double) {
         return toStringList(trailingZeros).joinToString(separator, prefix, postfix)
     }
 
-    fun toComponent(separator: String = ", ", color: String = "accent", textColor: String = "text", prefix: String = "", postfix: String = "", trailingZeros: Boolean = false): Component {
-        return Text.list(toStringList(trailingZeros), separator, color, textColor, prefix, postfix).component
+    fun toComponent(separator: String = ", ", kolor: Kolor = Kolor.ACCENT, textKolor: Kolor = Kolor.TEXT, prefix: String = "", postfix: String = "", trailingZeros: Boolean = false, bedrock: Boolean = false, rawColor: Boolean = false): Component {
+        return Text.list(toStringList(trailingZeros), separator, kolor, textKolor, prefix, postfix, bedrock, rawColor).component
     }
 }

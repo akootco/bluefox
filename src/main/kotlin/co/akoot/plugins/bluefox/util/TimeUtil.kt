@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.Kolor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -80,10 +81,7 @@ object TimeUtil {
     ): Component {
         val timeString = getTimeString(milliseconds - now)
         val formattedTime = formatTime(milliseconds, "MMM d, h:mma z", timeZone)
-        return Component.text(formattedTime)
-            .color(ColorUtil.getColor("number"))
-            .clickEvent(ClickEvent.copyToClipboard(milliseconds.toString()))
-            .hoverEvent(HoverEvent.showText(Component.text(timeString).color(ColorUtil.getColor("text"))))
+        return Kolor.NUMBER(formattedTime).copy(milliseconds.toString()).hover(Kolor.TEXT(timeString)).component
     }
 
     fun formatTime(
