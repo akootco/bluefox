@@ -275,6 +275,16 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
+    fun hover(itemStack: ItemStack): Text {
+        builder.hoverEvent(itemStack)
+        return this
+    }
+
+    fun hover(entity: Entity): Text {
+        builder.hoverEvent(entity)
+        return this
+    }
+
     fun url(url: String): Text {
         builder.clickEvent(ClickEvent.openUrl(url))
         return this
