@@ -19,11 +19,10 @@ class BlueFox : FoxPlugin("bluefox") {
 
         lateinit var settings: FoxConfig
         lateinit var auth: FoxConfig
-        var profiles: DbConfig? = null
         lateinit var server: Server
-        lateinit var overworld: World
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
+        lateinit var db: Connection
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
 
@@ -63,8 +62,7 @@ class BlueFox : FoxPlugin("bluefox") {
                 connectionTimeout = 30000
             }
             mainDataSource = HikariDataSource(hikariConfig)
-            val mainDb = mainDataSource.connection
-            profiles = DbConfig(mainDb, "profiles", "uuid") //TODO fix this
+            db = mainDataSource.connection
             //logger.info("Database - Loaded $userCount users.")
         } catch (_: Exception) {
             logger.severe("Failed to connect to the database, related features disabled.")
@@ -177,8 +175,6 @@ class BlueFox : FoxPlugin("bluefox") {
 
     override fun load() {
         BlueFox.server = server
-        overworld = server.getWorld(settings.getString("overworld") ?: "world") ?: return
-        spawnLocation = settings.getLocation("spawnLocation") ?: overworld.spawnLocation
         setupDatabases()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
         logger.info("Good day!")
