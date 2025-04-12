@@ -7,7 +7,7 @@ import java.sql.Statement
 
 open class Wallet(val id: Int, val address: String) {
 
-    val balance: MutableMap<String, Double> = mutableMapOf()
+    val balance: MutableMap<Coin, Double> = mutableMapOf()
 
     fun deposit(coin: Coin, amount: Double): Int {
         return Bank.send(this, coin, amount)
@@ -22,7 +22,7 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
-        val currentBalance = balance[coin.ticker] ?: return -1
+        val currentBalance = balance[coin] ?: return -1
         if(currentBalance < amount) return -1
         val hasRelatedId = relatedId != null
         val extraRelated = if(hasRelatedId) ",related_id" to ",?" else "" to ""
@@ -40,9 +40,9 @@ open class Wallet(val id: Int, val address: String) {
         val keys = statement.generatedKeys
         val success = keys.next()
         if(success) {
-            balance[coin.ticker] = currentBalance - amount
-            val recipientBalance = wallet.balance[coin.ticker] ?: 0.0
-            wallet.balance[coin.ticker] = recipientBalance + amount
+            balance[coin] = currentBalance - amount
+            val recipientBalance = wallet.balance[coin] ?: 0.0
+            wallet.balance[coin] = recipientBalance + amount
         }
         return runCatching { keys.getInt("id") }.getOrElse { -1 }
     }
@@ -59,7 +59,7 @@ open class Wallet(val id: Int, val address: String) {
         val resultSet = runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(resultSet.next()) {
             val coin = Market.getCoin(resultSet.getInt("coin_id")) ?: continue
-            balance[coin.ticker] = resultSet.getDouble("balance")
+            balance[coin] = resultSet.getDouble("balance")
         }
     }
 }

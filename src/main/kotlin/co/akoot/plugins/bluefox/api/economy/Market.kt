@@ -25,8 +25,8 @@ object Market {
     }
 
     fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: Double, sellerCoinAmount: Double): Int {
-        val sellerBalance = seller.balance[sellerCoin.ticker] ?: return -1
-        val buyerBalance = buyer.balance[buyerCoin.ticker] ?: return -1
+        val sellerBalance = seller.balance[sellerCoin] ?: return -1
+        val buyerBalance = buyer.balance[buyerCoin] ?: return -1
         if(sellerBalance < sellerCoinAmount) return -1
         if(buyerBalance < buyerCoinAmount) return -1
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
