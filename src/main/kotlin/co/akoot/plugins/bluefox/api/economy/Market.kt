@@ -2,16 +2,15 @@ package co.akoot.plugins.bluefox.api.economy
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.coins.Coin
-import co.akoot.plugins.bluefox.api.economy.coins.DiamondCoin
 import co.akoot.plugins.bluefox.api.economy.wallets.Wallet
 
 object Market {
 
     val coins: MutableMap<String, Coin> = mutableMapOf()
-    val prices: MutableMap<Pair<String, String>, Double> = mutableMapOf()
+    val prices: MutableMap<Pair<Coin, Coin>, Double> = mutableMapOf()
 
     fun priceInDiamonds(coin: Coin): Double {
-        val price = prices[coin.ticker to DiamondCoin.ticker] ?: -1.0
+        val price = prices[coin to Coin.DIA] ?: -1.0
         return price
     }
 
@@ -25,9 +24,13 @@ object Market {
         return success
     }
 
-    fun trade(seller: Wallet, buyer: Wallet, coin1: Coin, coin2: Coin, price1: Double, price2: Double): Boolean {
-        //todo: im houngry
-        return true
+    fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: Double, sellerCoinAmount: Double): Int {
+        val sellerBalance = seller.balance[sellerCoin.ticker] ?: return -1
+        val buyerBalance = buyer.balance[buyerCoin.ticker] ?: return -1
+        if(sellerBalance < sellerCoinAmount) return -1
+        if(buyerBalance < buyerCoinAmount) return -1
+        val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
+        return seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
     }
 
     fun getCoin(id: Int): Coin? {
@@ -55,7 +58,7 @@ object Market {
             try {
                 val coin1 = getCoin(result.getInt("coin_id1")) ?: continue
                 val coin2 = getCoin(result.getInt("coin_id2")) ?: continue
-                prices[coin1.ticker to coin2.ticker] = result.getDouble("price")
+                prices[coin1 to coin2] = result.getDouble("price")
             } catch (_: Exception) {
                 continue
             }

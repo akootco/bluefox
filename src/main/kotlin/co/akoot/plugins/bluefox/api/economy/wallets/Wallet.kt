@@ -2,41 +2,49 @@ package co.akoot.plugins.bluefox.api.economy.wallets
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Market
+import co.akoot.plugins.bluefox.api.economy.coins.Coin
+import java.sql.Statement
 
 open class Wallet(val id: Int, val address: String) {
 
     val balance: MutableMap<String, Double> = mutableMapOf()
 
-    fun deposit(ticker: String, amount: Double): Boolean {
-        return Bank.send(this, ticker, amount)
+    fun deposit(coin: Coin, amount: Double): Int {
+        return Bank.send(this, coin, amount)
     }
 
-    fun depositDiamonds(amount: Int): Boolean {
-        return Bank.send(this, "DIA", amount.toDouble())
+    fun depositDiamonds(amount: Int): Int {
+        return Bank.send(this, Coin.DIA, amount.toDouble())
     }
 
-    fun depositNetherite(amount: Int): Boolean {
-        return Bank.send(this, "NTRI", amount.toDouble())
+    fun depositNetherite(amount: Int): Int {
+        return Bank.send(this, Coin.NTRI, amount.toDouble())
     }
 
-    fun send(wallet: Wallet, ticker: String, amount: Double): Boolean {
-        val currentBalance = balance[ticker] ?: return false
-        if(currentBalance < amount) return false
-        val coin = Market.coins[ticker] ?: return false
+    fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
+        val currentBalance = balance[coin.ticker] ?: return -1
+        if(currentBalance < amount) return -1
+        val hasRelatedId = relatedId != null
+        val extraRelated = if(hasRelatedId) ",related_id" to ",?" else "" to ""
         val statement = BlueFox.db.prepareStatement("""
-            INSERT INTO wallet_transactions (coin_id,sender_id,recipient_id,amount) VALUES (?,?,?,?)
-        """.trimIndent())
+            INSERT INTO wallet_transactions (coin_id,sender_id,recipient_id,amount${extraRelated.first}) 
+            VALUES (?,?,?,?${extraRelated.second})
+        """.trimIndent(), Statement.RETURN_GENERATED_KEYS)
         statement.setInt(1, coin.id)
         statement.setInt(2, this.id)
         statement.setInt(3, wallet.id)
         statement.setDouble(4, amount)
-        val success = runCatching { statement.executeUpdate() }.isSuccess
+        if(hasRelatedId) statement.setInt(6, relatedId!!)
+        val rows = runCatching { statement.executeUpdate() }.getOrElse { -1 }
+        if(rows <= 0 ) return -1
+        val keys = statement.generatedKeys
+        val success = keys.next()
         if(success) {
-            balance[ticker] = currentBalance - amount
-            val recipientBalance = wallet.balance[ticker] ?: 0.0
-            wallet.balance[ticker] = recipientBalance + amount
+            balance[coin.ticker] = currentBalance - amount
+            val recipientBalance = wallet.balance[coin.ticker] ?: 0.0
+            wallet.balance[coin.ticker] = recipientBalance + amount
         }
-        return success
+        return runCatching { keys.getInt("id") }.getOrElse { -1 }
     }
 
     fun load() {
