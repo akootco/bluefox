@@ -1,8 +1,11 @@
 package co.akoot.plugins.bluefox.api.economy.wallets
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Market
-import co.akoot.plugins.bluefox.api.economy.coins.Coin
+import co.akoot.plugins.bluefox.api.economy.Coin
 import java.sql.Statement
 
 open class Wallet(val id: Int, val address: String) {
@@ -22,8 +25,8 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
-        val currentBalance = balance[coin] ?: return -1
-        if(currentBalance < amount) return -1
+        val currentBalance = balance[coin] ?: return MISSING_COIN
+        if(currentBalance < amount) return INSUFFICIENT_BALANCE
         val hasRelatedId = relatedId != null
         val extraRelated = if(hasRelatedId) ",related_id" to ",?" else "" to ""
         val statement = BlueFox.db.prepareStatement("""
@@ -34,9 +37,9 @@ open class Wallet(val id: Int, val address: String) {
         statement.setInt(2, this.id)
         statement.setInt(3, wallet.id)
         statement.setDouble(4, amount)
-        if(hasRelatedId) statement.setInt(6, relatedId!!)
-        val rows = runCatching { statement.executeUpdate() }.getOrElse { -1 }
-        if(rows <= 0 ) return -1
+        if(hasRelatedId) statement.setInt(5, relatedId!!)
+        val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
+        if(rows <= 0 ) return SQL_ERROR
         val keys = statement.generatedKeys
         val success = keys.next()
         if(success) {
@@ -44,7 +47,7 @@ open class Wallet(val id: Int, val address: String) {
             val recipientBalance = wallet.balance[coin] ?: 0.0
             wallet.balance[coin] = recipientBalance + amount
         }
-        return runCatching { keys.getInt("id") }.getOrElse { -1 }
+        return runCatching { keys.getInt("id") }.getOrElse { SQL_ERROR }
     }
 
     fun load() {

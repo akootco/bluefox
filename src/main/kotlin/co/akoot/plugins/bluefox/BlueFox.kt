@@ -2,7 +2,6 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
-import co.akoot.plugins.bluefox.util.DbConfig
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

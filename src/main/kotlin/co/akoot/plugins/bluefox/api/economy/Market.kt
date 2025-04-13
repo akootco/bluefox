@@ -1,7 +1,10 @@
 package co.akoot.plugins.bluefox.api.economy
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.api.economy.coins.Coin
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_BUYER_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_SELLER_COIN
 import co.akoot.plugins.bluefox.api.economy.wallets.Wallet
 
 object Market {
@@ -25,10 +28,10 @@ object Market {
     }
 
     fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: Double, sellerCoinAmount: Double): Int {
-        val sellerBalance = seller.balance[sellerCoin] ?: return -1
-        val buyerBalance = buyer.balance[buyerCoin] ?: return -1
-        if(sellerBalance < sellerCoinAmount) return -1
-        if(buyerBalance < buyerCoinAmount) return -1
+        val sellerBalance = seller.balance[sellerCoin] ?: return MISSING_SELLER_COIN
+        val buyerBalance = buyer.balance[buyerCoin] ?: return MISSING_BUYER_COIN
+        if(sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
+        if(buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
         return seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
     }
@@ -71,12 +74,15 @@ object Market {
         while(result.next()) {
             try {
                 val ticker = result.getString("ticker")
-                coins[ticker] = Coin(
+                val coin = Coin(
                     result.getInt("id"),
                     ticker,
                     result.getString("name"),
                     result.getString("description")
                 )
+                coins[ticker] = coin
+                if(ticker == "DIA") Coin.DIA = coin
+                else if(ticker == "NTRI") Coin.NTRI = coin
             } catch (_: Exception) {
                 continue
             }
