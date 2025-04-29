@@ -1,6 +1,12 @@
 group = project.group
 version = project.version
 
+repositories {
+    maven {
+        url = uri("https://repo.opencollab.dev/main/")
+    }
+}
+
 dependencies {
     // Kotlin is implemented and included in the final jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}"
@@ -21,4 +27,5 @@ dependencies {
             because 'L'
         }
     }
+    compileOnly('org.geysermc.geyser:api:2.7.0-SNAPSHOT')
 }

@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
+import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -187,6 +188,10 @@ class BlueFox : FoxPlugin("bluefox") {
     override fun registerConfigs() {
         settings = registerConfig("settings")
         auth = registerConfig("auth")
+    }
+
+    override fun registerCommands() {
+        registerCommand(WalletCommand(this))
     }
 
     override fun onCrash() {

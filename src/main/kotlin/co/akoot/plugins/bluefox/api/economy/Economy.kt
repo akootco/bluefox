@@ -1,6 +1,13 @@
 package co.akoot.plugins.bluefox.api.economy
 
+import org.bukkit.OfflinePlayer
+
 object Economy {
+
+    object Success {
+        const val SUCCESS = 0
+    }
+
     object Error {
         const val INSUFFICIENT_BALANCE = -1
         const val INSUFFICIENT_SELLER_BALANCE = -2

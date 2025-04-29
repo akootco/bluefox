@@ -5,7 +5,6 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_BUYER_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_SELLER_COIN
-import co.akoot.plugins.bluefox.api.economy.wallets.Wallet
 
 object Market {
 

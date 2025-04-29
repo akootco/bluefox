@@ -1,30 +1,65 @@
-package co.akoot.plugins.bluefox.api.economy.wallets
+package co.akoot.plugins.bluefox.api.economy
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
-import co.akoot.plugins.bluefox.api.economy.Market
-import co.akoot.plugins.bluefox.api.economy.Coin
+import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
+import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
+import org.bukkit.OfflinePlayer
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import java.sql.Statement
 
 open class Wallet(val id: Int, val address: String) {
 
+    companion object {
+        var WORLD = WorldWallet
+        var BANK = Wallet(2, "BANK")
+
+        fun get(address: String): Wallet? {
+            val statement = BlueFox.db.prepareStatement("SELECT id FROM wallets WHERE address = ?")
+            statement.setString(1, address)
+            val resultSet = runCatching { statement.executeQuery() }.getOrNull() ?: return null
+            while(resultSet.next()) {
+                val id = resultSet.getInt("id")
+                return Wallet(id, address)
+            }
+            return null
+        }
+
+        fun get(offlinePlayer: OfflinePlayer): Wallet? {
+            return get(offlinePlayer.defaultWalletAddress)
+        }
+    }
+
+    fun register(): Int {
+        val statement = BlueFox.db.prepareStatement("INSERT INTO wallets VALUES (?, ?)")
+        statement.run {
+            setInt(1, id)
+            setString(2, address)
+        }
+        val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
+        if(rows <= 0 ) return SQL_ERROR
+        return SUCCESS
+    }
+
     val balance: MutableMap<Coin, Double> = mutableMapOf()
 
-    fun deposit(coin: Coin, amount: Double): Int {
-        return Bank.send(this, coin, amount)
+    fun withdraw(player: Player, coin: Coin, amount: Int): Boolean {
+        val balance = balance[coin] ?: return false
+        if(balance <= amount) return false
+        player.inventory.addItem(ItemStack(coin.backing, amount))
+        return true
     }
 
-    fun depositDiamonds(amount: Int): Int {
-        return Bank.send(this, Coin.DIA, amount.toDouble())
+    fun deposit(player: Player, coin: Coin, amount: Int): Boolean {
+        if(!player.inventory.contains(coin.backing, amount)) return false
+        player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
+        return true
     }
 
-    fun depositNetherite(amount: Int): Int {
-        return Bank.send(this, Coin.NTRI, amount.toDouble())
-    }
-
-    fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
+    open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
         val currentBalance = balance[coin] ?: return MISSING_COIN
         if(currentBalance < amount) return INSUFFICIENT_BALANCE
         val hasRelatedId = relatedId != null
