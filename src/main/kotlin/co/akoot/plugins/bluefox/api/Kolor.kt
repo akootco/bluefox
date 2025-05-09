@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 
@@ -37,6 +38,10 @@ class Kolor(java: Int, bedrock: Int = java) {
 
     operator fun invoke(string: String, bedrock: Boolean = false, rawColor: Boolean = false): Text {
         return Text(string, get(bedrock, rawColor))
+    }
+
+    operator fun invoke(component: Component, bedrock: Boolean = false, rawColor: Boolean = false): Text {
+        return Text(component).color(get(bedrock, rawColor))
     }
 
     fun get(isBedrock: Boolean = false, rawColor: Boolean = false): TextColor {

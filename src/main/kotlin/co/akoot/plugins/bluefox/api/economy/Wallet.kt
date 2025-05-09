@@ -1,11 +1,15 @@
 package co.akoot.plugins.bluefox.api.economy
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.COIN_HAS_NO_BACKING
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
+import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -16,11 +20,12 @@ open class Wallet(val id: Int, val address: String) {
     companion object {
         var WORLD = WorldWallet
         var BANK = Wallet(2, "BANK")
+        val playerWallets: MutableMap<OfflinePlayer, Wallet> = mutableMapOf()
 
         fun get(address: String): Wallet? {
             val statement = BlueFox.db.prepareStatement("SELECT id FROM wallets WHERE address = ?")
             statement.setString(1, address)
-            val resultSet = runCatching { statement.executeQuery() }.getOrNull() ?: return null
+            val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return null
             while(resultSet.next()) {
                 val id = resultSet.getInt("id")
                 return Wallet(id, address)
@@ -31,32 +36,39 @@ open class Wallet(val id: Int, val address: String) {
         fun get(offlinePlayer: OfflinePlayer): Wallet? {
             return get(offlinePlayer.defaultWalletAddress)
         }
-    }
 
-    fun register(): Int {
-        val statement = BlueFox.db.prepareStatement("INSERT INTO wallets VALUES (?, ?)")
-        statement.run {
-            setInt(1, id)
-            setString(2, address)
+        fun create(address: String): Wallet? {
+            val statement = BlueFox.db.prepareStatement("INSERT INTO wallets (address) VALUES (?)")
+            statement.run {
+                setString(1, address)
+            }
+            val rows = statement.executeUpdate()//runCatching { statement.executeUpdate() }.getOrElse { 0 }
+            if(rows <= 0 ) return null
+            return get(address)
         }
-        val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
-        if(rows <= 0 ) return SQL_ERROR
-        return SUCCESS
+
+        fun create(offlinePlayer: OfflinePlayer): Wallet? {
+            return create(offlinePlayer.defaultWalletAddress)
+        }
     }
 
     val balance: MutableMap<Coin, Double> = mutableMapOf()
 
-    fun withdraw(player: Player, coin: Coin, amount: Int): Boolean {
-        val balance = balance[coin] ?: return false
-        if(balance <= amount) return false
+    fun withdraw(player: Player, coin: Coin, amount: Int): Int {
+        if (coin.backing == Material.AIR) return COIN_HAS_NO_BACKING
+        val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
+        if (amount < 1) return NUMBER_TOO_SMALL
+        if(balance < amount) return INSUFFICIENT_BALANCE
         player.inventory.addItem(ItemStack(coin.backing, amount))
-        return true
+        return send(WORLD, coin, amount.toDouble())
     }
 
-    fun deposit(player: Player, coin: Coin, amount: Int): Boolean {
-        if(!player.inventory.contains(coin.backing, amount)) return false
+    fun deposit(player: Player, coin: Coin, amount: Int): Int {
+        if (coin.backing == Material.AIR) return COIN_HAS_NO_BACKING
+        if (amount < 1) return INSUFFICIENT_ITEMS
+        if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
         player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
-        return true
+        return WORLD.send(this, coin, amount.toDouble())
     }
 
     open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
@@ -72,8 +84,8 @@ open class Wallet(val id: Int, val address: String) {
         statement.setInt(2, this.id)
         statement.setInt(3, wallet.id)
         statement.setDouble(4, amount)
-        if(hasRelatedId) statement.setInt(5, relatedId!!)
-        val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
+        if(hasRelatedId) statement.setInt(5, relatedId)
+        val rows = statement.executeUpdate()//runCatching { statement.executeUpdate() }.getOrElse { 0 }
         if(rows <= 0 ) return SQL_ERROR
         val keys = statement.generatedKeys
         val success = keys.next()
@@ -82,22 +94,24 @@ open class Wallet(val id: Int, val address: String) {
             val recipientBalance = wallet.balance[coin] ?: 0.0
             wallet.balance[coin] = recipientBalance + amount
         }
-        return runCatching { keys.getInt("id") }.getOrElse { SQL_ERROR }
+        return keys.getInt(1)//runCatching { keys.getInt("id") }.getOrElse { println(it); SQL_ERROR }
     }
 
     fun load() {
+        println("[$id:0x$address]")
         val statement = BlueFox.db.prepareStatement("""
             SELECT coin_id, (
                 COALESCE(SUM(CASE WHEN recipient_id = $id THEN amount ELSE 0 END), 0) -
                 COALESCE(SUM(CASE WHEN sender_id = $id THEN amount ELSE 0 END), 0)
             ) AS balance
-            FROM transactions
+            FROM wallet_transactions
             GROUP BY coin_id;
         """.trimIndent())
-        val resultSet = runCatching { statement.executeQuery() }.getOrNull() ?: return
+        val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(resultSet.next()) {
             val coin = Market.getCoin(resultSet.getInt("coin_id")) ?: continue
             balance[coin] = resultSet.getDouble("balance")
         }
+        println(balance)
     }
 }

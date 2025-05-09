@@ -16,5 +16,8 @@ object Economy {
         const val MISSING_SELLER_COIN = -5
         const val MISSING_BUYER_COIN = -6
         const val SQL_ERROR = -7
+        const val INSUFFICIENT_ITEMS = -8
+        const val COIN_HAS_NO_BACKING = -9
+        const val NUMBER_TOO_SMALL = -10
     }
 }

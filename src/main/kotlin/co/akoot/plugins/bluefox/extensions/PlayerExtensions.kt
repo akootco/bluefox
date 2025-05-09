@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.api.Profile
+import co.akoot.plugins.bluefox.api.economy.Wallet
 import org.bukkit.OfflinePlayer
 import org.bukkit.World
 import org.bukkit.entity.Player
@@ -22,3 +23,5 @@ fun List<OfflinePlayer>.names(): List<String> {
 }
 
 val Player.isBedrock: Boolean get() = Geyser.api().isBedrockPlayer(uniqueId)
+
+val OfflinePlayer.wallet: Wallet? get() = Wallet.playerWallets[this]

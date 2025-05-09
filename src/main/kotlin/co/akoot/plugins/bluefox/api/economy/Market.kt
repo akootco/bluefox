@@ -5,6 +5,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_BUYER_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_SELLER_COIN
+import org.bukkit.Material
 
 object Market {
 
@@ -42,6 +43,9 @@ object Market {
     fun load() {
         loadCoins()
         loadPrices()
+        println("[market]")
+        println(coins)
+        println(prices)
     }
 
     fun loadPrices() {
@@ -55,7 +59,7 @@ object Market {
             WHERE t2.related_transaction IS NOT NULL
             GROUP BY t1.coin_id, t2.coin_id;
         """.trimIndent())
-        val result = runCatching { statement.executeQuery() }.getOrNull() ?: return
+        val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(result.next()) {
             try {
                 val coin1 = getCoin(result.getInt("coin_id1")) ?: continue
@@ -69,19 +73,21 @@ object Market {
 
     fun loadCoins() {
         val statement = BlueFox.db.prepareStatement("SELECT * FROM coins")
-        val result = runCatching { statement.executeQuery() }.getOrNull() ?: return
+        val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(result.next()) {
             try {
                 val ticker = result.getString("ticker")
+                val backing = if(ticker == "DIA") Material.DIAMOND
+                else if(ticker == "NTRI") Material.NETHERITE_INGOT
+                else Material.AIR
                 val coin = Coin(
                     result.getInt("id"),
                     ticker,
                     result.getString("name"),
-                    result.getString("description")
+                    result.getString("description"),
+                    backing
                 )
                 coins[ticker] = coin
-                if(ticker == "DIA") Coin.DIA = coin
-                else if(ticker == "NTRI") Coin.NTRI = coin
             } catch (_: Exception) {
                 continue
             }

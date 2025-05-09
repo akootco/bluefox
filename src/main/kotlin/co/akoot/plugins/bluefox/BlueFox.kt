@@ -2,7 +2,9 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
+import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.WalletCommand
+import co.akoot.plugins.bluefox.events.PlayerEvents
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -176,6 +178,7 @@ class BlueFox : FoxPlugin("bluefox") {
     override fun load() {
         BlueFox.server = server
         setupDatabases()
+        Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
         logger.info("Good day!")
     }
@@ -196,6 +199,10 @@ class BlueFox : FoxPlugin("bluefox") {
 
     override fun onCrash() {
         server.shutdown()
+    }
+
+    override fun registerEvents() {
+        registerEventListener(PlayerEvents())
     }
 
 }

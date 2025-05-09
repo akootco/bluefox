@@ -49,17 +49,17 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * Get a list of suggestions which contain offline player names that are not in [args]
      *
      * @param args A list of player names already provided. This will filter out these names from the suggestions.
-     * If the last argument starts with . suggest bedrock names.
+     * If the last argument starts with "." suggest bedrock names.
      *
      * @return A list of suggestions which contain offline player names
      */
-    fun getOfflinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf()): MutableList<String> {
-        val offlinePlayerNames = plugin.server.offlinePlayers.mapNotNull { it.name }.minus(exclude).toMutableList()
+    fun getOfflinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
+        val offlinePlayerNames = plugin.server.offlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
         return getPlayerSuggestions(offlinePlayerNames, args)
     }
 
-    fun getOnlinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf()): MutableList<String> {
-        val onlinePlayerNames = plugin.server.onlinePlayers.mapNotNull { it.name }.minus(exclude).toMutableList()
+    fun getOnlinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
+        val onlinePlayerNames = plugin.server.onlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
         return getPlayerSuggestions(onlinePlayerNames, args)
     }
 
@@ -75,7 +75,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @param sender The command sender
      * @param message The "no permission" message to send to the [sender]. By default, it is
-     * "You need to be a player in order to run /[id]". If null, no message will be sent
+     * "You need to be a player to run /[id]". If null, no message will be sent
      *
      * @return The [sender] cast to [Player] if the sender is a player, null otherwise
      */

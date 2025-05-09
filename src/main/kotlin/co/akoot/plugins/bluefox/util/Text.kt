@@ -3,9 +3,11 @@ package co.akoot.plugins.bluefox.util
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.XYZ
+import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.isBedrock
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.TextComponent.Builder
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -13,6 +15,7 @@ import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
+import net.kyori.adventure.translation.Translatable
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
@@ -35,6 +38,10 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         val Boolean.yes: String get() = if(this) "yes" else "no"
         val Boolean.enabled: String get() = if(this) "enabled" else "disabled"
         val Boolean.on: String get() = if(this) "on" else "off"
+
+        fun Boolean.get(whetherTrue: String, whetherFalse: String): String {
+            return if(this) whetherTrue else whetherFalse
+        }
 
         fun list(items: List<String>, separator: String = "\n", itemKolor: Kolor = Kolor.ACCENT, textKolor: Kolor = Kolor.TEXT, prefix: String = "", postfix: String = "", bedrock: Boolean = false, rawColor: Boolean = false): Text {
             if(items.isEmpty()) return Text()
@@ -127,6 +134,23 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             Kolor.TEXT(this.toString()).copy(this.toString())
         }
 
+        val Number.text: Text get() {
+            val parts = this.toString().split(".")
+            if (parts.size == 1) return Kolor.NUMBER(parts[0])
+            return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
+        }
+
+        val Material.component: Component get() = Component.translatable(translationKey())
+        val Material.text: Text get() = Text(component)
+
+        fun Material.text(color: TextColor): Text {
+            return Text(component).color(color)
+        }
+
+        operator fun Component.plus(number: Number): Component {
+            return this.append(number.text.component)
+        }
+
         operator fun Component.plus(string: String): Component {
             return this.append(string().component)
         }
@@ -214,7 +238,8 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
     constructor(erm: (Text) -> Text): this("") {
         erm(this)
     }
-    constructor(sender: CommandSender, erm: (Text) -> Text): this("", bedrock = sender is Player && sender.isBedrock) {
+    constructor(sender: CommandSender?, erm: (Text) -> Text): this("", bedrock = sender is Player && sender.isBedrock) {
+        if(sender == null) return
         val text = erm(this)
         text.send(sender)
     }
@@ -364,7 +389,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
     }
 
     operator fun plus(number: Number): Text {
-        return this + Text(number.toString(), Kolor.NUMBER)
+        return this + number.text
     }
 
     operator fun <E : Enum<E>> plus(enum: E): Text {

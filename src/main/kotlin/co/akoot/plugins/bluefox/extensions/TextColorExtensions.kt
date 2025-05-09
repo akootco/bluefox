@@ -29,3 +29,7 @@ fun TextColor.mix(color: TextColor, mix: Double = 0.5, points: Int = 3): TextCol
 operator fun TextColor.invoke(string: String): Text {
     return Text(string).color(this)
 }
+
+operator fun TextColor.invoke(component: Component): Text {
+    return Text(component).color(this)
+}
