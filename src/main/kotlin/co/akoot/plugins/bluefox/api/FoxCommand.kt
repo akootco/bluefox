@@ -187,13 +187,13 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
 
     fun getPlayer(name: String): Result<Player?> {
         val player = BlueFox.getPlayer(name)
-            ?: return Result.fail(null, Kolor.ERROR("Player " + Kolor.ERROR.accent(name) + Kolor.ERROR(" is not online!")))
+            ?: return Result.fail(null, Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" is not online!"))
         return Result(player)
     }
 
     fun getOfflinePlayer(name: String): Result<OfflinePlayer?> {
         val player = BlueFox.getOfflinePlayer(name)
-            ?: return Result.fail(null, Kolor.ERROR("Player " + Kolor.ERROR.accent(name) + Kolor.ERROR(" does not exist!")))
+            ?: return Result.fail(null, Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" does not exist!"))
         return Result(player)
     }
 

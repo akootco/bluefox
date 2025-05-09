@@ -6,9 +6,14 @@ import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.COIN_HAS_NO_BACKING
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_BUYER_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_SELLER_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
@@ -34,14 +39,17 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
         args: Array<out String>
     ): MutableList<String> {
         return when(args.size) {
-            1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send")
+            1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send", "request")
             2 -> {
-                if (args[0] == "send") getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
-                else if (args[0] == "balance") Market.coins.keys.toMutableList()
-                else amountPresets
+                when(args[0]) {
+                    "send" -> getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
+                    "request" -> getOnlinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
+                    "balance" -> Market.coins.keys.toMutableList()
+                    else -> amountPresets
+                }
             }
             3 -> {
-                if (args[0] == "send") {
+                if (args[0] in setOf("send", "request")) {
                     val target = args[1]
                     if (target.startsWith("@")) {
                         getOfflinePlayer(args[1].substring(1)).value ?: return mutableListOf()
@@ -63,7 +71,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                     Market.coins[args[2]] ?: return mutableListOf()
                     return Market.coins.keys.minus(args[2]).toMutableList()
                 }
-                else if (args[0] == "send") {
+                else if (args[0] in setOf("send", "request")) {
                     return Market.coins.keys.toMutableList()
                 }
                 mutableListOf()
@@ -91,6 +99,35 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
         }
         val action = args[0]
         when (action) {
+            "swap" -> {
+                val coin1 = runCatching { Market.coins[args[2]] }.getOrNull() ?: return false
+                val amount = args[1].toDoubleOrNull() ?: wallet.balance[coin1]
+                if (amount == null) {
+                    Text(sender) {
+                        Kolor.ERROR("Erm? How much ") + Kolor.ERROR.accent(coin1.toString())  + " would you like to swap..?"
+                    }
+                    return false
+                }
+                val coin2 = runCatching { Market.coins[args[3]] }.getOrNull() ?: return false
+                if (coin1 == coin2) {
+                    Text(sender) {
+                        Kolor.ERROR("FOOL! You can't swap for the same coin!")
+                    }
+                    return false
+                }
+                Text(sender) {
+                    when (wallet.swap(coin1, coin2, amount)) {
+                        MISSING_SELLER_COIN -> Kolor.ERROR("You don't have any ") + Kolor.ERROR.accent(coin1.toString()) + Kolor.ERROR(" to swap!")
+                        INSUFFICIENT_SELLER_BALANCE -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin1.toString()) + Kolor.ERROR(" to swap!")
+                        PRICE_UNAVAILABLE, MISSING_BUYER_COIN, INSUFFICIENT_BUYER_BALANCE -> Kolor.ERROR("No price is set for this trade!")
+                        else -> {
+                            sendBalance(sender, wallet, coin1)
+                            sendBalance(sender, wallet, coin2)
+                            Kolor.ALT("Nice swap!")
+                        }
+                    }
+                }
+            }
             "balance" -> {
                 val coin = runCatching { Market.coins[args[1]] }.getOrNull()
                 if (coin == null) {
@@ -153,12 +190,18 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                     }
                 }
             }
-            "send" -> {
+            "send", "request" -> {
+                val actionText = if(action == "send") "to" else "from"
                 var targetPlayer: Player? = null
                 val targetWallet = if(args[1].startsWith("@")) {
-                    val target = getOfflinePlayer(args[1].substring(1)).getAndSend(sender) ?: return false
-                    targetPlayer = target.player
-                    target.wallet ?: Wallet.create(target)
+                    if(action == "send") {
+                        val target = getOfflinePlayer(args[1].substring(1)).getAndSend(sender) ?: return false
+                        targetPlayer = target.player
+                        target.wallet ?: Wallet.create(target)
+                    } else {
+                        targetPlayer = getPlayer(args[1].substring(1)).getAndSend(sender) ?: return false
+                        targetPlayer.wallet ?: Wallet.create(targetPlayer)
+                    }
                 } else {
                     Wallet.get(args[1].substring(2))
                 }
@@ -170,7 +213,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                 }
                 if (wallet == targetWallet) {
                     Text(sender) {
-                        Kolor.ERROR("You can't send money to yourself!")
+                        Kolor.ERROR("You can't $action money $actionText yourself!")
                     }
                     return false
                 }
@@ -178,9 +221,35 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                 val coin = runCatching { Market.coins[args[3]] }.getOrNull() ?: Coin.DIA
                 if (amount == null) {
                     Text(sender) {
-                        Kolor.ERROR("Erm? How much $coin would you like to send to $targetWallet..?")
+                        Kolor.ERROR("Erm? How much $coin would you like to $action $actionText $targetWallet..?")
                     }
                     return false
+                } else if (amount <= 0) {
+                    Text(sender) {
+                        Kolor.TEXT("The server glitched and deposited ") + round(Math.random() * 10000) + Kolor.ACCENT(" $coin") + " to your wallet."
+                    }
+                    return false
+                }
+                if(action == "request") {
+                    if(targetPlayer?.player == null) {
+                        Text(sender) {
+                            Kolor.ERROR("Literally who?")
+                        }
+                        return false
+                    } else if((targetWallet.balance[coin] ?: 0.0) < amount) {
+                        sender.sendMessage {
+                            targetPlayer.name() + Kolor.ERROR(" doesn't have enough ") + Kolor.ERROR.accent(coin.toString()) + " to spare!"
+                        }
+                        return false
+                    }
+                    Text(sender) {
+                        Kolor.TEXT("Requested ") + amount + Kolor.ACCENT(" $coin") + " from " + Kolor.ALT(args[1]) + "."
+                    }
+                    targetPlayer.sendMessage {
+                        sender.name() + Kolor.TEXT(" is requesting ") + amount + Kolor.ACCENT(" $coin") + " from you!\n" +
+                        Kolor.ALT.accent("(Click here to send)").suggest("/wallet send @${sender.name} $amount ${coin.ticker}")
+                    }
+                    return true
                 }
                 Text(sender) {
                     when(wallet.send(targetWallet, coin, amount)) {

@@ -6,6 +6,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
@@ -69,6 +70,12 @@ open class Wallet(val id: Int, val address: String) {
         if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
         player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
         return WORLD.send(this, coin, amount.toDouble())
+    }
+
+    fun swap(coin1: Coin, coin2: Coin, amount: Double): Int {
+        val price1 = Market.prices[coin1 to coin2] ?: return PRICE_UNAVAILABLE
+        val price2 = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
+        return Market.trade(this, BANK, coin1, coin2, price1 * amount, price2 * amount)
     }
 
     open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {

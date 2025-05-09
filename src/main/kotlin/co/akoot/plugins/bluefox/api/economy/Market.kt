@@ -33,7 +33,9 @@ object Market {
         if(sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
         if(buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
-        return seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
+        val sentId =  seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
+        loadPrices()
+        return sentId
     }
 
     fun getCoin(id: Int): Coin? {

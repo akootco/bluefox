@@ -19,5 +19,6 @@ object Economy {
         const val INSUFFICIENT_ITEMS = -8
         const val COIN_HAS_NO_BACKING = -9
         const val NUMBER_TOO_SMALL = -10
+        const val PRICE_UNAVAILABLE = -11
     }
 }
