@@ -73,16 +73,17 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun swap(coin1: Coin, coin2: Coin, amount: Double): Int {
-        val price1 = Market.prices[coin1 to coin2] ?: return PRICE_UNAVAILABLE
-        val price2 = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
-        return Market.trade(this, BANK, coin1, coin2, price1 * amount, price2 * amount)
+        val price = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
+        val amount2 = amount * price
+        WORLD.balance[coin2] = amount2
+        return Market.trade(this, WORLD, coin1, coin2, amount, amount2)
     }
 
     open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
         val currentBalance = balance[coin] ?: return MISSING_COIN
         if(currentBalance < amount) return INSUFFICIENT_BALANCE
         val hasRelatedId = relatedId != null
-        val extraRelated = if(hasRelatedId) ",related_id" to ",?" else "" to ""
+        val extraRelated = if(hasRelatedId) ",related_transaction" to ",?" else "" to ""
         val statement = BlueFox.db.prepareStatement("""
             INSERT INTO wallet_transactions (coin_id,sender_id,recipient_id,amount${extraRelated.first}) 
             VALUES (?,?,?,?${extraRelated.second})

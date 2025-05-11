@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.api.economy.Market
+import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.events.PlayerEvents
@@ -197,6 +198,7 @@ class BlueFox : FoxPlugin("bluefox") {
     override fun registerCommands() {
         registerCommand(WalletCommand(this))
         registerCommand(TradeCommand(this))
+        registerCommand(MarketCommand(this))
     }
 
     override fun onCrash() {
