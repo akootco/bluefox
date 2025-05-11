@@ -28,18 +28,27 @@ object Economy {
     }
 
     fun sendWallet(sender: CommandSender, wallet: Wallet) {
-        Text(sender) {
-            Kolor.TEXT.alt("[") + Kolor.ALT("0x${wallet.address}") + Kolor.TEXT.alt("]")
-        }
         val coins = wallet.balance.keys
-        if (coins.isEmpty()) {
+        if (coins.isEmpty() || wallet.balance.values.sum() <= 0.0) {
             Text(sender) {
-                Kolor.WARNING("You are broke!")
+                Kolor.WARNING("You are broke! Deposit some items for some coins!")
+            }
+            Text(sender) {
+                Kolor.WARNING.quote("/wallet deposit <amount> [coin]").italic().suggest("/wallet deposit ")
+            }
+            for(coin in Market.coins.values) {
+                if (coin.backing == Material.AIR) continue
+                Text(sender) {
+                    Text() + Component.translatable(coin.backing.translationKey()).color(Kolor.WARNING.alt) + Kolor.WARNING(" -> ") + Kolor.WARNING.accent("$coin")
+                }
             }
             return
         }
+        Text(sender) {
+            Kolor.TEXT.alt("[") + Kolor.ALT("0x${wallet.address}") + Kolor.TEXT.alt("]")
+        }
         for (coin in coins) {
-            sendBalance(sender, wallet, coin, "  ")
+            sendBalance(sender, wallet, coin)
         }
     }
 

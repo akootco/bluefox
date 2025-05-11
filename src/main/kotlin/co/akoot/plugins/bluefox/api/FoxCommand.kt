@@ -94,7 +94,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * [onCommand] if the [sender] doesn't have permission
      *
      * @param sender The command sender
-     * @param node The permission node (if applicable)
+     * @param node The permission node (if applicable) as "$permissionNode.$node"
      * @param message The "no permission" message to send to the [sender]. By default, it is
      * "You do not have permission to use /[id]". If null, no message will be sent
      *

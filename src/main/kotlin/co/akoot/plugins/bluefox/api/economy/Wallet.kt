@@ -39,6 +39,8 @@ open class Wallet(val id: Int, val address: String) {
         }
 
         fun create(address: String): Wallet? {
+            val existingWallet = get(address)
+            if(existingWallet != null) return existingWallet
             val statement = BlueFox.db.prepareStatement("INSERT INTO wallets (address) VALUES (?)")
             statement.run {
                 setString(1, address)
@@ -49,7 +51,9 @@ open class Wallet(val id: Int, val address: String) {
         }
 
         fun create(offlinePlayer: OfflinePlayer): Wallet? {
-            return create(offlinePlayer.defaultWalletAddress)
+            val wallet = create(offlinePlayer.defaultWalletAddress) ?: return null
+            playerWallets[offlinePlayer] = wallet
+            return wallet
         }
     }
 

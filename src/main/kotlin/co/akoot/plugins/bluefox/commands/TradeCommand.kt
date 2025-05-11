@@ -30,7 +30,7 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
             2,5 -> mutableListOf("1")
             3 -> Market.coins.keys.toMutableList()
             4 -> mutableListOf("for")
-            6 -> Market.coins.keys.minus(args[2]).toMutableList()
+            6 -> Market.coins.keys.minus(args[2].uppercase()).toMutableList()
             else -> mutableListOf()
         }
     }
@@ -46,8 +46,8 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
         val targetWallet = targetPlayer.wallet
         val amount1 = runCatching { args[1].toDouble() }.getOrNull()
         val amount2 = runCatching { args[4].toDouble() }.getOrNull()
-        val coin1 = runCatching { Market.coins[args[2]] }.getOrNull()
-        val coin2 = runCatching { Market.coins[args[5]] }.getOrNull()
+        val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
+        val coin2 = runCatching { Market.coins[args[5].uppercase()] }.getOrNull()
         if (wallet == null || targetWallet == null) {
             Text(sender) {
                 Kolor.ERROR("Both players must have a wallet to trade! Erm!!!!")
@@ -71,6 +71,12 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
             }
             return false
         }
+        if (coin1 == coin2) {
+            Text(sender) {
+                Kolor.ERROR("You can't trade for the same coin!")
+            }
+            return false
+        }
         val price1 = coin1 to amount1
         val price2 = coin2 to amount2
         val key = Market.getTradeKey(wallet to targetWallet)
@@ -87,14 +93,10 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
                 return false
             }
             Text(sender) {
-                Kolor.TEXT("Accepted ") + Kolor.ALT(args[0]) + Kolor.TEXT("'s trade offer: ") + amount2 + Kolor.ACCENT(" $coin2") + Kolor.TEXT(" for ") + amount1 + Kolor.ACCENT(" $coin1") + ".\n" +
-                        Kolor.ACCENT("$coin1: ") + (wallet.balance[coin1] ?: 0.0) + "\n" +
-                        Kolor.ACCENT("$coin2: ") + (wallet.balance[coin2] ?: 0.0)
+                (Kolor.TEXT("Accepted ") + Kolor.ALT(args[0]) + Kolor.TEXT("'s trade offer: ") + amount2 + Kolor.ACCENT(" $coin2") + Kolor.TEXT(" for ") + amount1 + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
             }
             Text(targetPlayer) {
-                Kolor.ALT("@${sender.name}") + Kolor.TEXT(" accepted your trade offer: ") + amount2 + Kolor.ACCENT(" $coin2")+ Kolor.TEXT(" for ") + amount1.text + Kolor.ACCENT(" $coin1") + ".\n" +
-                        Kolor.ACCENT("$coin1: ") + (wallet.balance[coin1] ?: 0.0) + "\n" +
-                        Kolor.ACCENT("$coin2: ") + (wallet.balance[coin2] ?: 0.0)
+                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" accepted your trade offer: ") + amount2 + Kolor.ACCENT(" $coin2")+ Kolor.TEXT(" for ") + amount1.text + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
             }
         } else {
             Market.requestTrade(wallet to targetWallet, price1, price2)
