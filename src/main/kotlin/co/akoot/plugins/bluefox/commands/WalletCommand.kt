@@ -11,6 +11,8 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_GAME_MODE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_WORLD
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
@@ -18,6 +20,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.extensions.countIncludingBlocks
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.wallet
 import co.akoot.plugins.bluefox.util.Text
@@ -142,39 +145,71 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
 
             "balance" -> {
                 val coin = runCatching { Market.coins[args[1].uppercase()] }.getOrNull()
-                val target = args.getOrNull(2)
-                val targetWallet = if(target != null) {
-                    if (target.startsWith("@")) {
-                        val targetPlayer = getOfflinePlayer(target.substring(1)).getAndSend(sender) ?: return false
-                        targetPlayer.wallet ?: Wallet.create(targetPlayer)
-                    } else {
-                        Wallet.get(target.substring(2))
+                val targetArg = args.getOrNull(2)
+
+                val targetWallet = when {
+                    targetArg == null -> wallet
+                    targetArg.startsWith("@") -> {
+                        val targetPlayer = getOfflinePlayer(targetArg.substring(1)).getAndSend(sender) ?: return false
+                        println(targetPlayer.name)
+                        println(targetPlayer.wallet?.address)
+                        targetPlayer.wallet ?: Wallet.create(targetPlayer) ?: wallet
                     }
-                } else {
-                    wallet
-                } ?: wallet
+                    else -> Wallet.get(targetArg.substring(2)) ?: wallet
+                }
+
+                targetWallet.load()
 
                 if (coin == null) {
                     Economy.sendWallet(sender, targetWallet)
                 } else {
                     Economy.sendBalance(sender, targetWallet, coin)
                 }
+
             }
 
             "deposit", "withdraw" -> {
-                val coin = runCatching { Market.coins[args[2].uppercase()] }.getOrNull() ?: Coin.DIA
                 val amountString = args.getOrNull(1) ?: "all"
+                var coin = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
+                if(coin == null && amountString == "all") {
+                    var success = false
+                    for ((key, coin) in Market.coins) {
+                        if (coin.backing == null) continue
+                        if(action == "withdraw" && ((wallet.balance[coin] ?: 0.0) < 1.0)) continue
+                        if(action == "deposit") {
+                            val count = if(coin.backingBlock != null) {
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock)
+                            } else {
+                                player.inventory.sumOf { it?.amount ?: 0 }
+                            }
+                            if(count < 1) continue
+                        }
+                        success = true
+                        val newArgs = args.toMutableList()
+                        if(args.size == 1) newArgs.add("all")
+                        newArgs.add(key)
+                        println("old: [${args.joinToString()}] new: [${newArgs.joinToString()}]")
+                        onCommand(sender, alias, newArgs.toTypedArray())
+                    }
+                    if(!success) {
+                        Text(sender) {
+                            Kolor.WARNING("You are broke!!!!")
+                        }
+                    }
+                    return true
+                }
+                if(coin == null) coin  = Coin.DIA
                 val amount = if (amountString == "all") {
                     if (action == "deposit") {
-                        var count = 0.0
-                        player.inventory.forEach {
-                            if (it != null && it.type == coin.backing) {
-                                count += it.amount
+                        if(coin.backing != null) {
+                            if(coin.backingBlock != null) {
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock).toDouble()
+                            } else {
+                                player.inventory.sumOf { it?.amount ?: 0 }.toDouble()
                             }
-                        }
-                        count
+                        } else null
                     } else {
-                        wallet.balance[coin] ?: 0.00
+                        wallet.balance[coin] ?: 0.0
                     }
                 } else {
                     amountString.toDoubleOrNull()
@@ -203,9 +238,12 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                             " to complete this transaction!"
                         )
 
-                        INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing.component) + Kolor.ERROR(
+                        INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing!!.component) + Kolor.ERROR(
                             " to complete this transaction!"
                         )
+
+                        INVALID_GAME_MODE -> Kolor.ERROR("You can't $action in this game mode!")
+                        INVALID_WORLD -> Kolor.ERROR("You can't $action in this world!")
 
                         SQL_ERROR -> Kolor.ERROR("Erm... Something blew up and it's all my fault!")
                         else -> {

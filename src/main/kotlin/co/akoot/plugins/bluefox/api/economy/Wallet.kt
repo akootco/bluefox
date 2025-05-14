@@ -4,12 +4,18 @@ import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.COIN_HAS_NO_BACKING
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_GAME_MODE
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_WORLD
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
+import co.akoot.plugins.bluefox.extensions.giveInBlocks
+import co.akoot.plugins.bluefox.extensions.isSurventure
+import co.akoot.plugins.bluefox.extensions.removeIncludingBlocks
+import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -60,19 +66,36 @@ open class Wallet(val id: Int, val address: String) {
     val balance: MutableMap<Coin, Double> = mutableMapOf()
 
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
-        if (coin.backing == Material.AIR) return COIN_HAS_NO_BACKING
+        if(!player.isOp) {
+            if (!player.isSurventure) return INVALID_GAME_MODE // best not risk it
+            if (player.world.name !in BlueFox.settings.getStringList("wallet.worlds")) return INVALID_WORLD
+        }
+        if (coin.backing == null) return COIN_HAS_NO_BACKING
         val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
         if (amount < 1) return NUMBER_TOO_SMALL
         if(balance < amount) return INSUFFICIENT_BALANCE
-        player.inventory.addItem(ItemStack(coin.backing, amount))
+        if(coin.backingBlock == null) {
+            player.inventory.addItem(ItemStack(coin.backing, amount))
+        } else {
+            player.giveInBlocks(coin.backing, coin.backingBlock, amount)
+        }
         return send(WORLD, coin, amount.toDouble())
     }
 
     fun deposit(player: Player, coin: Coin, amount: Int): Int {
-        if (coin.backing == Material.AIR) return COIN_HAS_NO_BACKING
+        if(!player.isOp) {
+            if (!player.isSurventure) return INVALID_GAME_MODE
+            if (player.world.name !in BlueFox.settings.getStringList("wallet.worlds")) return INVALID_WORLD
+        }
+        if (coin.backing == null) return COIN_HAS_NO_BACKING
         if (amount < 1) return INSUFFICIENT_ITEMS
-        if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
-        player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
+        if(coin.backingBlock == null) {
+            if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
+            player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
+        } else {
+            val result = player.removeIncludingBlocks(coin.backing, coin.backingBlock, amount)
+            if (!result) return INSUFFICIENT_ITEMS
+        }
         return WORLD.send(this, coin, amount.toDouble())
     }
 

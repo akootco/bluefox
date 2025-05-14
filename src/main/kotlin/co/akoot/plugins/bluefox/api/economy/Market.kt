@@ -115,15 +115,19 @@ object Market {
         while(result.next()) {
             try {
                 val ticker = result.getString("ticker")
-                val backing = if(ticker == "DIA") Material.DIAMOND
-                else if(ticker == "NTRI") Material.NETHERITE_INGOT
-                else Material.AIR
+                val backing = when (ticker) {
+                    "DIA" -> Material.DIAMOND to Material.DIAMOND_BLOCK
+                    "NTRI" -> Material.NETHERITE_INGOT to Material.NETHERITE_BLOCK
+                    "AD" -> Material.ANCIENT_DEBRIS to null
+                    else -> null to null
+                }
                 val coin = Coin(
                     result.getInt("id"),
                     ticker,
                     result.getString("name"),
                     result.getString("description"),
-                    backing
+                    backing.first,
+                    backing.second
                 )
                 coins[ticker] = coin
             } catch (_: Exception) {

@@ -25,6 +25,8 @@ object Economy {
         const val COIN_HAS_NO_BACKING = -9
         const val NUMBER_TOO_SMALL = -10
         const val PRICE_UNAVAILABLE = -11
+        const val INVALID_GAME_MODE = -12
+        const val INVALID_WORLD = -13
     }
 
     fun sendWallet(sender: CommandSender, wallet: Wallet) {
@@ -37,7 +39,7 @@ object Economy {
                 Kolor.WARNING.quote("/wallet deposit <amount> [coin]").italic().suggest("/wallet deposit ")
             }
             for(coin in Market.coins.values) {
-                if (coin.backing == Material.AIR) continue
+                if (coin.backing == null) continue
                 Text(sender) {
                     Text() + Component.translatable(coin.backing.translationKey()).color(Kolor.WARNING.alt) + Kolor.WARNING(" -> ") + Kolor.WARNING.accent("$coin")
                 }
@@ -59,7 +61,7 @@ object Economy {
     }
 
     fun sendInfo(sender: CommandSender, coin: Coin) {
-        val backing = if(coin.backing == Material.AIR) null else Component.translatable(coin.backing.translationKey()).color(Kolor.ERROR.accent)
+        val backing = coin.backing?.let {Component.translatable(it.translationKey()).color(Kolor.ERROR.accent)}
         Text(sender) {
             Kolor.ACCENT(coin.toString()) + " (" + Kolor.ALT(coin.name) + ") - " + Kolor.QUOTE(coin.description)
         }
