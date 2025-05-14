@@ -31,7 +31,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import kotlin.math.round
 
-class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
+class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = arrayOf("balance", "bal", "send", "request", "withdraw", "deposit", "swap")) {
 
     private val amountPresets = mutableListOf("all", "1", "2", "5", "10", "20", "25", "50", "100", "250", "500", "1000", "2000", "5000")
 
@@ -40,13 +40,14 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
         alias: String,
         args: Array<out String>
     ): MutableList<String> {
+        if(alias != id) return onTabComplete(sender, id, arrayOf(alias) + args)
         return when (args.size) {
             1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send", "request")
             2 -> {
                 when (args[0]) {
                     "send" -> getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
                     "request" -> getOnlinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
-                    "balance" -> Market.coins.keys.toMutableList()
+                    "balance", "bal" -> Market.coins.keys.toMutableList()
                     else -> amountPresets
                 }
             }
@@ -61,8 +62,8 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                     } else {
                         return mutableListOf()
                     }
-                    amountPresets.minus("all").toMutableList()
-                } else if(args[0] == "balance") {
+                    return amountPresets.minus("all").toMutableList()
+                } else if(args[0] == "balance" || args[0] == "bal") {
                     return getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
                 }
                 when (args[0]) {
@@ -92,6 +93,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
         alias: String,
         args: Array<out String>
     ): Boolean {
+        if(alias != id) return onCommand(sender, id, arrayOf(alias) + args)
         val player = getPlayerSender(sender).getAndSend(sender) ?: return false
         val wallet = player.wallet
         if (wallet == null) {
@@ -101,7 +103,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
             return false
         }
         if (args.isEmpty()) {
-            Economy.sendWallet(sender, wallet)
+            Economy.sendWallet(sender, wallet, true)
             return true
         }
         val action = args[0]
@@ -143,7 +145,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                 }
             }
 
-            "balance" -> {
+            "balance", "bal" -> {
                 val coin = runCatching { Market.coins[args[1].uppercase()] }.getOrNull()
                 val targetArg = args.getOrNull(2)
 
@@ -151,8 +153,6 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                     targetArg == null -> wallet
                     targetArg.startsWith("@") -> {
                         val targetPlayer = getOfflinePlayer(targetArg.substring(1)).getAndSend(sender) ?: return false
-                        println(targetPlayer.name)
-                        println(targetPlayer.wallet?.address)
                         targetPlayer.wallet ?: Wallet.create(targetPlayer) ?: wallet
                     }
                     else -> Wallet.get(targetArg.substring(2)) ?: wallet
@@ -161,7 +161,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                 targetWallet.load()
 
                 if (coin == null) {
-                    Economy.sendWallet(sender, targetWallet)
+                    Economy.sendWallet(sender, targetWallet, targetWallet == wallet)
                 } else {
                     Economy.sendBalance(sender, targetWallet, coin)
                 }
@@ -188,7 +188,6 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet") {
                         val newArgs = args.toMutableList()
                         if(args.size == 1) newArgs.add("all")
                         newArgs.add(key)
-                        println("old: [${args.joinToString()}] new: [${newArgs.joinToString()}]")
                         onCommand(sender, alias, newArgs.toTypedArray())
                     }
                     if(!success) {

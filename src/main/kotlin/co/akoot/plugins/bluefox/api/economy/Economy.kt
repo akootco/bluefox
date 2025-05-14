@@ -29,19 +29,26 @@ object Economy {
         const val INVALID_WORLD = -13
     }
 
-    fun sendWallet(sender: CommandSender, wallet: Wallet) {
+    fun sendWallet(sender: CommandSender, wallet: Wallet, self: Boolean = true) {
         val coins = wallet.balance.keys
         if (coins.isEmpty() || wallet.balance.values.sum() <= 0.0) {
-            Text(sender) {
-                Kolor.WARNING("You are broke! Deposit some items for some coins!")
-            }
-            Text(sender) {
-                Kolor.WARNING.quote("/wallet deposit <amount> [coin]").italic().suggest("/wallet deposit ")
-            }
-            for(coin in Market.coins.values) {
-                if (coin.backing == null) continue
+            if(self) {
                 Text(sender) {
-                    Text() + Component.translatable(coin.backing.translationKey()).color(Kolor.WARNING.alt) + Kolor.WARNING(" -> ") + Kolor.WARNING.accent("$coin")
+                    Kolor.WARNING("You are broke! Deposit some items for some coins!")
+                }
+                Text(sender) {
+                    Kolor.WARNING.quote("/wallet deposit <amount> [coin]").italic().suggest("/wallet deposit ")
+                }
+                for (coin in Market.coins.values) {
+                    if (coin.backing == null) continue
+                    Text(sender) {
+                        Text() + Component.translatable(coin.backing.translationKey())
+                            .color(Kolor.WARNING.alt) + Kolor.WARNING(" -> ") + Kolor.WARNING.accent("$coin")
+                    }
+                }
+            } else {
+                Text(sender) {
+                    Kolor.WARNING("They are broke!!!")
                 }
             }
             return
@@ -56,6 +63,7 @@ object Economy {
 
     fun sendBalance(sender: CommandSender, wallet: Wallet, coin: Coin, prefix: String = "") {
         Text(sender) {
+            Kolor.TEXT.alt("[") + Kolor.ALT("0x${wallet.address}") + Kolor.TEXT.alt("]\n") +
             Kolor.TEXT(prefix) + Kolor.ACCENT("$coin: ") + (wallet.balance[coin] ?: 0.0)
         }
     }
@@ -73,8 +81,9 @@ object Economy {
 
     fun sendPrice(sender: CommandSender, coin1: Coin, coin2: Coin = Coin.DIA) {
         val price = Market.prices[coin2 to coin1]
+
         Text(sender) {
-            Kolor.NUMBER("1 ") + Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + Kolor.NUMBER(price?.toString() ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
+            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + Kolor.NUMBER(price?.toString() ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
         }
     }
 }

@@ -13,7 +13,7 @@ import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 
-class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market") {
+class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market", aliases = arrayOf("price")) {
 
     private val amountPresets = mutableListOf("1", "5", "10", "25", "50", "100", "250", "500", "1000")
 
@@ -22,6 +22,7 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market") {
         alias: String,
         args: Array<out String>
     ): MutableList<String> {
+        if(alias != id) return onTabComplete(sender, id, arrayOf(alias) + args)
         return when (args.size) {
             1 -> mutableListOf("price", "info", "print").permissionCheck(sender)
             2 -> {
@@ -47,6 +48,7 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market") {
         alias: String,
         args: Array<out String>
     ): Boolean {
+        if(alias != id) return onCommand(sender, id, arrayOf(alias) + args)
         val coin1 = runCatching { Market.coins[args[1].uppercase()] }.getOrNull()
         val coin2 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
         when (args[0]) {
