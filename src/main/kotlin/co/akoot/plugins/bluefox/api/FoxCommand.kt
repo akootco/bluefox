@@ -54,17 +54,17 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * @return A list of suggestions which contain offline player names
      */
     fun getOfflinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
-        val offlinePlayerNames = plugin.server.offlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
-        return getPlayerSuggestions(offlinePlayerNames, args)
+        val offlinePlayerNames = BlueFox.cachedOfflinePlayerNames.map { "$prefix$it" }.minus(exclude).toMutableList()
+        return getPlayerSuggestions(offlinePlayerNames, args, prefix)
     }
 
     fun getOnlinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
         val onlinePlayerNames = plugin.server.onlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
-        return getPlayerSuggestions(onlinePlayerNames, args)
+        return getPlayerSuggestions(onlinePlayerNames, args, prefix)
     }
 
-    fun getPlayerSuggestions(players: MutableList<String>, args: Array<out String>? = null): MutableList<String> {
-        if (args?.last()?.startsWith(".") == false) players.removeIf {it.startsWith(".")}
+    fun getPlayerSuggestions(players: MutableList<String>, args: Array<out String>? = null, prefix: String = ""): MutableList<String> {
+        if (args?.last()?.startsWith("$prefix.") == false) players.removeIf {it.startsWith("$prefix.")}
         if (args.isNullOrEmpty()) return players
         return players.filterNot { it in args }.toMutableList()
     }
