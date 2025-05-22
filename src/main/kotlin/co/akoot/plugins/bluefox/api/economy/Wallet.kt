@@ -11,6 +11,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
+import co.akoot.plugins.bluefox.api.economy.Market.round
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
 import co.akoot.plugins.bluefox.extensions.giveInBlocks
 import co.akoot.plugins.bluefox.extensions.isSurventure
@@ -98,12 +99,11 @@ open class Wallet(val id: Int, val address: String) {
         }
         return WORLD.send(this, coin, amount.toDouble())
     }
-
     fun swap(coin1: Coin, coin2: Coin, amount: Double): Int {
         val price = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
-        val amount2 = amount * price
+        val amount2 = (amount * price).round(9)
         WORLD.balance[coin2] = amount2
-        return Market.trade(this, WORLD, coin1, coin2, amount, amount2)
+        return Market.trade(this, WORLD, coin1, coin2, amount.round(9), amount2)
     }
 
     open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {

@@ -8,6 +8,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.extensions.invoke
@@ -93,18 +94,18 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
                 return false
             }
             Text(sender) {
-                (Kolor.TEXT("Accepted ") + Kolor.ALT(args[0]) + Kolor.TEXT("'s trade offer: ") + amount2 + Kolor.ACCENT(" $coin2") + Kolor.TEXT(" for ") + amount1 + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
+                (Kolor.TEXT("Accepted ") + Kolor.ALT(args[0]) + Kolor.TEXT("'s trade offer: ") + amount2.rounded + Kolor.ACCENT(" $coin2") + Kolor.TEXT(" for ") + amount1.rounded + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
             }
             Text(targetPlayer) {
-                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" accepted your trade offer: ") + amount2 + Kolor.ACCENT(" $coin2")+ Kolor.TEXT(" for ") + amount1.text + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
+                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" accepted your trade offer: ") + amount2.rounded + Kolor.ACCENT(" $coin2")+ Kolor.TEXT(" for ") + amount1.rounded + Kolor.ACCENT(" $coin1")).execute("/wallet balance")
             }
         } else {
             Market.requestTrade(wallet to targetWallet, price1, price2)
             Text(sender) {
-                Kolor.TEXT("Sent ") + Kolor.ALT(args[0]) + Kolor.TEXT(" a trade offer: ") + amount1 + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + amount2 + Kolor.ACCENT(" $coin2") + "."
+                Kolor.TEXT("Sent ") + Kolor.ALT(args[0]) + Kolor.TEXT(" a trade offer: ") + amount1.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + amount2.rounded + Kolor.ACCENT(" $coin2") + "."
             }
             Text(targetPlayer) {
-                Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent a trade offer: ") + amount1 + Kolor.ACCENT(" $coin1")+ Kolor.TEXT(" for ") + amount2.text + Kolor.ACCENT(" $coin2") + ".\n" +  Kolor.ACCENT.alt("(Click here to accept)").suggest("/trade @${player.name} $amount2 ${coin2.ticker} for $amount1 ${coin1.ticker}")
+                Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent a trade offer: ") + amount1.rounded + Kolor.ACCENT(" $coin1")+ Kolor.TEXT(" for ") + amount2.rounded + Kolor.ACCENT(" $coin2") + ".\n" +  Kolor.ACCENT.alt("(Click here to accept)").suggest("/trade @${player.name} $amount2 ${coin2.ticker} for $amount1 ${coin1.ticker}")
             }
         }
         return true

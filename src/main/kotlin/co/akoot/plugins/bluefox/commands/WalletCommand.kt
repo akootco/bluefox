@@ -18,6 +18,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
+import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.extensions.countIncludingBlocks
@@ -42,7 +43,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
     ): MutableList<String> {
         if(alias != id) return onTabComplete(sender, id, arrayOf(alias) + args)
         return when (args.size) {
-            1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send", "request")
+            1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send", "request").permissionCheck(sender)
             2 -> {
                 when (args[0]) {
                     "send" -> getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
@@ -107,6 +108,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
             return true
         }
         val action = args[0]
+        permissionCheck(sender, action)
         when (action) {
             "swap" -> {
                 val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull() ?: return false
@@ -139,7 +141,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
 
                         PRICE_UNAVAILABLE -> Kolor.ERROR("No price is set for this trade!")
                         else -> {
-                            Kolor.ALT("Swapped ") + amount + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + amount * price + Kolor.ACCENT(" $coin2") + "."
+                            Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + (amount * price).rounded + Kolor.ACCENT(" $coin2") + "."
                         }
                     }
                 }
@@ -247,7 +249,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         SQL_ERROR -> Kolor.ERROR("Erm... Something blew up and it's all my fault!")
                         else -> {
                             Kolor.ALT("Nice $action! ") + Kolor.TEXT("You now have ") + (wallet.balance[coin]
-                                ?: 0.0) + Kolor.ACCENT(" $coin") + "."
+                                ?: 0.0).rounded + Kolor.ACCENT(" $coin") + "."
                         }
                     }
                 }
@@ -322,10 +324,10 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         return false
                     }
                     Text(sender) {
-                        Kolor.TEXT("Requested ") + amount + Kolor.ACCENT(" $coin") + " from " + Kolor.ALT(args[1]) + "."
+                        Kolor.TEXT("Requested ") + amount.rounded + Kolor.ACCENT(" $coin") + " from " + Kolor.ALT(args[1]) + "."
                     }
                     Text(targetPlayer) {
-                        Kolor.ALT("@${sender.name}") + Kolor.TEXT(" is requesting ") + amount + Kolor.ACCENT(" $coin") + Kolor.TEXT(" from you!\n") +
+                        Kolor.ALT("@${sender.name}") + Kolor.TEXT(" is requesting ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT(" from you!\n") +
                                 Kolor.ALT.accent("(Click here to send)")
                                     .suggest("/wallet send @${sender.name} $amount ${coin.ticker}")
                     }
@@ -340,9 +342,9 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         SQL_ERROR -> Kolor.ERROR("Sorry to break it to you but that just didn't work!")
                         else -> {
                             Text(targetPlayer) {
-                                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount + Kolor.ACCENT(" $coin") + Kolor.TEXT("!")).execute("/wallet balance")
+                                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT("!")).execute("/wallet balance")
                             }
-                            (Kolor.TEXT("Sent ") + amount + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute("/wallet balance")
+                            (Kolor.TEXT("Sent ") + amount.rounded + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute("/wallet balance")
                         }
                     }
                 }

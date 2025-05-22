@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api.economy
 
+import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.util.Text
@@ -28,6 +29,8 @@ object Economy {
         const val INVALID_GAME_MODE = -12
         const val INVALID_WORLD = -13
     }
+
+    val Double.rounded: String get() = "%.9f".format(this)
 
     fun sendWallet(sender: CommandSender, wallet: Wallet, self: Boolean = true) {
         val coins = wallet.balance.keys
@@ -63,8 +66,7 @@ object Economy {
 
     fun sendBalance(sender: CommandSender, wallet: Wallet, coin: Coin, prefix: String = "") {
         Text(sender) {
-            Kolor.TEXT.alt("[") + Kolor.ALT("0x${wallet.address}") + Kolor.TEXT.alt("]\n") +
-            Kolor.TEXT(prefix) + Kolor.ACCENT("$coin: ") + (wallet.balance[coin] ?: 0.0)
+            Kolor.TEXT(prefix) + Kolor.ACCENT("$coin: ") + (wallet.balance[coin] ?: 0.0).rounded
         }
     }
 
@@ -83,7 +85,7 @@ object Economy {
         val price = Market.prices[coin2 to coin1]
 
         Text(sender) {
-            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + Kolor.NUMBER(price?.toString() ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
+            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + Kolor.NUMBER(price?.rounded ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
         }
     }
 }

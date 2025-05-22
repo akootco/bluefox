@@ -6,12 +6,19 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BA
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
 import org.bukkit.Material
+import kotlin.math.round
 
 object Market {
 
     val coins: MutableMap<String, Coin> = mutableMapOf()
     val prices: MutableMap<Pair<Coin, Coin>, Double> = mutableMapOf()
     val pendingTrades: MutableMap<Pair<Wallet, Wallet>, Pair<Pair<Coin, Double>, Pair<Coin, Double>>> = mutableMapOf()
+
+    fun Double.round(decimals: Int): Double {
+        var multiplier = 1.0
+        repeat(decimals) { multiplier *= 10 }
+        return round(this * multiplier) / multiplier
+    }
 
     fun getTradeKey(parties: Pair<Wallet, Wallet>): Pair<Wallet, Wallet>? {
         val key1 = parties.first to parties.second
@@ -99,8 +106,8 @@ object Market {
                 val coin2 = getCoin(result.getInt("coin_id2")) ?: continue
                 val price1 = result.getDouble("price1")
                 val price2 = result.getDouble("price2")
-                prices[coin1 to coin2] = price1
-                prices[coin2 to coin1] = price2
+                prices[coin1 to coin2] = price1.round(2)
+                prices[coin2 to coin1] = price2.round(2)
             } catch (_: Exception) {
                 continue
             }
