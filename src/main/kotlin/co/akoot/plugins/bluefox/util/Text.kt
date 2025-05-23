@@ -15,6 +15,7 @@ import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.translation.Translatable
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
@@ -218,6 +219,10 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
         operator fun Builder.plusAssign(builder: Builder) {
             this.append(builder)
+        }
+
+        fun Component.asString(): String {
+            return PlainTextComponentSerializer.plainText().serialize(this)
         }
 
         val Material.cleanName: String get() = this.name.lowercase().replace("_", "")
