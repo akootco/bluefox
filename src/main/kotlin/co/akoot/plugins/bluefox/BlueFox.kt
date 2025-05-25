@@ -10,11 +10,15 @@ import co.akoot.plugins.bluefox.events.PlayerEvents
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import net.coreprotect.CoreProtect
+import net.coreprotect.CoreProtectAPI
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
 import org.bukkit.World
 import org.bukkit.entity.Player
+import org.geysermc.api.Geyser
+import org.geysermc.api.GeyserApiBase
 import java.sql.Connection
 
 class BlueFox : FoxPlugin("bluefox") {
@@ -27,6 +31,9 @@ class BlueFox : FoxPlugin("bluefox") {
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
         lateinit var db: Connection
+
+        var geyser: GeyserApiBase? = null
+        var co: CoreProtectAPI? = null
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
 
@@ -50,6 +57,41 @@ class BlueFox : FoxPlugin("bluefox") {
             return cachedOfflinePlayerNames.find {it.startsWith(name, true)}?.let { server.getOfflinePlayer(it) }
         }
 
+    }
+
+    private fun getCoreProtect(): CoreProtectAPI? {
+        val plugin = server.pluginManager.getPlugin("CoreProtect")
+
+        // Check that CoreProtect is loaded
+        if (plugin == null || plugin !is CoreProtect) {
+            return null
+        }
+
+        // Check that the API is enabled
+        val coreProtect = plugin.api
+        if (!coreProtect.isEnabled) {
+            return null
+        }
+
+        // Check that a compatible version of the API is loaded
+        if (coreProtect.APIVersion() < 10) {
+            return null
+        }
+
+        coreProtect?.testAPI()
+
+        return coreProtect
+    }
+
+    private fun getGeyser(): GeyserApiBase? {
+        val plugin = server.pluginManager.getPlugin("Geyser-Spigot")
+
+        // Check that CoreProtect is loaded
+        if (plugin == null) {
+            return null
+        }
+
+        return Geyser.api()
     }
 
     private lateinit var mainDataSource: HikariDataSource
@@ -178,6 +220,7 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     override fun load() {
+        co = getCoreProtect()
         BlueFox.server = server
         setupDatabases()
         Market.load()

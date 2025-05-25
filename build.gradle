@@ -5,6 +5,10 @@ repositories {
     maven {
         url = uri("https://repo.opencollab.dev/main/")
     }
+    maven {
+        name = 'playpro-repo'
+        url = 'https://maven.playpro.com'
+    }
 }
 
 dependencies {
@@ -28,4 +32,5 @@ dependencies {
         }
     }
     compileOnly('org.geysermc.geyser:api:2.7.0-SNAPSHOT')
+    compileOnly 'net.coreprotect:coreprotect:22.4'
 }
