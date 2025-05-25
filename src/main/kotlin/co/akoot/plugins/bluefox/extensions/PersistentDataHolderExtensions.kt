@@ -189,9 +189,11 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
  * @return If the value was removed successfully
  */
 inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: NamespacedKey, value: T): Boolean {
-    val list = getPDCList<T>(key)?.toMutableSet() ?: return false
+    val x = getPDCList<T>(key)
+    println("removeFrom: $x")
+    val list = x?.toMutableSet() ?: return false
     val success = list.remove(value)
-    setPDC(key, list)
+    setPDC(key, list.toList())
     return success
 }
 
@@ -202,9 +204,10 @@ inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: Namesp
  * @return If the value was added successfully
  */
 inline fun <reified T : Any>  PersistentDataHolder.addToPDCList(key: NamespacedKey, value: T): Boolean {
-    val list = getPDCList<T>(key)?.toMutableSet() ?: return false
+    val list = getPDCList<T>(key)?.toMutableSet() ?: mutableSetOf()
+    println("addTo: $list")
     val success = list.add(value)
-    setPDC(key, list)
+    setPDC(key, list.toList())
     return success
 }
 

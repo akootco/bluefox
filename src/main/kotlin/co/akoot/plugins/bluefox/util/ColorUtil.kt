@@ -6,6 +6,8 @@ import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 import java.awt.color.ColorSpace
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 object ColorUtil {
@@ -55,6 +57,30 @@ object ColorUtil {
         }
 
         return (hue * 60).let { if (it < 0) it + 360 else it }
+    }
+
+    fun getBrightness(color: Int): Float {
+        val col = Color(color)
+        val min = col.red.coerceAtMost(col.green).coerceAtMost(col.blue) / 255f
+        val max = col.red.coerceAtLeast(col.green).coerceAtLeast(col.blue) / 255f
+        return (max + min) / 2f
+    }
+
+    fun getSaturation(color: Int): Float {
+        val col = Color(color)
+        val r = col.red
+        val g = col.green
+        val b = col.blue
+        val max = max(r, max(g, b))
+        val min = min(r, min(g, b))
+        if (max == min) return 0f
+        val d = max - min
+        return when (max) {
+            r -> (g - b) / d + (if (g < b) 6f else 0f)
+            g -> (b - r) / d + 2f
+            b -> (r - g) / d + 4f
+            else -> 0f
+        } * 60f
     }
 
     /**
