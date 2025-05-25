@@ -1,22 +1,12 @@
 group = project.group
 version = project.version
 
-repositories {
-    maven {
-        url = uri("https://repo.opencollab.dev/main/")
-    }
-    maven {
-        name = 'playpro-repo'
-        url = 'https://maven.playpro.com'
-    }
-}
-
 dependencies {
     // Kotlin is implemented and included in the final jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}"
 
     // Libraries
-    implementation 'com.mysql:mysql-connector-j:9.1.0'
+    implementation 'com.mysql:mysql-connector-j:9.3.0'
     implementation 'com.zaxxer:HikariCP:6.0.0'
     implementation 'joda-time:joda-time:2.13.0'
     implementation 'com.typesafe:config:1.4.3'
@@ -31,6 +21,4 @@ dependencies {
             because 'L'
         }
     }
-    compileOnly('org.geysermc.geyser:api:2.7.0-SNAPSHOT')
-    compileOnly 'net.coreprotect:coreprotect:22.4'
 }
