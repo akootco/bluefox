@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox.api.events
 import org.bukkit.event.Cancellable
 
 abstract class FoxEventCancellable: FoxEvent(), Cancellable {
+    private var isCancelled = false
     override fun isCancelled(): Boolean {
         return isCancelled
     }
