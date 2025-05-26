@@ -65,7 +65,7 @@ fun Player.countIncludingBlocks(item: Material, block: Material, ratio: Int = 9)
  */
 fun Player.removeIncludingBlocks(item: Material, block: Material, amount: Int? = null, ratio: Int = 9): Boolean {
     val total = countIncludingBlocks(item, block, ratio)
-    var remaining = total
+    var remaining = amount
 
     // remove all if the amount is null
     if(amount == null) {

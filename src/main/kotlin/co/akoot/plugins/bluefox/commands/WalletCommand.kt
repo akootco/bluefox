@@ -108,7 +108,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
             return true
         }
         val action = args[0]
-        permissionCheck(sender, action)
+        permissionCheck(sender, action) ?: return false
         when (action) {
             "swap" -> {
                 val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull() ?: return false
