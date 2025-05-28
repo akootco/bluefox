@@ -15,6 +15,7 @@ class FoxConfig(val file: File) {
     private val options = ConfigRenderOptions.concise().setFormatted(true)
     var autoload = true
     var autosave = true
+    var onLoad: ((FoxConfig) -> Unit)? = null
 
     /**
      * Loads the config file into memory
@@ -36,6 +37,7 @@ class FoxConfig(val file: File) {
      */
     fun reload() {
         load()
+        onLoad?.invoke(this)
     }
 
     /**
