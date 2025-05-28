@@ -11,9 +11,11 @@ import java.io.File
 abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     protected val configs: MutableMap<String, FoxConfig> = mutableMapOf()
+    open lateinit var settings: FoxConfig
 
     override fun onEnable() {
-        if(dataFolder.mkdirs()) logger.info("Created data folder")
+        if(dataFolder.mkdirs()) logger.info("Created data folder for $id")
+        settings = registerConfig("settings")
         registerConfigs()
         load()
         registerCommands()

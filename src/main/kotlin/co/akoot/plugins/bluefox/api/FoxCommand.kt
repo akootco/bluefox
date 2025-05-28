@@ -16,6 +16,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
         private val SELECTORS = setOf("@a", "@s", "@r")
         private val OFFLINE_SELECTORS = setOf("@ao", "@ro")
         private val ALL_SELECTORS = SELECTORS + OFFLINE_SELECTORS
+        val nothing: MutableList<String> = mutableListOf()
     }
 
     private val permissionNode = "${plugin.name}.command.$id"

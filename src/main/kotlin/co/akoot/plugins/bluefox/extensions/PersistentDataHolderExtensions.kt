@@ -156,7 +156,6 @@ inline fun <reified T : Any> PersistentDataHolder.getPDCList(key: NamespacedKey)
  */
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: T?) {
     val v: T = removeIfNull(key, value) ?: return
-    println("setting $key to $value")
     return when(T::class) {
         Location::class -> persistentDataContainer.set(key, LocationDataType(), v as Location)
         UUID::class -> persistentDataContainer.set(key, UUIDDataType(), v as UUID)
@@ -190,7 +189,6 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
  */
 inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: NamespacedKey, value: T): Boolean {
     val x = getPDCList<T>(key)
-    println("removeFrom: $x")
     val list = x?.toMutableSet() ?: return false
     val success = list.remove(value)
     setPDC(key, list.toList())
@@ -205,7 +203,6 @@ inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: Namesp
  */
 inline fun <reified T : Any>  PersistentDataHolder.addToPDCList(key: NamespacedKey, value: T): Boolean {
     val list = getPDCList<T>(key)?.toMutableSet() ?: mutableSetOf()
-    println("addTo: $list")
     val success = list.add(value)
     setPDC(key, list.toList())
     return success

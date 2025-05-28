@@ -25,7 +25,6 @@ class BlueFox : FoxPlugin("bluefox") {
 
     companion object {
 
-        lateinit var settings: FoxConfig
         lateinit var auth: FoxConfig
         lateinit var server: Server
         lateinit var spawnLocation: Location

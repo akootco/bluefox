@@ -69,7 +69,7 @@ open class Wallet(val id: Int, val address: String) {
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
         if(!player.isOp) {
             if (!player.isSurventure) return INVALID_GAME_MODE // best not risk it
-            if (player.world.name !in BlueFox.settings.getStringList("wallet.worlds")) return INVALID_WORLD
+            if (player.world.name !in BlueFox.instance.settings.getStringList("wallet.worlds")) return INVALID_WORLD
         }
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
@@ -86,7 +86,7 @@ open class Wallet(val id: Int, val address: String) {
     fun deposit(player: Player, coin: Coin, amount: Int): Int {
         if(!player.isOp) {
             if (!player.isSurventure) return INVALID_GAME_MODE
-            if (player.world.name !in BlueFox.settings.getStringList("wallet.worlds")) return INVALID_WORLD
+            if (player.world.name !in BlueFox.instance.settings.getStringList("wallet.worlds")) return INVALID_WORLD
         }
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         if (amount < 1) return INSUFFICIENT_ITEMS

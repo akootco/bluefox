@@ -14,7 +14,7 @@ object IOUtil {
     /**
      * Extract a file from the jar (located in src/main/resources)
      * @param loader A class loader. When using this function from another jar, it needs that class loader. Can be
-     * any class that's inside the jar you want to extract from.
+     * any class inside the jar you want to extract from.
      * @param source The source path from within the jar (src/main/resources/[source]).
      * @param dest The destination of the extracted file.
      * @param overwrite To overwrite or not to overwrite.
@@ -25,7 +25,7 @@ object IOUtil {
         return try {
             if (overwrite || !exists) {
                 if (!exists) dest.parent.toFile().mkdirs()
-                val stream = loader.getResourceAsStream(source) ?: throw IOException()
+                val stream = loader.getResourceAsStream(source) ?: return false
                 Files.copy(stream, dest, StandardCopyOption.REPLACE_EXISTING)
             }
             true
