@@ -6,25 +6,23 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_GAME_MODE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INVALID_WORLD
-import co.akoot.plugins.bluefox.api.economy.Economy.Error.MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
-import co.akoot.plugins.bluefox.api.economy.Economy.Success.SUCCESS
-import co.akoot.plugins.bluefox.api.economy.Market.round
+import co.akoot.plugins.bluefox.api.events.PlayerDepositEvent
+import co.akoot.plugins.bluefox.api.events.PlayerWithdrawEvent
+import co.akoot.plugins.bluefox.api.events.WalletSendCoinEvent
+import co.akoot.plugins.bluefox.api.events.WalletRequestSwapEvent
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
 import co.akoot.plugins.bluefox.extensions.giveInBlocks
 import co.akoot.plugins.bluefox.extensions.isSurventure
 import co.akoot.plugins.bluefox.extensions.removeIncludingBlocks
-import org.bukkit.GameMode
-import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Statement
-import kotlin.math.floor
 
 open class Wallet(val id: Int, val address: String) {
 
@@ -79,6 +77,7 @@ open class Wallet(val id: Int, val address: String) {
         val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
         if (amount < 1) return NUMBER_TOO_SMALL
         if(balance < BigDecimal(amount)) return INSUFFICIENT_BALANCE
+        PlayerWithdrawEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
         if(coin.backingBlock == null) {
             player.inventory.addItem(ItemStack(coin.backing, amount))
         } else {
@@ -94,6 +93,7 @@ open class Wallet(val id: Int, val address: String) {
         }
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         if (amount < 1) return INSUFFICIENT_ITEMS
+        PlayerDepositEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
         if(coin.backingBlock == null) {
             if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
             player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
@@ -107,12 +107,14 @@ open class Wallet(val id: Int, val address: String) {
     fun swap(coin1: Coin, coin2: Coin, amount: BigDecimal): Int {
         val price = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
         val amount2 = amount.multiply(price).setScale(8, RoundingMode.HALF_UP)
+        WalletRequestSwapEvent(this, coin1, coin2, amount, amount2).fire() ?: return Economy.Error.EVENT_CANCELLED
         return Market.trade(this, WORLD, coin1, coin2, amount, amount2)
     }
 
     open fun send(wallet: Wallet, coin: Coin, amount: BigDecimal, relatedId: Int? = null): Int {
         val currentBalance = balance[coin] ?: BigDecimal.ZERO//return MISSING_COIN
         if(!hasUnlimitedMoney && currentBalance < amount) return INSUFFICIENT_BALANCE
+        WalletSendCoinEvent(this, wallet, coin, amount, relatedId).fire() ?: return Economy.Error.EVENT_CANCELLED
         val hasRelatedId = relatedId != null
         val extraRelated = if(hasRelatedId) ",related_transaction" to ",?" else "" to ""
         val statement = BlueFox.db.prepareStatement("""

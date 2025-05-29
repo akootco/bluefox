@@ -1,5 +1,7 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.api.events.FoxEvent
+import co.akoot.plugins.bluefox.api.events.FoxEventCancellable
 import co.akoot.plugins.bluefox.util.IOUtil
 import org.bukkit.NamespacedKey
 import org.bukkit.event.Event

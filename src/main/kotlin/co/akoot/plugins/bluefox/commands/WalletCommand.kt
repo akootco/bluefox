@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Economy
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.COIN_HAS_NO_BACKING
+import co.akoot.plugins.bluefox.api.economy.Economy.Error.EVENT_CANCELLED
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_ITEMS
@@ -22,6 +23,8 @@ import co.akoot.plugins.bluefox.api.economy.Economy.isMoreThanZero
 import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.api.events.PlayerRequestCoinEvent
+import co.akoot.plugins.bluefox.api.events.PlayerRequestTradeEvent
 import co.akoot.plugins.bluefox.extensions.countIncludingBlocks
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.wallet
@@ -133,21 +136,20 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     }
                     return false
                 }
-                Text(sender) {
-                    val balance = wallet.balance[coin2] ?: BigDecimal.ZERO
-                    when (wallet.swap(coin1, coin2, amount)) {
-                        BUYER_MISSING_COIN, INSUFFICIENT_BUYER_BALANCE -> Kolor.ERROR("Erm......Idk what to say but that just didn't work.")
-                        INSUFFICIENT_SELLER_BALANCE, SELLER_MISSING_COIN -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(
-                            coin1.toString()
-                        ) + " to swap!"
-
-                        PRICE_UNAVAILABLE -> Kolor.ERROR("No price is set for this trade!")
-                        else -> {
-                            val swapped = wallet.balance[coin2]?.minus(balance) ?: BigDecimal.ZERO
-                            Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + swapped.rounded + Kolor.ACCENT(" $coin2") + "."
-                        }
+                val balance = wallet.balance[coin2] ?: BigDecimal.ZERO
+                val message = when (wallet.swap(coin1, coin2, amount)) {
+                    BUYER_MISSING_COIN, INSUFFICIENT_BUYER_BALANCE -> Kolor.ERROR("Erm......Idk what to say but that just didn't work.")
+                    INSUFFICIENT_SELLER_BALANCE, SELLER_MISSING_COIN -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(
+                        coin1.toString()
+                    ) + " to swap!"
+                    EVENT_CANCELLED -> return false
+                    PRICE_UNAVAILABLE -> Kolor.ERROR("No price is set for this trade!")
+                    else -> {
+                        val swapped = wallet.balance[coin2]?.minus(balance) ?: BigDecimal.ZERO
+                        Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + swapped.rounded + Kolor.ACCENT(" $coin2") + "."
                     }
                 }
+                message.send(sender)
             }
 
             "balance", "bal" -> {
@@ -234,28 +236,28 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                 } else {
                     wallet.withdraw(player, coin, amount.toInt())
                 }
-                Text(sender) {
-                    when (result) {
-                        NUMBER_TOO_SMALL -> Kolor.ERROR("You can't $action less than 1 ") + Kolor.ERROR.accent(coin.toString()) + "!"
-                        COIN_HAS_NO_BACKING -> Kolor.ERROR.alt(coin.toString()) + Kolor.ERROR(" doesn't have a backing item!")
-                        INSUFFICIENT_BALANCE -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.toString()) + Kolor.ERROR(
-                            " to complete this transaction!"
-                        )
+                val message = when (result) {
+                    NUMBER_TOO_SMALL -> Kolor.ERROR("You can't $action less than 1 ") + Kolor.ERROR.accent(coin.toString()) + "!"
+                    COIN_HAS_NO_BACKING -> Kolor.ERROR.alt(coin.toString()) + Kolor.ERROR(" doesn't have a backing item!")
+                    INSUFFICIENT_BALANCE -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.toString()) + Kolor.ERROR(
+                        " to complete this transaction!"
+                    )
 
-                        INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing!!.component) + Kolor.ERROR(
-                            " to complete this transaction!"
-                        )
+                    INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing!!.component) + Kolor.ERROR(
+                        " to complete this transaction!"
+                    )
 
-                        INVALID_GAME_MODE -> Kolor.ERROR("You can't $action in this game mode!")
-                        INVALID_WORLD -> Kolor.ERROR("You can't $action in this world!")
+                    INVALID_GAME_MODE -> Kolor.ERROR("You can't $action in this game mode!")
+                    INVALID_WORLD -> Kolor.ERROR("You can't $action in this world!")
 
-                        SQL_ERROR -> Kolor.ERROR("Erm... Something blew up and it's all my fault!")
-                        else -> {
-                            Kolor.ALT("Nice $action! ") + Kolor.TEXT("You now have ") + (wallet.balance[coin]
-                                ?: BigDecimal.ZERO).rounded + Kolor.ACCENT(" $coin") + "."
-                        }
+                    EVENT_CANCELLED -> return false
+                    SQL_ERROR -> Kolor.ERROR("Erm... Something blew up and it's all my fault!")
+                    else -> {
+                        Kolor.ALT("Nice $action! ") + Kolor.TEXT("You now have ") + (wallet.balance[coin]
+                            ?: BigDecimal.ZERO).rounded + Kolor.ACCENT(" $coin") + "."
                     }
                 }
+                message.send(sender)
             }
 
             "send", "request" -> {
@@ -326,6 +328,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         }
                         return false
                     }
+                    PlayerRequestCoinEvent(player, targetWallet, amount, coin).fire() ?: return false //TODO: message?
                     Text(sender) {
                         Kolor.TEXT("Requested ") + amount.rounded + Kolor.ACCENT(" $coin") + " from " + Kolor.ALT(args[1]) + "."
                     }
@@ -336,21 +339,21 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     }
                     return true
                 }
-                Text(sender) {
-                    when (wallet.send(targetWallet, coin, amount)) {
-                        MISSING_COIN, INSUFFICIENT_BALANCE -> Kolor.ERROR("You do not even have any ") + Kolor.ERROR.accent(
-                            coin.toString()
-                        ) + Kolor.ERROR("!")
+                val message = when (wallet.send(targetWallet, coin, amount)) {
+                    MISSING_COIN, INSUFFICIENT_BALANCE -> Kolor.ERROR("You do not even have any ") + Kolor.ERROR.accent(
+                        coin.toString()
+                    ) + Kolor.ERROR("!")
 
-                        SQL_ERROR -> Kolor.ERROR("Sorry to break it to you but that just didn't work!")
-                        else -> {
-                            Text(targetPlayer) {
-                                (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT("!")).execute("/wallet balance")
-                            }
-                            (Kolor.TEXT("Sent ") + amount.rounded + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute("/wallet balance")
+                    SQL_ERROR -> Kolor.ERROR("Sorry to break it to you but that just didn't work!")
+                    EVENT_CANCELLED -> return false
+                    else -> {
+                        Text(targetPlayer) {
+                            (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT("!")).execute("/wallet balance")
                         }
+                        (Kolor.TEXT("Sent ") + amount.rounded + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute("/wallet balance")
                     }
                 }
+                message.send(sender)
             }
         }
         return true

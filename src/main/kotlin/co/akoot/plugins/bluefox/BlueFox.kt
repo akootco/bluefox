@@ -6,7 +6,7 @@ import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
-import co.akoot.plugins.bluefox.events.PlayerEvents
+import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -15,7 +15,6 @@ import net.coreprotect.CoreProtectAPI
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
-import org.bukkit.World
 import org.bukkit.entity.Player
 import org.geysermc.api.Geyser
 import org.geysermc.api.GeyserApiBase
@@ -248,7 +247,7 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     override fun registerEvents() {
-        registerEventListener(PlayerEvents())
+        registerEventListener(BlueFoxListener())
     }
 
 }

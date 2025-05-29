@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api.events
 
+import co.akoot.plugins.bluefox.BlueFox
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
@@ -11,4 +12,8 @@ abstract class FoxEvent: Event() {
     }
 
     override fun getHandlers(): HandlerList = handlerList
+
+    fun call() {
+        BlueFox.server.pluginManager.callEvent(this)
+    }
 }

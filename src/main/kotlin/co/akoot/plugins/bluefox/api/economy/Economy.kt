@@ -32,6 +32,7 @@ object Economy {
         const val PRICE_UNAVAILABLE = -11
         const val INVALID_GAME_MODE = -12
         const val INVALID_WORLD = -13
+        const val EVENT_CANCELLED = -14
     }
 
     val Double.rounded: String get() = "%.9f".format(this)
@@ -93,7 +94,7 @@ object Economy {
         val price = Market.prices[coin2 to coin1]
 
         Text(sender) {
-            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + (price?.rounded ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
+            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + (price?.rounded ?: "(unknown)"()) + " " + Kolor.ACCENT(coin2.toString())
         }
     }
 }

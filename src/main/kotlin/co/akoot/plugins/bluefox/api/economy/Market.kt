@@ -3,13 +3,11 @@ package co.akoot.plugins.bluefox.api.economy
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
-import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
-import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
-import co.akoot.plugins.bluefox.api.economy.Economy.rounded
+import co.akoot.plugins.bluefox.api.events.CoinCreateEvent
+import co.akoot.plugins.bluefox.api.events.WalletAcceptTradeEvent
 import org.bukkit.Material
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.round
 
 object Market {
 
@@ -51,6 +49,7 @@ object Market {
     }
 
     fun registerCoin(coin: Coin): Boolean {
+        CoinCreateEvent(coin).fire() ?: return false
         val statement = BlueFox.db.prepareStatement("INSERT INTO coins (ticker, name, description) VALUES (?,?,?)")
         statement.setString(1, coin.ticker)
         statement.setString(2, coin.name)
@@ -65,6 +64,7 @@ object Market {
         val buyerBalance = buyer.balance[buyerCoin] ?: BigDecimal.ZERO//return BUYER_MISSING_COIN
         if(!seller.hasUnlimitedMoney && sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
         if(!buyer.hasUnlimitedMoney && buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
+        WalletAcceptTradeEvent(buyer, seller, buyerCoin, sellerCoin, buyerCoinAmount, sellerCoinAmount).fire() ?: return Economy.Error.EVENT_CANCELLED
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
         val sentId =  seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
         val statement = BlueFox.db.prepareStatement("UPDATE wallet_transactions SET related_transaction = ? WHERE id = ?")
