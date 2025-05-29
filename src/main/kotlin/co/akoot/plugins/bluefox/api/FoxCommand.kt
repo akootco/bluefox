@@ -30,7 +30,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      * This is typically used for generating sub-command tab-completion
      */
     protected fun MutableList<String>.permissionCheck(sender: CommandSender): MutableList<String> {
-        return this.filter { permissionCheck(sender, it) == true }.toMutableList()
+        return this.filter { permissionCheck(sender, it, message = null) == true }.toMutableList()
     }
 
     /**

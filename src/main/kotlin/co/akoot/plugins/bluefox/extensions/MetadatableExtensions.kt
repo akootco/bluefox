@@ -18,7 +18,6 @@ inline fun <reified T: Any> Metadatable.removeIfNull(key: String, value: T?, plu
 }
 
 inline fun <reified T : Any>  Metadatable.setMeta(key: String, value: T?, plugin: JavaPlugin = BlueFox.instance) {
-    println("west: set $key to $value")
     removeIfNull(key, value) ?: return
     setMetadata(key, FixedMetadataValue(plugin, value))
 }

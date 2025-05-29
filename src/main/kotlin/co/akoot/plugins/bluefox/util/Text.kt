@@ -23,6 +23,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.awt.Color
+import java.math.BigDecimal
 
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
@@ -137,6 +138,12 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
         val Number.text: Text get() {
             val parts = this.toString().split(".")
+            if (parts.size == 1) return Kolor.NUMBER(parts[0])
+            return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
+        }
+
+        val BigDecimal.text: Text get() {
+            val parts = this.toPlainString().split(".")
             if (parts.size == 1) return Kolor.NUMBER(parts[0])
             return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
         }

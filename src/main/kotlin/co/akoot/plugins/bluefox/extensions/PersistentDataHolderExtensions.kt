@@ -172,13 +172,12 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
 @Suppress("UNCHECKED_CAST") // pesky pesky...
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: List<T>?) {
     val v: List<T> = removeIfNull(key, value) ?: return
-    return when(T::class) {
+    when(T::class) {
         Location::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(LocationDataType()), v as List<Location>)
         UUID::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(UUIDDataType()), v as List<UUID>)
         Boolean::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(PersistentDataType.BOOLEAN), v as List<Boolean>)
         else -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(PrimitiveType(T::class.java)), v)
     }
-
 }
 
 /**

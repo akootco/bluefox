@@ -13,7 +13,6 @@ class PlayerEvents: Listener {
         val player = event.player
         val wallet = Wallet.get(player) ?: Wallet.create(player)
         if (wallet == null) {
-            println("erm.. what a fail.. sos ad")
             return
         }
         wallet.load()

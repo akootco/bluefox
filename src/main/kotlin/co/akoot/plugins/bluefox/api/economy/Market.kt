@@ -5,19 +5,20 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import org.bukkit.Material
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.round
 
 object Market {
 
     val coins: MutableMap<String, Coin> = mutableMapOf()
-    val prices: MutableMap<Pair<Coin, Coin>, Double> = mutableMapOf()
-    val pendingTrades: MutableMap<Pair<Wallet, Wallet>, Pair<Pair<Coin, Double>, Pair<Coin, Double>>> = mutableMapOf()
+    val prices: MutableMap<Pair<Coin, Coin>, BigDecimal> = mutableMapOf()
+    val pendingTrades: MutableMap<Pair<Wallet, Wallet>, Pair<Pair<Coin, BigDecimal>, Pair<Coin, BigDecimal>>> = mutableMapOf()
 
-    fun Double.round(decimals: Int): Double {
-        var multiplier = 1.0
-        repeat(decimals) { multiplier *= 10 }
-        return round(this * multiplier) / multiplier
+    fun BigDecimal.round(decimals: Int = 9): BigDecimal {
+        return this.setScale(decimals, RoundingMode.HALF_UP)
     }
 
     fun getTradeKey(parties: Pair<Wallet, Wallet>): Pair<Wallet, Wallet>? {
@@ -28,7 +29,7 @@ object Market {
         else null
     }
 
-    fun requestTrade(parties: Pair<Wallet, Wallet>, price1: Pair<Coin, Double>, price2: Pair<Coin, Double>): Boolean {
+    fun requestTrade(parties: Pair<Wallet, Wallet>, price1: Pair<Coin, BigDecimal>, price2: Pair<Coin, BigDecimal>): Boolean {
         val key = getTradeKey(parties)
         val value = price1 to price2
         return if(key != null) {
@@ -45,9 +46,8 @@ object Market {
         return pendingTrades.remove(getTradeKey(parties)) != null
     }
 
-    fun priceInDiamonds(coin: Coin): Double {
-        val price = prices[coin to Coin.DIA] ?: -1.0
-        return price
+    fun priceInDiamonds(coin: Coin): BigDecimal {
+        return prices[coin to Coin.DIA] ?: BigDecimal.ZERO
     }
 
     fun registerCoin(coin: Coin): Boolean {
@@ -60,11 +60,11 @@ object Market {
         return success
     }
 
-    fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: Double, sellerCoinAmount: Double): Int {
-        val sellerBalance = seller.balance[sellerCoin] ?: return SELLER_MISSING_COIN
-        val buyerBalance = buyer.balance[buyerCoin] ?: return BUYER_MISSING_COIN
-        if(sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
-        if(buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
+    fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: BigDecimal, sellerCoinAmount: BigDecimal): Int {
+        val sellerBalance = seller.balance[sellerCoin] ?: BigDecimal.ZERO//return SELLER_MISSING_COIN
+        val buyerBalance = buyer.balance[buyerCoin] ?: BigDecimal.ZERO//return BUYER_MISSING_COIN
+        if(!seller.hasUnlimitedMoney && sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
+        if(!buyer.hasUnlimitedMoney && buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
         val sentId =  seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
         val statement = BlueFox.db.prepareStatement("UPDATE wallet_transactions SET related_transaction = ? WHERE id = ?")
@@ -82,9 +82,6 @@ object Market {
     fun load() {
         loadCoins()
         loadPrices()
-        println("[market]")
-        println(coins)
-        println(prices)
     }
 
     fun loadPrices() {
@@ -92,8 +89,7 @@ object Market {
             SELECT
                 t1.coin_id AS coin_id1,
                 t2.coin_id AS coin_id2,
-                AVG(t1.amount / t2.amount) AS price1,
-                AVG(t2.amount / t1.amount) AS price2
+                AVG(t1.amount / t2.amount) AS price1
             FROM wallet_transactions t1
             JOIN wallet_transactions t2 ON t1.id = t2.related_transaction
             WHERE t2.related_transaction IS NOT NULL
@@ -104,16 +100,13 @@ object Market {
             try {
                 val coin1 = getCoin(result.getInt("coin_id1")) ?: continue
                 val coin2 = getCoin(result.getInt("coin_id2")) ?: continue
-                val price1 = result.getDouble("price1")
-                val price2 = result.getDouble("price2")
-                prices[coin1 to coin2] = price1.round(2)
-                prices[coin2 to coin1] = price2.round(2)
+                val price1 = result.getBigDecimal("price1")
+                prices.getOrPut(coin1 to coin2) { price1 }
+                prices.getOrPut(coin2 to coin1) { BigDecimal.ONE.divide(price1, 16, RoundingMode.HALF_UP) }
             } catch (_: Exception) {
                 continue
             }
         }
-        println("[prices]")
-        println(prices)
     }
 
     fun loadCoins() {

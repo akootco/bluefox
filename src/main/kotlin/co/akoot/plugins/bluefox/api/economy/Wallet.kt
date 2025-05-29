@@ -21,12 +21,15 @@ import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Statement
+import kotlin.math.floor
 
 open class Wallet(val id: Int, val address: String) {
 
     companion object {
-        var WORLD = WorldWallet
+        var WORLD = Wallet(1, "WORLD")
         var BANK = Wallet(2, "BANK")
         val playerWallets: MutableMap<OfflinePlayer, Wallet> = mutableMapOf()
 
@@ -64,7 +67,8 @@ open class Wallet(val id: Int, val address: String) {
         }
     }
 
-    val balance: MutableMap<Coin, Double> = mutableMapOf()
+    val balance: MutableMap<Coin, BigDecimal> = mutableMapOf()
+    val hasUnlimitedMoney get() = this == WORLD || this == BANK
 
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
         if(!player.isOp) {
@@ -74,13 +78,13 @@ open class Wallet(val id: Int, val address: String) {
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
         if (amount < 1) return NUMBER_TOO_SMALL
-        if(balance < amount) return INSUFFICIENT_BALANCE
+        if(balance < BigDecimal(amount)) return INSUFFICIENT_BALANCE
         if(coin.backingBlock == null) {
             player.inventory.addItem(ItemStack(coin.backing, amount))
         } else {
             player.giveInBlocks(coin.backing, coin.backingBlock, amount)
         }
-        return send(WORLD, coin, amount.toDouble())
+        return send(WORLD, coin, BigDecimal(amount))
     }
 
     fun deposit(player: Player, coin: Coin, amount: Int): Int {
@@ -97,18 +101,18 @@ open class Wallet(val id: Int, val address: String) {
             val result = player.removeIncludingBlocks(coin.backing, coin.backingBlock, amount)
             if (!result) return INSUFFICIENT_ITEMS
         }
-        return WORLD.send(this, coin, amount.toDouble())
-    }
-    fun swap(coin1: Coin, coin2: Coin, amount: Double): Int {
-        val price = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
-        val amount2 = (amount * price).round(9)
-        WORLD.balance[coin2] = amount2
-        return Market.trade(this, WORLD, coin1, coin2, amount.round(9), amount2)
+        return WORLD.send(this, coin, BigDecimal(amount))
     }
 
-    open fun send(wallet: Wallet, coin: Coin, amount: Double, relatedId: Int? = null): Int {
-        val currentBalance = balance[coin] ?: return MISSING_COIN
-        if(currentBalance < amount) return INSUFFICIENT_BALANCE
+    fun swap(coin1: Coin, coin2: Coin, amount: BigDecimal): Int {
+        val price = Market.prices[coin2 to coin1] ?: return PRICE_UNAVAILABLE
+        val amount2 = amount.multiply(price).setScale(8, RoundingMode.HALF_UP)
+        return Market.trade(this, WORLD, coin1, coin2, amount, amount2)
+    }
+
+    open fun send(wallet: Wallet, coin: Coin, amount: BigDecimal, relatedId: Int? = null): Int {
+        val currentBalance = balance[coin] ?: BigDecimal.ZERO//return MISSING_COIN
+        if(!hasUnlimitedMoney && currentBalance < amount) return INSUFFICIENT_BALANCE
         val hasRelatedId = relatedId != null
         val extraRelated = if(hasRelatedId) ",related_transaction" to ",?" else "" to ""
         val statement = BlueFox.db.prepareStatement("""
@@ -118,22 +122,23 @@ open class Wallet(val id: Int, val address: String) {
         statement.setInt(1, coin.id)
         statement.setInt(2, this.id)
         statement.setInt(3, wallet.id)
-        statement.setDouble(4, amount)
+        statement.setBigDecimal(4, amount)
         if(hasRelatedId) statement.setInt(5, relatedId)
-        val rows = statement.executeUpdate()//runCatching { statement.executeUpdate() }.getOrElse { 0 }
+        val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
         if(rows <= 0 ) return SQL_ERROR
         val keys = statement.generatedKeys
         val success = keys.next()
         if(success) {
-            balance[coin] = currentBalance - amount
-            val recipientBalance = wallet.balance[coin] ?: 0.0
+            if(!hasUnlimitedMoney) {
+                balance[coin] = currentBalance - amount
+            }
+            val recipientBalance = wallet.balance[coin] ?: BigDecimal.ZERO
             wallet.balance[coin] = recipientBalance + amount
         }
         return keys.getInt(1)//runCatching { keys.getInt("id") }.getOrElse { println(it); SQL_ERROR }
     }
 
     fun load() {
-        println("[$id:0x$address]")
         val statement = BlueFox.db.prepareStatement("""
             SELECT coin_id, (
                 COALESCE(SUM(CASE WHEN recipient_id = $id THEN amount ELSE 0 END), 0) -
@@ -145,8 +150,7 @@ open class Wallet(val id: Int, val address: String) {
         val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(resultSet.next()) {
             val coin = Market.getCoin(resultSet.getInt("coin_id")) ?: continue
-            balance[coin] = resultSet.getDouble("balance")
+            balance[coin] = resultSet.getBigDecimal("balance")
         }
-        println(balance)
     }
 }

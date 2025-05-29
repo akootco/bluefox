@@ -87,7 +87,7 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market", aliases = arr
                     }
                     return false
                 }
-                val amount = runCatching{args[1].toDouble()}.getOrNull()
+                val amount = runCatching{args[1].toBigDecimalOrNull()}.getOrNull()
                 if (amount == null) {
                     Text(sender) {
                         Kolor.ERROR("HOW MANY?????!!!!!!")

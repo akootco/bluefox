@@ -8,6 +8,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.BUYER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
+import co.akoot.plugins.bluefox.api.economy.Economy.isMoreThanZero
 import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
@@ -17,6 +18,7 @@ import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.Text.Companion.plus
 import co.akoot.plugins.bluefox.util.Text.Companion.text
 import org.bukkit.command.CommandSender
+import java.math.BigDecimal
 
 class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
 
@@ -45,8 +47,8 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
         val targetPlayer = getPlayer(args[0].substring(1)).getAndSend(sender) ?: return false
         val wallet = player.wallet
         val targetWallet = targetPlayer.wallet
-        val amount1 = runCatching { args[1].toDouble() }.getOrNull()
-        val amount2 = runCatching { args[4].toDouble() }.getOrNull()
+        val amount1 = runCatching { args[1].toBigDecimal() }.getOrNull()
+        val amount2 = runCatching { args[4].toBigDecimal() }.getOrNull()
         val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
         val coin2 = runCatching { Market.coins[args[5].uppercase()] }.getOrNull()
         if (wallet == null || targetWallet == null) {
@@ -60,7 +62,7 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
                 Kolor.ERROR("Try putting in a number for the amount..?")
             }
             return false
-        } else if(amount1 <= 0 || amount2 <= 0) {
+        } else if(!amount1.isMoreThanZero || !amount2.isMoreThanZero) {
             Text(sender) {
                 Kolor.ERROR("Now that wouldn't be very fair!")
             }

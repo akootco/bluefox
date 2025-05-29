@@ -18,6 +18,7 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.NUMBER_TOO_SMALL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SELLER_MISSING_COIN
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
+import co.akoot.plugins.bluefox.api.economy.Economy.isMoreThanZero
 import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
@@ -30,6 +31,7 @@ import co.akoot.plugins.bluefox.util.Text.Companion.plus
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import java.math.BigDecimal
 import kotlin.math.round
 
 class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = arrayOf("balance", "bal", "send", "request", "withdraw", "deposit", "swap")) {
@@ -112,13 +114,13 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
         when (action) {
             "swap" -> {
                 val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull() ?: return false
-                val amount = args[1].toDoubleOrNull() ?: wallet.balance[coin1]
+                val amount = args[1].toBigDecimalOrNull() ?: wallet.balance[coin1]
                 if (amount == null) {
                     Text(sender) {
                         Kolor.ERROR("Erm? How much ") + Kolor.ERROR.accent(coin1.toString()) + " would you like to swap..?"
                     }
                     return false
-                } else if(amount <= 0) {
+                } else if(!amount.isMoreThanZero) {
                     Text(sender) {
                         Kolor.TEXT("The server glitched and deposited ") + round(Math.random() * 10000) + Kolor.ACCENT(" $coin1") + " to your wallet."
                     }
@@ -132,7 +134,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     return false
                 }
                 Text(sender) {
-                    val price = Market.prices[coin2 to coin1] ?: 0.0
+                    val balance = wallet.balance[coin2] ?: BigDecimal.ZERO
                     when (wallet.swap(coin1, coin2, amount)) {
                         BUYER_MISSING_COIN, INSUFFICIENT_BUYER_BALANCE -> Kolor.ERROR("Erm......Idk what to say but that just didn't work.")
                         INSUFFICIENT_SELLER_BALANCE, SELLER_MISSING_COIN -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(
@@ -141,7 +143,8 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
 
                         PRICE_UNAVAILABLE -> Kolor.ERROR("No price is set for this trade!")
                         else -> {
-                            Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + (amount * price).rounded + Kolor.ACCENT(" $coin2") + "."
+                            val swapped = wallet.balance[coin2]?.minus(balance) ?: BigDecimal.ZERO
+                            Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + swapped.rounded + Kolor.ACCENT(" $coin2") + "."
                         }
                     }
                 }
@@ -177,7 +180,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     var success = false
                     for ((key, coin) in Market.coins) {
                         if (coin.backing == null) continue
-                        if(action == "withdraw" && ((wallet.balance[coin] ?: 0.0) < 1.0)) continue
+                        if(action == "withdraw" && ((wallet.balance[coin] ?: BigDecimal.ZERO) < BigDecimal.ONE)) continue
                         if(action == "deposit") {
                             val count = if(coin.backingBlock != null) {
                                 player.countIncludingBlocks(coin.backing, coin.backingBlock)
@@ -204,23 +207,23 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     if (action == "deposit") {
                         if(coin.backing != null) {
                             if(coin.backingBlock != null) {
-                                player.countIncludingBlocks(coin.backing, coin.backingBlock).toDouble()
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock).toBigDecimal()
                             } else {
-                                player.inventory.sumOf { it?.amount ?: 0 }.toDouble()
+                                player.inventory.sumOf { it?.amount ?: 0 }.toBigDecimal()
                             }
                         } else null
                     } else {
-                        wallet.balance[coin] ?: 0.0
+                        wallet.balance[coin] ?: BigDecimal.ZERO
                     }
                 } else {
-                    amountString.toDoubleOrNull()
+                    amountString.toBigDecimalOrNull()
                 }
                 if (amount == null) {
                     Text(sender) {
                         Kolor.ERROR("Erm? How much $coin would you like to ${if (action == "deposit") "deposit" else "withdraw"}..?")
                     }
                     return false
-                } else if (amount < 0) {
+                } else if (!amount.isMoreThanZero) {
                     Text(sender) {
                         Kolor.TEXT("The server glitched and deposited ") + round(Math.random() * 10000) + Kolor.ACCENT(" $coin") + " to your wallet."
                     }
@@ -249,7 +252,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         SQL_ERROR -> Kolor.ERROR("Erm... Something blew up and it's all my fault!")
                         else -> {
                             Kolor.ALT("Nice $action! ") + Kolor.TEXT("You now have ") + (wallet.balance[coin]
-                                ?: 0.0).rounded + Kolor.ACCENT(" $coin") + "."
+                                ?: BigDecimal.ZERO).rounded + Kolor.ACCENT(" $coin") + "."
                         }
                     }
                 }
@@ -286,7 +289,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                 val amount = runCatching {
                     args[2].run {
                         if (this == "all") wallet.balance[coin]
-                        else toDouble()
+                        else toBigDecimal()
                     }
                 }.getOrNull()
                 if (amount == null) {
@@ -296,12 +299,12 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         ) + "..?"
                     }
                     return false
-                } else if (amount < 0) {
+                } else if (!amount.isMoreThanZero) {
                     Text(sender) {
                         Kolor.TEXT("The server glitched and deposited ") + round(Math.random() * 10000) + Kolor.ACCENT(" $coin") + " to your wallet."
                     }
                     return false
-                } else if (amount == 0.0) {
+                } else if (!amount.isMoreThanZero) {
                     Text(sender) {
                         if (action == "request") {
                             Kolor.ERROR("Poor ") + Kolor.ERROR.alt(args[1]) + Kolor.ERROR(" hasn't any ") + Kolor.ERROR.accent(coin.toString()) + Kolor.ERROR(".")
@@ -317,7 +320,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                             Kolor.ERROR("Literally who?")
                         }
                         return false
-                    } else if ((targetWallet.balance[coin] ?: 0.0) < amount) {
+                    } else if ((targetWallet.balance[coin] ?: BigDecimal.ZERO) < amount) {
                         Text(sender) {
                             Kolor.ALT(args[1]) + Kolor.ERROR(" doesn't have enough ") + Kolor.ERROR.accent(coin.toString()) + " to spare!"
                         }

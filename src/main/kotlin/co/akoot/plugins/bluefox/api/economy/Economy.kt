@@ -2,11 +2,15 @@ package co.akoot.plugins.bluefox.api.economy
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
+import co.akoot.plugins.bluefox.api.economy.Market.round
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.Text.Companion.invoke
+import co.akoot.plugins.bluefox.util.Text.Companion.text
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
+import java.math.BigDecimal
 
 object Economy {
 
@@ -31,10 +35,14 @@ object Economy {
     }
 
     val Double.rounded: String get() = "%.9f".format(this)
+    val BigDecimal.rounded: Text get() = this.round(9).text
+    val BigDecimal.isMoreThanZero: Boolean get()  {
+        return this > BigDecimal.ZERO.setScale(9)
+    }
 
     fun sendWallet(sender: CommandSender, wallet: Wallet, self: Boolean = true) {
         val coins = wallet.balance.keys
-        if (coins.isEmpty() || wallet.balance.values.sum() <= 0.0) {
+        if (coins.isEmpty() || wallet.balance.values.fold(BigDecimal.ZERO) { acc, it -> acc + it } == BigDecimal.ZERO) {
             if(self) {
                 Text(sender) {
                     Kolor.WARNING("You are broke! Deposit some items for some coins!")
@@ -66,7 +74,7 @@ object Economy {
 
     fun sendBalance(sender: CommandSender, wallet: Wallet, coin: Coin, prefix: String = "") {
         Text(sender) {
-            Kolor.TEXT(prefix) + Kolor.ACCENT("$coin: ") + (wallet.balance[coin] ?: 0.0).rounded
+            Kolor.TEXT(prefix) + Kolor.ACCENT("$coin: ") + (wallet.balance[coin] ?: BigDecimal.ZERO).rounded
         }
     }
 
@@ -85,7 +93,7 @@ object Economy {
         val price = Market.prices[coin2 to coin1]
 
         Text(sender) {
-            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + Kolor.NUMBER(price?.rounded ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
+            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + (price?.rounded ?: "(unknown)") + " " + Kolor.ACCENT(coin2.toString())
         }
     }
 }
