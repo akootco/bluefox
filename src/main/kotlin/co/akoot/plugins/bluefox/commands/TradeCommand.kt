@@ -49,8 +49,8 @@ class TradeCommand(plugin: BlueFox): FoxCommand(plugin, "trade") {
         val targetWallet = targetPlayer.wallet
         val amount1 = runCatching { args[1].toBigDecimal() }.getOrNull()
         val amount2 = runCatching { args[4].toBigDecimal() }.getOrNull()
-        val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
-        val coin2 = runCatching { Market.coins[args[5].uppercase()] }.getOrNull()
+        val coin1 = args.getOrNull(2)?.let { Market.getCoin(it) }
+        val coin2 = args.getOrNull(5)?.let { Market.getCoin(it) }
         if (wallet == null || targetWallet == null) {
             Text(sender) {
                 Kolor.ERROR("Both players must have a wallet to trade! Erm!!!!")

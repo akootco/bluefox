@@ -116,7 +116,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
         permissionCheck(sender, action) ?: return false
         when (action) {
             "swap" -> {
-                val coin1 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull() ?: return false
+                val coin1 = args.getOrNull(2)?.let { Market.getCoin(it) } ?: return false
                 val amount = args[1].toBigDecimalOrNull() ?: wallet.balance[coin1]
                 if (amount == null) {
                     Text(sender) {
@@ -129,7 +129,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     }
                     return false
                 }
-                val coin2 = runCatching { Market.coins[args[3].uppercase()] }.getOrNull() ?: return false
+                val coin2 = args.getOrNull(3)?.let { Market.getCoin(it) } ?: return false
                 if (coin1 == coin2) {
                     Text(sender) {
                         Kolor.ERROR("FOOL! You can't swap for the same coin!")
@@ -153,7 +153,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
             }
 
             "balance", "bal" -> {
-                val coin = runCatching { Market.coins[args[1].uppercase()] }.getOrNull()
+                val coin = args.getOrNull(1)?.let { Market.getCoin(it) }
                 val targetArg = args.getOrNull(2)
 
                 val targetWallet = when {
@@ -177,7 +177,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
 
             "deposit", "withdraw" -> {
                 val amountString = args.getOrNull(1) ?: "all"
-                var coin = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
+                var coin = args.getOrNull(2)?.let { Market.getCoin(it) }
                 if(coin == null && amountString == "all") {
                     var success = false
                     for ((key, coin) in Market.coins) {
@@ -287,7 +287,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     }
                     return false
                 }
-                val coin = runCatching { Market.coins[args[3].uppercase()] }.getOrNull() ?: Coin.DIA
+                val coin = args.getOrNull(3)?.let { Market.getCoin(it) } ?: Coin.DIA
                 val amount = runCatching {
                     args[2].run {
                         if (this == "all") wallet.balance[coin]

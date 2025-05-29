@@ -19,6 +19,10 @@ object Market {
         return this.setScale(decimals, RoundingMode.HALF_UP)
     }
 
+    fun getCoin(name: String): Coin? {
+        return coins.entries.find { it.key.equals(name, true) }?.value
+    }
+
     fun getTradeKey(parties: Pair<Wallet, Wallet>): Pair<Wallet, Wallet>? {
         val key1 = parties.first to parties.second
         val key2 = parties.second to parties.first

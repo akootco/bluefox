@@ -35,7 +35,7 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market", aliases = arr
             }
             3 -> {
                 when(args[0]) {
-                    "price", "info" -> Market.coins.keys.minus(args[1].uppercase()).toMutableList()
+                    "price", "info" -> Market.coins.keys.minus(args[1]).toMutableList()
                     "print" -> Market.coins.keys.toMutableList()
                     else -> mutableListOf()
                 }
@@ -49,10 +49,11 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market", aliases = arr
         alias: String,
         args: Array<out String>
     ): Boolean {
+        if(args.isEmpty()) return onCommand(sender, "market", arrayOf("price"))
         if(alias == "prices") return onCommand(sender, "market", arrayOf("price"))
         if(alias != id) return onCommand(sender, id, arrayOf(alias) + args)
-        val coin1 = runCatching { Market.coins[args[1].uppercase()] }.getOrNull()
-        val coin2 = runCatching { Market.coins[args[2].uppercase()] }.getOrNull()
+        val coin1 = args.getOrNull(1)?.let { Market.getCoin(it) }
+        val coin2 = args.getOrNull(2)?.let { Market.getCoin(it) }
         when (args[0]) {
             "price" -> {
                 if (coin1 == null) {
@@ -100,7 +101,6 @@ class MarketCommand(plugin: BlueFox): FoxCommand(plugin, "market", aliases = arr
                     }
                     return false
                 }
-                Wallet.BANK.balance[coin2] = amount
                 val result = Wallet.BANK.send(wallet, coin2, amount)
                 if (result < 0) {
                     Text(sender) {

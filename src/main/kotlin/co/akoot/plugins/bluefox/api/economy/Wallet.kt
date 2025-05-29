@@ -67,6 +67,8 @@ open class Wallet(val id: Int, val address: String) {
 
     val balance: MutableMap<Coin, BigDecimal> = mutableMapOf()
     val hasUnlimitedMoney get() = this == WORLD || this == BANK
+    val offlinePlayer: OfflinePlayer? get() = playerWallets.entries.find { it.value == this }?.key
+    val player: Player? get() = offlinePlayer?.player
 
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
         if(!player.isOp) {
