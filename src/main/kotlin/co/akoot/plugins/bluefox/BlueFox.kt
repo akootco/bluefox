@@ -31,7 +31,7 @@ class BlueFox : FoxPlugin("bluefox") {
         lateinit var db: Connection
 
         var geyser: GeyserApiBase? = null
-        var co: CoreProtectAPI? = null
+        var co: CoreProtectAPI? = null //TODO: use getCoreProtect() instead of this
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
 
@@ -57,7 +57,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
     }
 
-    private fun getCoreProtect(): CoreProtectAPI? {
+    fun getCoreProtect(): CoreProtectAPI? {
         val plugin = server.pluginManager.getPlugin("CoreProtect")
 
         // Check that CoreProtect is loaded
@@ -218,7 +218,6 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     override fun load() {
-        co = getCoreProtect()
         BlueFox.server = server
         setupDatabases()
         Market.load()

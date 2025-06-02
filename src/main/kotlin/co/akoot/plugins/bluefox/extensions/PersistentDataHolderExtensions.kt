@@ -88,7 +88,7 @@ class UUIDDataType(): PersistentDataType<ByteArray, UUID> {
     }
 }
 
-fun Player.hasPDC(key: NamespacedKey): Boolean {
+fun PersistentDataHolder.hasPDC(key: NamespacedKey): Boolean {
     return persistentDataContainer.has(key)
 }
 
