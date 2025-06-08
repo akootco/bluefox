@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.extensions.brighten
+import co.akoot.plugins.bluefox.extensions.isGray
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
@@ -29,6 +30,11 @@ object ColorUtil {
         Calendar.NOVEMBER -> TextColor.color(0xdd9d78)
         Calendar.DECEMBER -> TextColor.color(0xfc4b55)
         else -> TextColor.color(0xffffff)
+    }
+
+    fun textColor(nm: String): TextColor? {
+        val color = runCatching {Color.decode(nm)}.getOrNull() ?: return null
+        return TextColor.color(color.rgb)
     }
 
     fun month(color: TextColor, mix: Double = 0.25, brighten: Double = 0.15): TextColor {

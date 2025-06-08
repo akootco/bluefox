@@ -3,10 +3,16 @@ package co.akoot.plugins.bluefox.api
 import co.akoot.plugins.bluefox.api.events.FoxEvent
 import co.akoot.plugins.bluefox.api.events.FoxEventCancellable
 import co.akoot.plugins.bluefox.util.IOUtil
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.advancement.Advancement
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
+import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.Recipe
+import org.bukkit.inventory.ShapedRecipe
+import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
@@ -20,6 +26,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         settings = registerConfig("settings")
         registerConfigs()
         load()
+        registerRecipes()
         registerCommands()
         registerEvents()
     }
@@ -35,6 +42,34 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     open fun registerEvents() {}
     open fun registerConfigs() {}
     open fun onCrash() {}
+    open fun registerRecipes() {}
+
+    fun registerRecipe(name: String, result: ItemStack, recipe: Map<Char, Material>, vararg shape: String) {
+        val key = key(name)
+        val shapedRecipe = ShapedRecipe(key, result)
+        shapedRecipe.shape(*shape)
+        for((k,v) in recipe) {
+            shapedRecipe.setIngredient(k, v)
+        }
+        registerRecipe(shapedRecipe)
+    }
+
+    fun registerRecipe(name: String, result: ItemStack, vararg recipe: Material) {
+        val key = key(name)
+        val shapelessRecipe = ShapelessRecipe(key, result)
+        for(ingredient in recipe) {
+            shapelessRecipe.addIngredient(ingredient)
+        }
+        registerRecipe(shapelessRecipe)
+    }
+
+    fun getRecipe(name: String): Recipe? {
+        return server.getRecipe(key(name))
+    }
+
+    fun registerRecipe(recipe: Recipe) {
+        server.addRecipe(recipe)
+    }
 
     fun registerCommand(command: FoxCommand) {
         server.commandMap.register(id, command)
@@ -78,4 +113,6 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     fun key(key: String): NamespacedKey {
         return NamespacedKey(this, key)
     }
+
+    fun getAdvancement(name: String): Advancement? = server.getAdvancement(key(name))
 }
