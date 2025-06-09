@@ -258,3 +258,7 @@ fun String.shadow(alpha: Double): ShadowColor {
 fun Int.shadow(alpha: Double): ShadowColor {
     return TextColor.color(this).toShadowColor(alpha)
 }
+
+fun TextColor.toBukkitColor(): org.bukkit.Color {
+    return org.bukkit.Color.fromRGB(value())
+}
