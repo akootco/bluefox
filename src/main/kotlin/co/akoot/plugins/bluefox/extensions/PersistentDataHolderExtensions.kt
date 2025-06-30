@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.extensions
 
+import io.papermc.paper.persistence.PersistentDataViewHolder
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
@@ -88,7 +89,7 @@ class UUIDDataType(): PersistentDataType<ByteArray, UUID> {
     }
 }
 
-fun PersistentDataHolder.hasPDC(key: NamespacedKey): Boolean {
+fun PersistentDataViewHolder.hasPDC(key: NamespacedKey): Boolean {
     return persistentDataContainer.has(key)
 }
 
@@ -122,7 +123,7 @@ inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey
  * Get the [Object] value of type [T] from the [PersistentDataContainer] with key [key]
  * @param key The [NamespacedKey] of the value to get from this [PersistentDataContainer]
  */
-inline fun <reified T : Any> PersistentDataHolder.getPDC(key: NamespacedKey): T? {
+inline fun <reified T : Any> PersistentDataViewHolder.getPDC(key: NamespacedKey): T? {
     when(T::class) {
         Location::class -> return persistentDataContainer.get(key, LocationDataType()) as T?
         UUID::class -> return persistentDataContainer.get(key, UUIDDataType()) as T?
@@ -137,7 +138,7 @@ inline fun <reified T : Any> PersistentDataHolder.getPDC(key: NamespacedKey): T?
  * @return The [List]
  */
 @Suppress("UNCHECKED_CAST") // pesky pesky...
-inline fun <reified T : Any> PersistentDataHolder.getPDCList(key: NamespacedKey): List<T>? {
+inline fun <reified T : Any> PersistentDataViewHolder.getPDCList(key: NamespacedKey): List<T>? {
     val dataType = when(T::class) {
         Location::class -> LocationDataType()
         UUID::class -> UUIDDataType()
