@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import org.bukkit.GameMode
@@ -32,8 +33,12 @@ val OfflinePlayer.wallet: Wallet? get() = Wallet.playerWallets[this]
 
 val Player.isSurventure: Boolean get() = gameMode in setOf(GameMode.SURVIVAL, GameMode.ADVENTURE) // :)
 
+var Player.language: String?
+    get() = getPDC<String>(BlueFox.instance.key("language"))
+    set(value) = setPDC(BlueFox.instance.key("language"), value)
+
 /**
- * Counts the total amount of a specified item and an equivalent amount of a specified block
+ * Counts the total amount of a specified item and the equivalent amount of a specified block
  * in the player's inventory. The block count is multiplied by a given ratio.
  *
  * @param item the material type of the item to count

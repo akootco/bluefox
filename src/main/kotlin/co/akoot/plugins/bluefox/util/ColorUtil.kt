@@ -241,6 +241,8 @@ object ColorUtil {
     }
 }
 
+val TextColor.invert get() = TextColor.color(value() xor 0x00FFFFFF)
+
 fun TextColor.toShadowColor(alpha: Double = 1.0): ShadowColor {
     return ShadowColor.shadowColor(this, (alpha * 255).toInt())
 }

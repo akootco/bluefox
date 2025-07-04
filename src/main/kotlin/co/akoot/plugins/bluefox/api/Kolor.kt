@@ -2,11 +2,12 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.invert
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 
-class Kolor(java: Int, bedrock: Int = java) {
+class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
 
     companion object {
         val TEXT = Kolor(0xfcf7f4, 0xFFFFFF)
@@ -18,10 +19,21 @@ class Kolor(java: Int, bedrock: Int = java) {
         val ERROR = Kolor(0xfc5f5f, 0xFF5555)
         val WARNING = Kolor(0xfcae5f, 0xFFAA00)
         val MONTH = Kolor(ColorUtil.MONTH_COLOR)
+        val map = mapOf(
+            't' to TEXT,
+            '2' to ALT,
+            'a' to ACCENT,
+            'p' to PLAYER,
+            'n' to NUMBER,
+            'q' to QUOTE,
+            'e' to ERROR,
+            'w' to WARNING,
+            'm' to MONTH
+        )
     }
 
-    constructor(hex: String): this(Color.decode(hex).rgb)
-    constructor(textColor: TextColor): this(textColor.value())
+    constructor(hex: String, char: Char? = null): this(Color.decode(hex).rgb)
+    constructor(textColor: TextColor, char: Char? = null): this(textColor.value())
 
     val raw = TextColor.color(java)
     val bedrock = TextColor.color(bedrock)
@@ -47,4 +59,26 @@ class Kolor(java: Int, bedrock: Int = java) {
     fun get(isBedrock: Boolean = false, rawColor: Boolean = false): TextColor {
         return if(isBedrock) bedrock else (if(rawColor) raw else text)
     }
+
+    fun parse(string: String): TextColor? {
+        var bedrock = false
+        var raw = false
+        var result: TextColor? = null
+
+        for (char in string) {
+            when (char) {
+                'r' -> raw = true
+                'b' -> bedrock = true
+                else -> {
+                    val kolor = map[char]?.get(bedrock, raw) ?: continue
+                    result = if (result == null) kolor else ColorUtil.mix(result, kolor)
+                }
+            }
+        }
+
+        return result
+    }
+
+
+    val invert get() = text.invert
 }

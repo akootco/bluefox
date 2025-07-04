@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.extensions
 
+import co.akoot.plugins.bluefox.BlueFox
 import io.papermc.paper.persistence.PersistentDataViewHolder
 import org.bukkit.Bukkit
 import org.bukkit.Location

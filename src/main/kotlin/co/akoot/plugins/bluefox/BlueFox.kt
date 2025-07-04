@@ -15,6 +15,7 @@ import net.coreprotect.CoreProtectAPI
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
+import org.bukkit.World
 import org.bukkit.entity.Player
 import org.geysermc.api.Geyser
 import org.geysermc.api.GeyserApiBase
@@ -29,6 +30,7 @@ class BlueFox : FoxPlugin("bluefox") {
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
         lateinit var db: Connection
+        var world: World? = null
 
         var geyser: GeyserApiBase? = null
         var co: CoreProtectAPI? = null //TODO: use getCoreProtect() instead of this
@@ -219,6 +221,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
     override fun load() {
         BlueFox.server = server
+        BlueFox.world = server.getWorld("world")
         setupDatabases()
         Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()

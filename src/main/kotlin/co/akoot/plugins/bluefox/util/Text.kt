@@ -17,6 +17,8 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.translation.Translatable
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
@@ -24,6 +26,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.awt.Color
 import java.math.BigDecimal
+import java.net.URLEncoder
 
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
@@ -71,6 +74,19 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
                 word.lowercase().replaceFirstChar { char -> char.uppercaseChar()}
             }
         }
+
+//        val clickableTextRegex = Regex("")
+//        val placeholderRegex = Regex("")
+//        val colorRegex = Regex("")
+//        val parseRegex = Regex("($clickableTextRegex)|($placeholderRegex)|($colorRegex)|([^&\\[\\]\$}]*(?:(?:\\[\\[|&&|\\\$\\\$|}}|]])[^&]*)?)", RegexOption.IGNORE_CASE)
+//        fun String.parse(): Text {
+//            val colors = mutableListOf<TextColor?>()
+//            val bold = false
+//            val italic = false
+//            val strikethrough = false
+//            val magic = false
+//            val inverted = false
+//        }
 
         fun String.titleCase(vararg delimiters: String): String {
             var string = this
@@ -233,6 +249,29 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         }
 
         val Material.cleanName: String get() = this.name.lowercase().replace("_", "")
+
+        fun translate(text: String, sourceLang: String = "auto", targetLang: String = "en"): String {
+            val client = OkHttpClient()
+            val encodedText = URLEncoder.encode(text, "UTF-8")
+            val url = "https://lingva.ml/api/v1/$sourceLang/$targetLang/$encodedText"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    println("Translation failed: ${response.code}")
+                    return text
+                }
+
+                val json = response.body?.string()
+                val startIndex = json?.indexOf("\"translation\":\"") ?: return text
+                val endIndex = json.indexOf("\"", startIndex + 15)
+                return json.substring(startIndex + 15, endIndex)
+            }
+        }
     }
 
     constructor(string: String, color: Int, vararg decorations: TextDecoration) : this(string, TextColor.color(color), false, true, *decorations)
