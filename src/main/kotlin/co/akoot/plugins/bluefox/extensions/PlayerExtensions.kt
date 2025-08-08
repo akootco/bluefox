@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.FoxConfig
+import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.util.Text

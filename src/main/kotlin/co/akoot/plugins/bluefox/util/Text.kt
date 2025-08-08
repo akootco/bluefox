@@ -316,6 +316,11 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
+    fun shadowColor(argb: Int, alpha: Double = 1.0): Text {
+        builder.shadowColor(TextColor.color(argb).toShadowColor(alpha))
+        return this
+    }
+
     fun shadowColor(shadowColor: ShadowColor): Text {
         builder.shadowColor(shadowColor)
         return this
@@ -376,6 +381,11 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
     fun color(kolor: Kolor): Text {
         builder.color(kolor.get(bedrock, rawColor))
+        return this
+    }
+
+    fun color(rgb: Int): Text {
+        builder.color(TextColor.color(rgb))
         return this
     }
 
@@ -534,6 +544,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             Duration.ofMillis((stay * 1000).toLong()), // stay
             Duration.ofMillis((fadeOut * 1000).toLong())  // fade out
         )
+        audience.sendTitlePart(TitlePart.TIMES, times)
         audience.sendTitlePart(TitlePart.SUBTITLE, component)
         audience.sendTitlePart(TitlePart.TITLE, Component.empty())
         return this
