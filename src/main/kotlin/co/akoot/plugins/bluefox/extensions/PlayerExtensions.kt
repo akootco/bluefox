@@ -4,6 +4,9 @@ import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.util.Text
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
@@ -21,7 +24,7 @@ fun OfflinePlayer.getDataFile(): File {
 }
 
 val OfflinePlayer.profile: Profile
-    get() = Profile(this)
+    get() = Profile(this.uniqueId)
 
 fun List<OfflinePlayer>.names(): List<String> {
     return this.mapNotNull { it.name }
@@ -147,3 +150,19 @@ fun Player.giveInBlocks(item: Material, block: Material, amount: Int, ratio: Int
         inventory.addItem(itemStack)
     }
 }
+
+fun Player.sendTitle(text: Text, subtitle: Text? = null, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5) {
+    text.sendTitle(this, subtitle, fadeIn, stay, fadeOut)
+}
+
+fun Player.sendSubtitle(text: Text, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5) {
+    text.sendSubtitle(this, fadeIn, stay, fadeOut)
+}
+
+fun Player.sendActionBar(text: Text) {
+    sendActionBar(text.component)
+}
+//
+//val OfflinePlayer.displayName: TextComponent get() = getPDC<String>(BlueFox.instance.key("nickname"))?.let {
+//
+//} ?: Component.text(name ?: uniqueId.toString())

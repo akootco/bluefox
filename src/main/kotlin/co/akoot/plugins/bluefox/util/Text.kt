@@ -16,6 +16,8 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.kyori.adventure.title.Title
+import net.kyori.adventure.title.TitlePart
 import net.kyori.adventure.translation.Translatable
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,6 +29,7 @@ import org.bukkit.inventory.ItemStack
 import java.awt.Color
 import java.math.BigDecimal
 import java.net.URLEncoder
+import java.time.Duration
 
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
@@ -510,6 +513,34 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         BlueFox.server.apply {
             permission?.let { broadcast(component, it) } ?: broadcast(component)
         }
+        return this
+    }
+
+    fun sendTitle(audience: Audience, subtitle: Text? = null, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5): Text {
+        val times = Title.Times.times(
+            Duration.ofMillis((fadeIn * 1000).toLong()), // fade in
+            Duration.ofMillis((stay * 1000).toLong()), // stay
+            Duration.ofMillis((fadeOut * 1000).toLong())  // fade out
+        )
+        audience.sendTitlePart(TitlePart.TIMES, times)
+        subtitle?.let { audience.sendTitlePart(TitlePart.SUBTITLE, it.component) }
+        audience.sendTitlePart(TitlePart.TITLE, component)
+        return this
+    }
+
+    fun sendSubtitle(audience: Audience, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5): Text {
+        val times = Title.Times.times(
+            Duration.ofMillis((fadeIn * 1000).toLong()), // fade in
+            Duration.ofMillis((stay * 1000).toLong()), // stay
+            Duration.ofMillis((fadeOut * 1000).toLong())  // fade out
+        )
+        audience.sendTitlePart(TitlePart.SUBTITLE, component)
+        audience.sendTitlePart(TitlePart.TITLE, Component.empty())
+        return this
+    }
+
+    fun sendActionBar(player: Player): Text {
+        player.sendActionBar(component)
         return this
     }
 
