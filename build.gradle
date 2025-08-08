@@ -6,13 +6,13 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}"
 
     // Libraries
-    implementation 'com.mysql:mysql-connector-j:9.3.0'
-    implementation 'com.zaxxer:HikariCP:6.0.0'
-    implementation 'joda-time:joda-time:2.13.0'
+    implementation 'com.mysql:mysql-connector-j:9.4.0'
+    implementation 'com.zaxxer:HikariCP:7.0.0'
+    implementation 'joda-time:joda-time:2.14.0'
     implementation 'com.typesafe:config:1.4.3'
 
     // Discord4J but without opus-java and also use the latest version of okhttp3 pls ty
-    implementation('net.dv8tion:JDA:5.2.1') {
+    implementation('net.dv8tion:JDA:5.6.1') {
         exclude module: 'opus-java'
     }
     implementation 'com.squareup.okhttp3:okhttp'
