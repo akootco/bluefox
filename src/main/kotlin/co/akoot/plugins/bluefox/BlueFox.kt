@@ -8,10 +8,16 @@ import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
+import co.akoot.plugins.bluefox.util.async
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
 import net.coreprotect.CoreProtectAPI
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.requests.GatewayIntent
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
@@ -30,10 +36,12 @@ class BlueFox : FoxPlugin("bluefox") {
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
         lateinit var db: Connection
+        lateinit var channels: MutableMap<String, TextChannel>
         var world: World? = null
 
-        var geyser: GeyserApiBase? = null
-        var co: CoreProtectAPI? = null //TODO: use getCoreProtect() instead of this
+        val geyser: GeyserApiBase? get() = instance.getGeyser()
+        val co: CoreProtectAPI? get() = instance.getCoreProtect()
+        var jda: JDA? = null
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
 
@@ -52,11 +60,33 @@ class BlueFox : FoxPlugin("bluefox") {
             return server.onlinePlayers.find { it.name.startsWith(name, true) }
         }
 
+        fun getPlayers(playerNames: String, exact: Boolean = false): List<Player> {
+            val playerNames = playerNames.split(",", ", ", ", and ", " and ", " ", "/", " / ", "&", " & ", ignoreCase = true)
+            return playerNames.mapNotNull { getPlayer(it, exact) }
+        }
+
         fun getOfflinePlayer(name: String, exact: Boolean = false): OfflinePlayer? {
             if (exact) return cachedOfflinePlayerNames.find { it.equals(name, true) }?.let { server.getOfflinePlayer(it) }
             return cachedOfflinePlayerNames.find {it.startsWith(name, true)}?.let { server.getOfflinePlayer(it) }
         }
 
+        fun sendDiscordMessage(message: String, channel: String = "minecraft") {
+            val channel = channels[channel] ?: return
+            channel.sendMessage(message).queue()
+        }
+
+        fun sendEmbed(embed: MessageEmbed, vararg other: MessageEmbed, channel: String = "minecraft") {
+            val channel = channels[channel] ?: return
+            channel.sendMessageEmbeds(embed, *other).queue()
+        }
+
+    }
+
+    private fun getJDA(): JDA? {
+        val token = auth.getString("tokens.discord") ?: return null
+        val builder = JDABuilder.createDefault(token)
+        builder.enableIntents(GatewayIntent.GUILD_MEMBERS)
+        return builder.build()
     }
 
     fun getCoreProtect(): CoreProtectAPI? {
@@ -77,8 +107,6 @@ class BlueFox : FoxPlugin("bluefox") {
         if (coreProtect.APIVersion() < 10) {
             return null
         }
-
-        coreProtect?.testAPI()
 
         return coreProtect
     }
@@ -214,17 +242,26 @@ class BlueFox : FoxPlugin("bluefox") {
         return false
     }
 
-    override fun onEnable() {
-        super.onEnable()
-        instance = this
+    private fun loadChannel(channelName: String) {
+        val win = settings.getLong("discord.channel.$channelName")?.let { jda?.getTextChannelById(it) }?.let { channels[channelName] = it  }
+        if(win != null) return
+        logger.severe("This sucks, I can't find Discord channel #$channelName!")
     }
 
     override fun load() {
+        instance = this
         BlueFox.server = server
-        BlueFox.world = server.getWorld("world")
+        world = server.getWorld("world")
         setupDatabases()
         Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
+        jda = getJDA()
+        async {
+            jda?.awaitReady()
+            channels = mutableMapOf()
+            loadChannel("minecraft")
+            loadChannel("console")
+        }
         logger.info("Good day!")
     }
 
