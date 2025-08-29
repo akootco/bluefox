@@ -4,7 +4,6 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
-import org.json.simple.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
