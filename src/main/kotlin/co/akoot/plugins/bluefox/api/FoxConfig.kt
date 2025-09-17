@@ -11,6 +11,12 @@ import java.io.File
 
 class FoxConfig(val file: File) {
 
+    companion object {
+        fun fromPlugin(plugin: FoxPlugin, name: String = "settings"): FoxConfig {
+            return FoxConfig(File("plugins", plugin.name).resolve("$name.conf"))
+        }
+    }
+
     private var config = ConfigFactory.parseFile(file)
     private val options = ConfigRenderOptions.concise().setFormatted(true)
     var autoload = true
