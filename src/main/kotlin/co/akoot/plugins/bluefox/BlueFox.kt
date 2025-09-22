@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
+import co.akoot.plugins.bluefox.listeners.DiscordListener
 import co.akoot.plugins.bluefox.util.IOUtil
 import co.akoot.plugins.bluefox.util.async
 import com.zaxxer.hikari.HikariConfig
@@ -261,6 +262,8 @@ class BlueFox : FoxPlugin("bluefox") {
             channels = mutableMapOf()
             loadChannel("minecraft")
             loadChannel("console")
+            loadChannel("logs")
+            jda?.addEventListener(DiscordListener())
         }
         logger.info("Good day!")
     }
