@@ -4,6 +4,7 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.MarketCommand
+import co.akoot.plugins.bluefox.commands.TestCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
@@ -282,6 +283,7 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(WalletCommand(this))
         registerCommand(TradeCommand(this))
         registerCommand(MarketCommand(this))
+//        registerCommand(TestCommand(this))
     }
 
     override fun onCrash() {

@@ -3,6 +3,8 @@ package co.akoot.plugins.bluefox.api
 import co.akoot.plugins.bluefox.api.events.FoxEvent
 import co.akoot.plugins.bluefox.api.events.FoxEventCancellable
 import co.akoot.plugins.bluefox.util.IOUtil
+import io.papermc.paper.plugin.lifecycle.event.LifecycleEvent
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.advancement.Advancement
@@ -73,6 +75,12 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     fun registerCommand(command: FoxCommand) {
         server.commandMap.register(id, command)
+    }
+
+    fun registerCommand(command: CatCommand) {
+        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
+            it.registrar().register(command.build())
+        }
     }
 
     fun registerEventListener(listener: Listener) {
