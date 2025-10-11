@@ -8,18 +8,12 @@ import co.akoot.plugins.bluefox.commands.TestCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
-import co.akoot.plugins.bluefox.listeners.DiscordListener
 import co.akoot.plugins.bluefox.util.IOUtil
 import co.akoot.plugins.bluefox.util.async
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
 import net.coreprotect.CoreProtectAPI
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
-import net.dv8tion.jda.api.requests.GatewayIntent
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
@@ -32,30 +26,18 @@ import java.sql.Connection
 class BlueFox : FoxPlugin("bluefox") {
 
     companion object {
-
         lateinit var auth: FoxConfig
         lateinit var server: Server
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
         lateinit var db: Connection
-        lateinit var channels: MutableMap<String, TextChannel>
         var world: World? = null
 
         val geyser: GeyserApiBase? get() = instance.getGeyser()
         val co: CoreProtectAPI? get() = instance.getCoreProtect()
-        var jda: JDA? = null
+
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
-
-        fun getAPIKey(name: String): String? {
-            if (!this::auth.isInitialized) return null
-            return auth.getString("api-keys.$name")
-        }
-
-        fun getToken(name: String): String? {
-            if (!this::auth.isInitialized) return null
-            return auth.getString("tokens.$name")
-        }
 
         fun getPlayer(name: String, exact: Boolean = false): Player? {
             if (exact) return server.onlinePlayers.find { it.name.equals(name, true) }
@@ -72,23 +54,6 @@ class BlueFox : FoxPlugin("bluefox") {
             return cachedOfflinePlayerNames.find {it.startsWith(name, true)}?.let { server.getOfflinePlayer(it) }
         }
 
-        fun sendDiscordMessage(message: String, channel: String = "minecraft") {
-            val channel = channels[channel] ?: return
-            channel.sendMessage(message).queue()
-        }
-
-        fun sendEmbed(embed: MessageEmbed, vararg other: MessageEmbed, channel: String = "minecraft") {
-            val channel = channels[channel] ?: return
-            channel.sendMessageEmbeds(embed, *other).queue()
-        }
-
-    }
-
-    private fun getJDA(): JDA? {
-        val token = auth.getString("tokens.discord") ?: return null
-        val builder = JDABuilder.createDefault(token)
-        builder.enableIntents(GatewayIntent.GUILD_MEMBERS)
-        return builder.build()
     }
 
     fun getCoreProtect(): CoreProtectAPI? {
@@ -114,13 +79,7 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     private fun getGeyser(): GeyserApiBase? {
-        val plugin = server.pluginManager.getPlugin("Geyser-Spigot")
-
-        // Check that CoreProtect is loaded
-        if (plugin == null) {
-            return null
-        }
-
+        val plugin = server.pluginManager.getPlugin("Geyser-Spigot") ?: return null
         return Geyser.api()
     }
 
@@ -244,12 +203,6 @@ class BlueFox : FoxPlugin("bluefox") {
         return false
     }
 
-    private fun loadChannel(channelName: String) {
-        val win = settings.getLong("discord.channel.$channelName")?.let { jda?.getTextChannelById(it) }?.let { channels[channelName] = it  }
-        if(win != null) return
-        logger.severe("This sucks, I can't find Discord channel #$channelName!")
-    }
-
     override fun load() {
         instance = this
         BlueFox.server = server
@@ -257,15 +210,6 @@ class BlueFox : FoxPlugin("bluefox") {
         setupDatabases()
         Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
-        jda = getJDA()
-        async {
-            jda?.awaitReady()
-            channels = mutableMapOf()
-            loadChannel("minecraft")
-            loadChannel("console")
-            loadChannel("logs")
-            jda?.addEventListener(DiscordListener())
-        }
         logger.info("Good day!")
     }
 
@@ -275,7 +219,6 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     override fun registerConfigs() {
-        settings = registerConfig("settings")
         auth = registerConfig("auth")
     }
 

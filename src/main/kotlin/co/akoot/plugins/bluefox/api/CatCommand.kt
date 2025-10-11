@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
+import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.DoubleArgumentType
 import com.mojang.brigadier.arguments.FloatArgumentType
@@ -24,8 +25,11 @@ import org.bukkit.block.BlockState
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import java.time.ZoneId
 
 abstract class CatCommand(val plugin: FoxPlugin, val id: String): LiteralArgumentBuilder<CommandSourceStack>(id) {
+
+    protected val win = Command.SINGLE_SUCCESS
 
     protected fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
@@ -174,5 +178,13 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String): LiteralArgumen
 
     protected fun getMaterial(ctx: CommandContext<CommandSourceStack>, argName: String = "material"): Material {
         return getBlockState(ctx, argName).type
+    }
+
+    protected fun timeZone(argName: String = "time zone"): RequiredArgumentBuilder<CommandSourceStack, ZoneId> {
+        return Commands.argument(argName, TimeZoneArgument())
+    }
+
+    protected fun getZoneId(ctx: CommandContext<CommandSourceStack>, argName: String = "time zone"): ZoneId {
+        return ctx.getArgument(argName, ZoneId::class.java)
     }
 }

@@ -158,7 +158,7 @@ object TimeUtil {
 
     fun getTimeZone(ip: String): TimeZone? {
         return try {
-            val url = URI("https://api.ipdata.co/$ip?api-key=${BlueFox.getAPIKey("ipdata")}").toURL()
+            val url = URI("https://api.ipdata.co/$ip?api-key=${BlueFox.auth.getString("api-keys.ipdata")}").toURL()
             val config = WebUtil.getConfig(url) ?: return null
             val zoneId = config.getString("time_zone.name")
             TimeZone.getTimeZone(zoneId)
