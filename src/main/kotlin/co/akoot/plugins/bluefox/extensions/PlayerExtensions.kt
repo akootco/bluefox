@@ -143,12 +143,14 @@ fun Player.giveInBlocks(item: Material, block: Material, amount: Int, ratio: Int
 
     if (blocks > 0) {
         val blockStack = ItemStack(block, blocks)
-        inventory.addItem(blockStack)
+        val extra = inventory.addItem(blockStack)
+        extra.values.forEach { dropItem(it) }
     }
 
     if (remainder > 0) {
         val itemStack = ItemStack(item, remainder)
-        inventory.addItem(itemStack)
+        val extra = inventory.addItem(itemStack)
+        extra.values.forEach { dropItem(it) }
     }
 }
 
