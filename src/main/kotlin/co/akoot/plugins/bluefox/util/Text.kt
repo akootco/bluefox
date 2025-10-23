@@ -5,6 +5,7 @@ import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.XYZ
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.isBedrock
+import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
@@ -98,6 +99,8 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             }
             return string
         }
+
+        val String.titleCase: String get() = titleCase(" ", "_")
 
         fun String.noShadow(): Text {
             return Text(this).noShadow()

@@ -8,6 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.WorldCreator
 import java.io.File
+import java.util.UUID
 
 class FoxConfig(val file: File) {
 
@@ -50,6 +51,8 @@ class FoxConfig(val file: File) {
      * Saves the config in memory to the config file
      */
     fun save() {
+        file.parentFile.mkdirs()
+        file.createNewFile()
         file.writeText(config.root().render(options))
     }
 
@@ -102,6 +105,9 @@ class FoxConfig(val file: File) {
     fun getBoolean(path: String) = get(path, Config::getBoolean)
     fun getBooleanList(path: String) = getList(path, Config::getBooleanList)
 
+    fun getUUID(path: String) = get(path, Config::getString)?.let { UUID.fromString(it) }
+    fun getUUIDList(path: String) = getList(path, Config::getStringList).map { UUID.fromString(it) }
+
     fun getLocation(path: String): Location? {
         val world = getString("$path.world")?.let { Bukkit.getWorld(it) } ?: return null
         val coordinates = getDoubleList("$path.xyz")
@@ -109,6 +115,30 @@ class FoxConfig(val file: File) {
         if (coordinates.size != 3) return null
         return if(target.size != 2) Location(world, coordinates[0], coordinates[1], coordinates[2])
         else Location(world, coordinates[0], coordinates[1], coordinates[2], target[0].toFloat(), target[1].toFloat())
+    }
+
+    inline fun <reified T : Any> append(path: String, item: T) {
+        val list = when(T::class) {
+            UUID::class -> getUUIDList(path)
+            Long::class -> getLongList(path)
+            Int::class -> getIntList(path)
+            Double::class -> getDoubleList(path)
+            Boolean::class -> getBooleanList(path)
+            else -> getStringList(path)
+        } as List<T>
+        set(path, list + item)
+    }
+
+    inline fun <reified T : Any> remove(path: String, item: T) {
+        val list = when(T::class) {
+            UUID::class -> getUUIDList(path)
+            Long::class -> getLongList(path)
+            Int::class -> getIntList(path)
+            Double::class -> getDoubleList(path)
+            Boolean::class -> getBooleanList(path)
+            else -> getStringList(path)
+        } as List<T>
+        set(path, list - item)
     }
 
     fun setLocation(path: String, location: Location) {

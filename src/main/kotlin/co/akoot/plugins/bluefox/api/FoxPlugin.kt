@@ -20,7 +20,7 @@ import java.io.File
 
 abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
-    protected val configs: MutableMap<String, FoxConfig> = mutableMapOf()
+    val configs: MutableMap<String, FoxConfig> = mutableMapOf()
     open lateinit var settings: FoxConfig
 
     override fun onEnable() {
