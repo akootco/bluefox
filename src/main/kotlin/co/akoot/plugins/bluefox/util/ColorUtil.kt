@@ -184,6 +184,9 @@ object ColorUtil {
         return getGradient(points, color1, color2)[(points * percentage).toInt()]
     }
 
+    private val cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
+    private val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
+
     /**
      * Generates a gradient based on the color points provided.
      * This method mixes the colors in the CIE color space, which
@@ -194,46 +197,43 @@ object ColorUtil {
      * @return A list of colors
      */
     fun getGradient(size: Int, vararg points: TextColor): MutableList<TextColor> {
+        val gradient = ArrayList<TextColor>(size)
 
-        val gradient: MutableList<TextColor> = mutableListOf()
+        val x = points.size
+        val y = x - 1
 
-        val cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
-        val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
+        val a = size - x
+        val b = a / y
+        var c = a - (b * y)
 
-        // Don't you HATE the funny little letter variables below?
+        // precompute CIE XYZ for all points
+        val ciePoints = Array(x) { i ->
+            val rgb = Color(points[i].value()).getRGBColorComponents(null)
+            cie.fromRGB(rgb)
+        }
 
-        val x = points.size // Number of points
-        val y = x - 1       // Number of relations
-
-        val a = size - x    // Total number of midpoints
-        val b = a / y       // Minimum number of midpoints per relation
-        var c = a - (b * y) // Total number of extra midpoints
-
+        // build gradient
         for (i in 0 until x) {
+            gradient += points[i]
+            if (i == y) break
 
-            val from = points[i]
-            gradient += from
+            val from = ciePoints[i]
+            val to = ciePoints[i + 1]
 
-            if (i == y) break // The final color
+            val k = if (c-- > 0) b + 1 else b
+            val m = k + 1
+            val step = 1.0f / m
 
-            val to = points[i + 1]
+            val cieMid = FloatArray(3)
 
-            val cieFrom = cie.fromRGB(Color(from.value()).getRGBColorComponents(null))
-            val cieTo = cie.fromRGB(Color(to.value()).getRGBColorComponents(null))
+            for (j in 0 until k) {
+                val t = (j + 1) * step
+                cieMid[0] = from[0] + t * (to[0] - from[0])
+                cieMid[1] = from[1] + t * (to[1] - from[1])
+                cieMid[2] = from[2] + t * (to[2] - from[2])
 
-            val k = if (c-- > 0) b + 1 else b // Number of colors to generate for this relation
-            val m = k + 1 // We only need to include the colors IN BETWEEN
-
-            for (j in 0 until m) {
-                val l = j + 1
-                val rgb = sRGB.fromCIEXYZ(
-                    floatArrayOf(
-                        cieFrom[0] + (l * (1.0f / m)) * (cieTo[0] - cieFrom[0]),
-                        cieFrom[1] + (l * (1.0f / m)) * (cieTo[1] - cieFrom[1]),
-                        cieFrom[2] + (l * (1.0f / m)) * (cieTo[2] - cieFrom[2])
-                    )
-                )
-                if (j < k) gradient += TextColor.color(rgb[0], rgb[1], rgb[2])
+                val rgb = sRGB.fromCIEXYZ(cieMid)
+                gradient += TextColor.color(rgb[0], rgb[1], rgb[2])
             }
         }
 

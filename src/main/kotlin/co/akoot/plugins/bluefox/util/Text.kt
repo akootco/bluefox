@@ -324,7 +324,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun shadowColor(shadowColor: ShadowColor): Text {
+    fun shadowColor(shadowColor: ShadowColor?): Text {
         builder.shadowColor(shadowColor)
         return this
     }
@@ -357,7 +357,11 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun hover(string: String, color: TextColor? = null, vararg decorations: TextDecoration): Text {
+    fun hover(string: String?, color: TextColor? = null, vararg decorations: TextDecoration): Text {
+        if(string == null) {
+            builder.hoverEvent(null)
+            return this
+        }
         builder.hoverEvent(HoverEvent.showText(Text(string, color, bedrock = false, rawColor = true, *decorations).component))
         return this
     }
