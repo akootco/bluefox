@@ -81,7 +81,14 @@ open class Wallet(val id: Int, val address: String) {
         if(balance < BigDecimal(amount)) return INSUFFICIENT_BALANCE
         PlayerWithdrawEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
         if(coin.backingBlock == null) {
-            player.inventory.addItem(ItemStack(coin.backing, amount))
+            var remaining = amount
+            while (remaining > 0) {
+                val stackSize = minOf(remaining, coin.backing.maxStackSize)
+                val leftovers = player.inventory.addItem(ItemStack(coin.backing, stackSize))
+
+                leftovers.values.forEach { player.dropItem(it) }
+                remaining -= stackSize
+            }
         } else {
             player.giveInBlocks(coin.backing, coin.backingBlock, amount)
         }
