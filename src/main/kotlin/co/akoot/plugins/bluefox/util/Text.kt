@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.isBedrock
 import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import net.kyori.adventure.audience.Audience
+import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.TextComponent.Builder
@@ -15,6 +16,7 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.`object`.ObjectContents
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.title.Title
@@ -31,6 +33,7 @@ import java.awt.Color
 import java.math.BigDecimal
 import java.net.URLEncoder
 import java.time.Duration
+import java.util.UUID
 
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
@@ -559,6 +562,21 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
     fun sendActionBar(player: Player): Text {
         player.sendActionBar(component)
+        return this
+    }
+
+    fun playerHead(username: String): Text {
+        builder.append(Component.`object` { it.contents(ObjectContents.playerHead().name(username).build()).build() })
+        return this
+    }
+
+    fun playerHead(player: Player): Text {
+        builder.append(Component.`object` { it.contents(ObjectContents.playerHead().skin(player).build()).build() })
+        return this
+    }
+
+    fun sprite(path: String): Text {
+        builder.append(Component.`object` { it.contents(ObjectContents.sprite(Key.key(path))).build() })
         return this
     }
 
