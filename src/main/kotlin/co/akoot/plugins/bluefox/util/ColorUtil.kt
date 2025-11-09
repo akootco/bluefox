@@ -239,7 +239,76 @@ object ColorUtil {
 
         return gradient
     }
+
+    fun getGradient(
+        size: Int,
+        vararg points: Pair<TextColor, ShadowColor>
+    ): MutableList<Pair<TextColor, ShadowColor>> {
+
+        val gradient = ArrayList<Pair<TextColor, ShadowColor>>(size)
+
+        val x = points.size
+        val y = x - 1
+
+        val a = size - x
+        val b = a / y
+        var c = a - (b * y)
+
+        // precompute CIE XYZ for TextColor points
+        val cieTextColors = Array(x) { i ->
+            val rgb = Color(points[i].first.value()).getRGBColorComponents(null)
+            cie.fromRGB(rgb)
+        }
+
+        // precompute ShadowColor RGB and alpha
+        val shadowColors = points.map { it.second }.toTypedArray()
+
+        for (i in 0 until x) {
+            gradient += points[i]
+            if (i == y) break
+
+            val fromText = cieTextColors[i]
+            val toText = cieTextColors[i + 1]
+
+            val fromShadow = shadowColors[i]
+            val toShadow = shadowColors[i + 1]
+
+            val k = if (c-- > 0) b + 1 else b
+            val m = k + 1
+            val step = 1.0f / m
+
+            val cieMid = FloatArray(3)
+
+            for (j in 0 until k) {
+                val t = (j + 1) * step
+
+                // interpolate TextColor
+                cieMid[0] = fromText[0] + t * (toText[0] - fromText[0])
+                cieMid[1] = fromText[1] + t * (toText[1] - fromText[1])
+                cieMid[2] = fromText[2] + t * (toText[2] - fromText[2])
+                val rgbText = sRGB.fromCIEXYZ(cieMid)
+                val interpolatedText = TextColor.color(
+                    (rgbText[0] * 255).toInt().coerceIn(0, 255),
+                    (rgbText[1] * 255).toInt().coerceIn(0, 255),
+                    (rgbText[2] * 255).toInt().coerceIn(0, 255)
+                )
+
+                // interpolate ShadowColor
+                val r = (fromShadow.red() + t * (toShadow.red() - fromShadow.red())).toInt().coerceIn(0, 255)
+                val g = (fromShadow.green() + t * (toShadow.green() - fromShadow.green())).toInt().coerceIn(0, 255)
+                val bCol = (fromShadow.blue() + t * (toShadow.blue() - fromShadow.blue())).toInt().coerceIn(0, 255)
+                val a = (fromShadow.alpha() + t * (toShadow.alpha() - fromShadow.alpha())).toInt().coerceIn(0, 255)
+                val interpolatedShadow = ShadowColor.shadowColor(r, g, bCol, a)
+
+                gradient += interpolatedText to interpolatedShadow
+            }
+        }
+
+        return gradient
+    }
 }
+
+
 
 val TextColor.invert get() = TextColor.color(value() xor 0x00FFFFFF)
 

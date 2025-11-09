@@ -401,13 +401,13 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun bold(): Text{
-        builder.decorate(TextDecoration.BOLD)
+    fun bold(enabled: Boolean = true): Text{
+        builder.decoration(TextDecoration.BOLD, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
-    fun italic(): Text{
-        builder.decorate(TextDecoration.ITALIC)
+    fun italic(enabled: Boolean = true): Text{
+        builder.decoration(TextDecoration.ITALIC, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
@@ -416,18 +416,18 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun strikethrough(): Text{
-        builder.decorate(TextDecoration.STRIKETHROUGH)
+    fun strikethrough(enabled: Boolean = true): Text{
+        builder.decoration(TextDecoration.STRIKETHROUGH, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
-    fun underlined(): Text {
-        builder.decorate(TextDecoration.UNDERLINED)
+    fun underlined(enabled: Boolean = true): Text {
+        builder.decoration(TextDecoration.UNDERLINED, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
-    fun obfuscated(): Text {
-        builder.decorate(TextDecoration.OBFUSCATED)
+    fun obfuscated(enabled: Boolean = true): Text {
+        builder.decoration(TextDecoration.OBFUSCATED, TextDecoration.State.byBoolean(enabled))
         return this
     }
 

@@ -13,13 +13,14 @@ import co.akoot.plugins.bluefox.api.events.PlayerDepositEvent
 import co.akoot.plugins.bluefox.api.events.PlayerWithdrawEvent
 import co.akoot.plugins.bluefox.api.events.WalletSendCoinEvent
 import co.akoot.plugins.bluefox.api.events.WalletRequestSwapEvent
+import co.akoot.plugins.bluefox.extensions.countItem
 import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
 import co.akoot.plugins.bluefox.extensions.giveInBlocks
 import co.akoot.plugins.bluefox.extensions.isSurventure
 import co.akoot.plugins.bluefox.extensions.removeIncludingBlocks
+import co.akoot.plugins.bluefox.extensions.withAmount
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Statement
@@ -84,13 +85,13 @@ open class Wallet(val id: Int, val address: String) {
             var remaining = amount
             while (remaining > 0) {
                 val stackSize = minOf(remaining, coin.backing.maxStackSize)
-                val leftovers = player.inventory.addItem(ItemStack(coin.backing, stackSize))
+                val leftovers = player.inventory.addItem(coin.backing.withAmount(stackSize))
 
                 leftovers.values.forEach { player.dropItem(it) }
                 remaining -= stackSize
             }
         } else {
-            player.giveInBlocks(coin.backing, coin.backingBlock, amount)
+            player.giveInBlocks(coin.backing, coin.backingBlock, amount, coin.backingBlockValue)
         }
         return send(WORLD, coin, BigDecimal(amount))
     }
@@ -104,10 +105,10 @@ open class Wallet(val id: Int, val address: String) {
         if (amount < 1) return INSUFFICIENT_ITEMS
         PlayerDepositEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
         if(coin.backingBlock == null) {
-            if (!player.inventory.contains(coin.backing, amount)) return INSUFFICIENT_ITEMS
-            player.inventory.removeItemAnySlot(ItemStack(coin.backing, amount))
+            if (player.countItem(coin.backing) < amount) return INSUFFICIENT_ITEMS
+            player.inventory.removeItemAnySlot(coin.backing.withAmount(amount))
         } else {
-            val result = player.removeIncludingBlocks(coin.backing, coin.backingBlock, amount)
+            val result = player.removeIncludingBlocks(coin.backing, coin.backingBlock, amount, coin.backingBlockValue)
             if (!result) return INSUFFICIENT_ITEMS
         }
         return WORLD.send(this, coin, BigDecimal(amount))

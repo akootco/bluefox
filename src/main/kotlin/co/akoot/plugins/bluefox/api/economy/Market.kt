@@ -5,7 +5,9 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_BUYER_BAL
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.INSUFFICIENT_SELLER_BALANCE
 import co.akoot.plugins.bluefox.api.events.CoinCreateEvent
 import co.akoot.plugins.bluefox.api.events.WalletAcceptTradeEvent
+import co.akoot.plugins.bluefox.extensions.itemStack
 import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -113,6 +115,10 @@ object Market {
         }
     }
 
+    private data class CoinBacking(val backing: ItemStack? = null, val backingBlock: ItemStack? = null, val backingBlockAmount: Int = 9) {
+        constructor(backing: Material, backingBlock: Material? = null, backingBlockAmount: Int = 9): this(backing.itemStack, backingBlock?.itemStack, backingBlockAmount)
+    }
+
     fun loadCoins() {
         val statement = BlueFox.db.prepareStatement("SELECT * FROM coins")
         val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
@@ -120,23 +126,26 @@ object Market {
             try {
                 val ticker = result.getString("ticker")
                 val backing = when (ticker) {
-                    "DIA" -> Material.DIAMOND to Material.DIAMOND_BLOCK
-                    "NTRI" -> Material.NETHERITE_INGOT to Material.NETHERITE_BLOCK
-                    "AD" -> Material.ANCIENT_DEBRIS to null
-                    else -> null to null
+                    "DIA" -> CoinBacking(Material.DIAMOND,  Material.DIAMOND_BLOCK)
+                    "NTRI" -> CoinBacking(Material.NETHERITE_INGOT, Material.NETHERITE_BLOCK)
+                    "AD" -> CoinBacking(Material.ANCIENT_DEBRIS)
+                    "AMETHYST" -> CoinBacking(Coin.AMETHYST.backing, Coin.AMETHYST.backingBlock, 4)
+                    else -> CoinBacking()
                 }
                 val coin = Coin(
                     result.getInt("id"),
                     ticker,
                     result.getString("name"),
                     result.getString("description"),
-                    backing.first,
-                    backing.second
+                    backing.backing,
+                    backing.backingBlock,
+                    backing.backingBlockAmount
                 )
                 coins[ticker] = coin
             } catch (_: Exception) {
                 continue
             }
         }
+        coins["AMETHYST"] = Coin.AMETHYST
     }
 }

@@ -24,14 +24,11 @@ import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.api.events.PlayerRequestCoinEvent
-import co.akoot.plugins.bluefox.api.events.PlayerRequestTradeEvent
+import co.akoot.plugins.bluefox.extensions.countItem
 import co.akoot.plugins.bluefox.extensions.countIncludingBlocks
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.wallet
 import co.akoot.plugins.bluefox.util.Text
-import co.akoot.plugins.bluefox.util.Text.Companion.component
-import co.akoot.plugins.bluefox.util.Text.Companion.plus
-import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.math.BigDecimal
@@ -73,7 +70,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     return getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
                 }
                 when (args[0]) {
-                    "deposit", "withdraw" -> Market.coins.entries.filter { it.value.backing != Material.AIR }
+                    "deposit", "withdraw" -> Market.coins.entries.filter { it.value.backing != null }
                         .map { it.key }.toMutableList()
 
                     "swap" -> Market.coins.keys.toMutableList()
@@ -185,9 +182,9 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         if(action == "withdraw" && ((wallet.balance[coin] ?: BigDecimal.ZERO) < BigDecimal.ONE)) continue
                         if(action == "deposit") {
                             val count = if(coin.backingBlock != null) {
-                                player.countIncludingBlocks(coin.backing, coin.backingBlock)
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock, coin.backingBlockValue)
                             } else {
-                                player.inventory.sumOf { it?.amount ?: 0 }
+                                player.countItem(coin.backing)
                             }
                             if(count < 1) continue
                         }
@@ -204,14 +201,14 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     }
                     return true
                 }
-                if(coin == null) coin  = Coin.DIA
+                if(coin == null) coin = Coin.DIA
                 val amount = if (amountString == "all") {
                     if (action == "deposit") {
                         if(coin.backing != null) {
                             if(coin.backingBlock != null) {
-                                player.countIncludingBlocks(coin.backing, coin.backingBlock).toBigDecimal()
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock, coin.backingBlockValue).toBigDecimal()
                             } else {
-                                player.inventory.sumOf { it?.amount ?: 0 }.toBigDecimal()
+                                player.countItem(coin.backing).toBigDecimal()
                             }
                         } else null
                     } else {
@@ -243,7 +240,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         " to complete this transaction!"
                     )
 
-                    INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing!!.component) + Kolor.ERROR(
+                    INSUFFICIENT_ITEMS -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(coin.backing!!.displayName()) + Kolor.ERROR(
                         " to complete this transaction!"
                     )
 

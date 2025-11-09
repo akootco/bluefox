@@ -15,6 +15,7 @@ import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
 import net.coreprotect.CoreProtectAPI
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
 import org.bukkit.Server
 import org.bukkit.World
@@ -52,6 +53,10 @@ class BlueFox : FoxPlugin("bluefox") {
         fun getOfflinePlayer(name: String, exact: Boolean = false): OfflinePlayer? {
             if (exact) return cachedOfflinePlayerNames.find { it.equals(name, true) }?.let { server.getOfflinePlayer(it) }
             return cachedOfflinePlayerNames.find {it.startsWith(name, true)}?.let { server.getOfflinePlayer(it) }
+        }
+
+        fun key(key: String): NamespacedKey {
+            return NamespacedKey(instance, key)
         }
 
     }

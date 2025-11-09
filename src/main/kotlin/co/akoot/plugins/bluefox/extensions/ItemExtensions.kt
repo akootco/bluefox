@@ -1,7 +1,10 @@
 package co.akoot.plugins.bluefox.extensions
 
+import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.economy.Coin
+import net.kyori.adventure.text.Component
 import org.bukkit.Material
-import org.bukkit.entity.Player
+import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ItemStack
 
 val Material.itemStack get() = ItemStack(this)
@@ -33,6 +36,58 @@ fun ItemStack.inBlocks(block: ItemStack, ratio: Int = 9): MutableList<ItemStack>
     return inventory
 }
 
-fun ItemStack.isOf(itemStack: ItemStack): Boolean {
-    return this.type == itemStack.type && this.itemMeta == itemStack.itemMeta
+fun ItemStack.isOf(vararg itemStack: ItemStack?): Boolean {
+    for(item in itemStack) {
+        if(item == null) continue
+        if(this.type == item.type && ((!this.hasItemMeta() && !item.hasItemMeta()) || (this.itemMeta == item.itemMeta))) {
+            return true
+        }
+    }
+    return false
+}
+
+fun ItemStack.isCoin(coin: Coin): Boolean {
+    if(coin.backing == null) return false
+    if(this.type == coin.backing.type || this.type == coin.backingBlock?.type) {
+        if(coin.backing.hasItemMeta()) {
+            return isOf(coin.backing, coin.backingBlock)
+        }
+        return true
+    }
+    return false
+}
+
+fun ItemStack.withAmount(amount: Int): ItemStack {
+    this.amount = amount
+    return this
+}
+
+fun ItemStack.withDisplayName(component: Component): ItemStack {
+    val meta = itemMeta
+    meta.displayName(component)
+    setItemMeta(meta)
+    return this
+}
+
+fun ItemStack.withLore(vararg component: Component): ItemStack {
+    val meta = itemMeta
+    meta.lore(component.toList())
+    setItemMeta(meta)
+    return this
+}
+
+fun ItemStack.withAddedLore(vararg component: Component): ItemStack {
+    val meta = itemMeta
+    val lore = meta.lore()?.toMutableList() ?: mutableListOf()
+    lore.addAll(component)
+    meta.lore(lore)
+    setItemMeta(meta)
+    return this
+}
+
+inline fun<reified T: Any> ItemStack.withPDC(key: NamespacedKey, value: T): ItemStack {
+    val meta = itemMeta
+    meta.setPDC(key, value)
+    setItemMeta(meta)
+    return this
 }
