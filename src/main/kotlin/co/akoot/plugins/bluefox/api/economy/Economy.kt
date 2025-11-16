@@ -80,13 +80,12 @@ object Economy {
     }
 
     fun sendInfo(sender: CommandSender, coin: Coin) {
-        val backing = coin.backing?.let {Component.translatable(it.translationKey()).color(Kolor.ERROR.accent)}
         Text(sender) {
             Kolor.ACCENT(coin.toString()) + " (" + Kolor.ALT(coin.name) + ") - " + Kolor.QUOTE(coin.description)
         }
-        if (backing == null) return
+        val backing = coin.backing ?: return
         Text(sender) {
-            Kolor.TEXT("  Backing item: ") + backing
+            Kolor.TEXT("  Backing item: ") + backing.effectiveName().color(Kolor.ERROR.accent).hoverEvent(backing)
         }
     }
 
