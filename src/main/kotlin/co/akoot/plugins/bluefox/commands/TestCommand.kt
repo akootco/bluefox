@@ -6,34 +6,33 @@ import com.mojang.brigadier.Command
 
 class TestCommand(plugin: FoxPlugin): CatCommand(plugin,"test") {
     init {
-        then(float("amount", -1f, 2f)
-            .executes {
+        then(float("amount", -1f, 2f) {
                 val sender = getSender(it)
                 val amount = getFloat(it, "amount")
                 sender.sendMessage("very well $amount")
-                win
+                true
             }
-            .then(boolean().executes {
+            .then(boolean() {
                 val sender = getSender(it)
                 val amount = getFloat(it, "amount")
                 val trueOrFalse = getBoolean(it)
                 sender.sendMessage("now you did say $amount and $trueOrFalse")
-                win
+                true
             })
         )
-        then(subcommand("b").then(player().executes {
+        then(subcommand("b").then(player() {
             val player = getPlayer(it)
             getSender(it).sendMessage("am gonna krill ${player.name}")
-            win
+            true
         }).executes {
             val sender = getSender(it)
             sender.sendMessage("you said b")
             win
         })
-        then(subcommand("c").executes {
+        then(subcommand("c") {
             val sender = getSender(it)
             sender.sendMessage("you said c lol")
-            win
+            true
         })
     }
 }
