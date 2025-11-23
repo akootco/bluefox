@@ -17,9 +17,6 @@ import kotlin.math.min
 import kotlin.random.Random
 
 class Gradient(val colors: List<TextColor>) {
-    constructor(colors: List<Int>): this(colors.map { TextColor.color(it) })
-    constructor(colors: List<Color>): this(colors.map { TextColor.color(it.rgb) })
-    constructor(colors: List<String>): this(colors.map { textColor(it) ?: ColorUtil.WHITE })
     fun tinted(tint: TextColor) = colors.map { mix(it, tint) }
     fun color(string: String, points: Int = string.length): Component {
         val text = Text()

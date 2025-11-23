@@ -17,7 +17,7 @@ fun OfflinePlayer.getDataFile(): File {
     return File("world/playerdata/$uniqueId.dat")
 }
 
-val OfflinePlayer.configFile: File get() = File("users/$uniqueId.conf")
+val OfflinePlayer.configFile: File get() = File("users/$uniqueId.json")
 val OfflinePlayer.config: FoxConfig get() = FoxConfig(configFile)
 val Player.config: FoxConfig get() = BlueFox.instance.configs[name] ?: BlueFox.instance.registerConfig(name, configFile.path)
 
