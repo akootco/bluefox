@@ -17,6 +17,8 @@ import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.`object`.ObjectContents
+import net.kyori.adventure.text.`object`.PlayerHeadObjectContents
+import net.kyori.examination.Examinable
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.title.Title
@@ -34,6 +36,11 @@ import java.math.BigDecimal
 import java.net.URLEncoder
 import java.time.Duration
 import java.util.UUID
+
+val alphaNumericRegex = Regex("[^a-zA-Z0-9_ -]")
+val snakeCaseRegex = Regex("\\s|-")
+fun String.snakeCase() = this.replace(snakeCaseRegex, "_").lowercase().alphaNumeric()
+fun String.alphaNumeric() = this.replace(alphaNumericRegex, "")
 
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
@@ -283,6 +290,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         }
     }
 
+    constructor(char: Char, color: TextColor): this(char.toString(), color)
     constructor(string: String, color: Int, vararg decorations: TextDecoration) : this(string, TextColor.color(color), false, true, *decorations)
     constructor(string: String, color: Color, vararg decorations: TextDecoration) : this(string, TextColor.color(color.rgb), false, true, *decorations)
     constructor(string: String, kolor: Kolor, bedrock: Boolean = false, rawColor: Boolean = false, vararg decorations: TextDecoration) : this(

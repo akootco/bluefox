@@ -2,6 +2,11 @@ package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.extensions.brighten
 import co.akoot.plugins.bluefox.extensions.isGray
+import co.akoot.plugins.bluefox.util.ColorUtil.mix
+import co.akoot.plugins.bluefox.util.ColorUtil.textColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
@@ -10,6 +15,38 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+
+class Gradient(val colors: List<TextColor>) {
+    constructor(colors: List<Int>): this(colors.map { TextColor.color(it) })
+    constructor(colors: List<Color>): this(colors.map { TextColor.color(it.rgb) })
+    constructor(colors: List<String>): this(colors.map { textColor(it) ?: ColorUtil.WHITE })
+    fun tinted(tint: TextColor) = colors.map { mix(it, tint) }
+    fun color(string: String, points: Int = string.length): Component {
+        val text = Text()
+        for ((i, char) in string.withIndex()) {
+            text += Text(char, colors[i])
+        }
+        return text.component
+    }
+}
+
+class NamedColor(val id: String, val name: String, val color: TextColor, val author: String = "foxncat", val description: String? = null) {
+    constructor(name: String, color: TextColor): this(name.snakeCase(), name, color)
+    constructor(name: String, color: String): this(name.snakeCase(), name, textColor(color) ?: ColorUtil.WHITE)
+    companion object {
+        val BLACK = NamedColor("0", "Black", TextColor.color(0x0), "Mojang")
+        val WHITE = NamedColor("f", "White", TextColor.color(0xffffff), "Mojang")
+    }
+    fun shadowColor(alpha: Double = 0.5): ShadowColor {
+        return color.toShadowColor(alpha)
+    }
+    fun swatch(symbol: String = "█"): Component {
+        return Text(symbol, color)
+            .hover("$name\n$id\nby $author\n\"$description\"", color)
+            .copy("&$id")
+            .component
+    }
+}
 
 object ColorUtil {
 
