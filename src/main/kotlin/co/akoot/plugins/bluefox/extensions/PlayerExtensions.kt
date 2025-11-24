@@ -5,8 +5,10 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.util.Text
+import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.io.File
@@ -177,3 +179,13 @@ fun Player.sendActionBar(text: Text) {
 //val OfflinePlayer.displayName: TextComponent get() = getPDC<String>(BlueFox.instance.key("nickname"))?.let {
 //
 //} ?: Component.text(name ?: uniqueId.toString())
+
+fun Player.playSound(sound: Sound, volume: Float = 1f, pitch: Float = 1f) {
+    playSound(location, sound, volume, pitch)
+}
+
+val Player.isAfk get() = this.config.getBoolean("flags.afk") ?: false
+
+var Player.deathMessage: Component?
+    get() = getMeta<Component>("deathMessage")
+    set(value) = setMeta("deathMessage", value)
