@@ -1,5 +1,7 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.extensions.invoke
+import co.akoot.plugins.bluefox.extensions.sendMessage
 import co.akoot.plugins.bluefox.util.Text
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.BoolArgumentType
@@ -308,5 +310,20 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
 
     protected fun noargs(executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }) {
         executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    fun getPlayerSender(ctx: CommandContext<CommandSourceStack>): Player? {
+        val sender = getSender(ctx)
+        if(sender !is Player) {
+            sender.sendMessage("You must be a player to run this command.")
+        }
+        return sender as? Player
+    }
+
+    fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String): Boolean? {
+        val sender = getSender(ctx)
+        if(sender.hasPermission("${plugin.id}.command.$node")) return true
+        sender.sendMessage(Kolor.WARNING("You do not have permission to run ") + Kolor.WARNING.accent("/${ctx.input}"))
+        return null
     }
 }
