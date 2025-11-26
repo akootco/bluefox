@@ -320,9 +320,10 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
         return sender as? Player
     }
 
-    fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String): Boolean? {
+    fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
-        if(sender.hasPermission("${plugin.id}.command.$node")) return true
+        val finalNode = node?.let { ".$it" } ?: ""
+        if(sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
         sender.sendMessage(Kolor.WARNING("You do not have permission to run ") + Kolor.WARNING.accent("/${ctx.input}"))
         return null
     }
