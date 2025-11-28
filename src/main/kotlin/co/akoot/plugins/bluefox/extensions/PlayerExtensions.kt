@@ -2,6 +2,8 @@ package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.FoxConfig
+import co.akoot.plugins.bluefox.api.LegacyHome
+import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.util.Text
@@ -189,3 +191,38 @@ val Player.isAfk get() = this.config.getBoolean("flags.afk") ?: false
 var Player.deathMessage: Component?
     get() = getMeta<Component>("deathMessage")
     set(value) = setMeta("deathMessage", value)
+
+var Player.legacyHomes: List<LegacyHome>
+    get() = config.getStringList("data.homes").mapNotNull { LegacyHome.from(it) }
+    set(value) = config.set("data.homes", value.map { it.toString() })
+
+fun Player.getLegacyHome(name: String): LegacyHome? {
+    if (name == "bed") return legacyHomeBed
+    return legacyHomes.firstOrNull { it.name == name }
+}
+
+val Player.legacyHomeBed: LegacyHome? get() = respawnLocation?.let { LegacyHome("bed", it) }
+
+/**
+ * @return true if replaced
+ */
+fun Player.setLegacyHome(home: LegacyHome): Boolean {
+    val homes = legacyHomes.toMutableList()
+    val replaced = homes.removeIf { it.name == home.name }
+    homes += home
+    legacyHomes = homes// + home
+    return replaced
+}
+
+/**
+ * @return true if removed
+ */
+fun Player.deleteLegacyHome(name: String): Boolean {
+    val homes = legacyHomes.toMutableList()
+    val removed = homes.removeIf { it.name == name }
+    if(!removed) return false
+    legacyHomes = homes
+    return true
+}
+
+fun Player.teleport(legacyWarp: LegacyWarp) = teleport(legacyWarp.location)

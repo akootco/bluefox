@@ -117,6 +117,24 @@ class FoxConfig(val file: File) {
         else Location(world, coordinates[0], coordinates[1], coordinates[2], target[0].toFloat(), target[1].toFloat())
     }
 
+    fun getWarp(path: String): Warp? {
+        val location = getLocation("$path.location") ?: return null
+        val name = getString("$path.name")
+        val author = getUUID("$path.author")
+        val description = getString("$path.description")
+        val visibility = getString("$path.visibility")?.let { Visibility.valueOf(it.uppercase()) }
+        val id = path.substring(path.lastIndexOf(".").coerceAtLeast(0))
+        return Warp(id, name, description, author, location, visibility)
+    }
+
+    fun setWarp(path: String, warp: Warp) {
+        set("$path.name", warp.name)
+        set("$path.description", warp.description)
+        set("$path.author", warp.author)
+        set("$path.visibility", warp.visibility?.name?.lowercase())
+        setLocation("$path.location", warp.location)
+    }
+
     inline fun <reified T : Any> append(path: String, item: T) {
         val list = when(T::class) {
             UUID::class -> getUUIDList(path)
@@ -125,7 +143,7 @@ class FoxConfig(val file: File) {
             Double::class -> getDoubleList(path)
             Boolean::class -> getBooleanList(path)
             else -> getStringList(path)
-        } as List<T>
+        } as List<*>
         set(path, list + item)
     }
 

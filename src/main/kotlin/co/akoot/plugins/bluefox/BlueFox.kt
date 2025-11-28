@@ -4,10 +4,12 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.economy.Market
+import co.akoot.plugins.bluefox.commands.HomeCommand
 import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.TestCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
+import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
 import co.akoot.plugins.bluefox.util.async
@@ -15,6 +17,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
 import net.coreprotect.CoreProtectAPI
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
@@ -60,6 +63,15 @@ class BlueFox : FoxPlugin("bluefox") {
 
         fun key(key: String): NamespacedKey {
             return NamespacedKey(instance, key)
+        }
+
+        fun getLegacyWorld(legacyName: String): World? {
+            val name = when(legacyName) {
+                "nether" -> "world_nether"
+                "end" -> "world_the_end"
+                else -> legacyName
+            }
+            return Bukkit.getWorld(name)
         }
 
     }
@@ -226,25 +238,47 @@ class BlueFox : FoxPlugin("bluefox") {
 
     private val legacyWarpsFolder = File("warps")
     fun loadLegacyWarps() {
-        for (it in legacyWarpsFolder.listFiles {
+        for (file in legacyWarpsFolder.listFiles {
             it.isFile && it.name.endsWith(".json")
         }) {
-            val config = FoxConfig(it)
-            val name = config.getString("name") ?: continue
-            val world = config.getString("world").let {
-                when(it) {
-                    "nether" -> "world_nether"
-                    "end" -> "world_the_end"
-                    else -> it
-                }
-            }?.let { server.getWorld(it) } ?: continue
-            val coordinates = config.getDoubleList("coordinates").ifEmpty { continue }
-            val direction = config.getDoubleList("direction").ifEmpty { continue }
-            val location = Location(world, coordinates[0], coordinates[1], coordinates[2], direction[0].toFloat(), direction[1].toFloat())
-            legacyWarps += LegacyWarp(name, location)
+            val warp = getLegacyWarp(file.name.substringBeforeLast('.')) ?: continue
+            legacyWarps += warp
         }
-        println("[Legacy Warps]")
-        legacyWarps.forEach { println(it) }
+    }
+
+    fun getLegacyWarp(name: String): LegacyWarp? {
+        val file = legacyWarpsFolder.resolve("$name.json")
+        if(!file.exists()) return null
+        val config = FoxConfig(file)
+        val name = config.getString("name") ?: return null
+        val world = config.getString("world")?.let { getLegacyWorld(it) } ?: return null
+        val coordinates = config.getDoubleList("coordinates").ifEmpty { return null }
+        val direction = config.getDoubleList("direction").ifEmpty { return null }
+        val location = Location(world, coordinates[0], coordinates[1], coordinates[2], direction[0].toFloat(), direction[1].toFloat())
+        return LegacyWarp(name, location)
+    }
+
+    /**
+     * @return true if replaced
+     */
+    fun setLegacyWarp(warp: LegacyWarp): Boolean {
+        val file = legacyWarpsFolder.resolve("$name.json")
+        val config = FoxConfig(file)
+        config.autosave = false
+        config.set("name", warp.name)
+        config.set("world", getLegacyWorld(warp.location.world.legacyName))
+        config.set("coordinates", listOf(warp.location.x, warp.location.y, warp.location.z))
+        config.set("direction", listOf(warp.location.yaw, warp.location.pitch))
+        config.save()
+        return file.exists()
+    }
+
+    /**
+     * @return true if deleted
+     */
+    fun deleteLegacyWarp(warpName: String): Boolean {
+        val file = legacyWarpsFolder.resolve("${warpName}.json")
+        return file.delete()
     }
 
     override fun unload() {
@@ -260,6 +294,7 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(WalletCommand(this))
         registerCommand(TradeCommand(this))
         registerCommand(MarketCommand(this))
+//        registerCommand(HomeCommand(this))
 //        registerCommand(TestCommand(this))
     }
 

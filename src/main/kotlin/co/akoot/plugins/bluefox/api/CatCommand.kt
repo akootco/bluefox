@@ -9,11 +9,14 @@ import com.mojang.brigadier.arguments.DoubleArgumentType
 import com.mojang.brigadier.arguments.FloatArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
+import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
+import io.papermc.paper.command.brigadier.MessageComponentSerializer
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
 import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver
 import io.papermc.paper.command.brigadier.argument.resolvers.FinePositionResolver
@@ -133,16 +136,27 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
 
     protected fun string(
         argName: String,
+        suggests: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
-        return Commands.argument(argName, StringArgumentType.string()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, StringArgumentType.string())
+            .suggests { ctx, builder ->
+                suggests(ctx, builder)
+                builder.buildFuture()
+            }
+            .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun greedyString(
         argName: String,
+        suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
         return Commands.argument(argName, StringArgumentType.greedyString())
+            .suggests { ctx, builder ->
+                suggestions(ctx, builder)
+                builder.buildFuture()
+            }
             .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
@@ -312,7 +326,7 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
         executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    fun getPlayerSender(ctx: CommandContext<CommandSourceStack>): Player? {
+    protected fun getPlayerSender(ctx: CommandContext<CommandSourceStack>): Player? {
         val sender = getSender(ctx)
         if(sender !is Player) {
             sender.sendMessage("You must be a player to run this command.")
@@ -320,11 +334,44 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
         return sender as? Player
     }
 
-    fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
+    protected fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
         if(sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
         sender.sendMessage(Kolor.WARNING("You do not have permission to run ") + Kolor.WARNING.accent("/${ctx.input}"))
         return null
+    }
+
+    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<String>) {
+        suggestions.stream()
+            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestInt")
+    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Int>) {
+        suggestions.stream()
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestText")
+    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
+        suggestions.stream()
+            .filter { entry -> entry.first.startsWith(builder.remainingLowerCase) }
+            .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
+    }
+
+    @JvmName("suggestIntText")
+    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
+        suggestions.stream()
+            .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
+    }
+
+    protected fun then(something: () -> ArgumentBuilder<CommandSourceStack, *>) {
+        then(something())
+    }
+
+    protected infix fun ArgumentBuilder<CommandSourceStack, *>.then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
+        return then(something())
     }
 }

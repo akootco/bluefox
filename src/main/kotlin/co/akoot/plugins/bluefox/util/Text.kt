@@ -50,6 +50,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
     companion object {
         val newline = Text("\n")
+        val newlineSpace = Text("\n  ")
         val space = Text(" ")
 
         val Boolean.now: String get() = if(this) "now" else "no longer"
@@ -353,18 +354,18 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         this.enumOptions = options
     }
 
-    fun suggest(command: String): Text {
-        builder.clickEvent(ClickEvent.suggestCommand(command))
+    fun suggest(command: String?): Text {
+        builder.clickEvent(command?.let { ClickEvent.suggestCommand(it) })
         return this
     }
 
-    fun execute(command: String): Text {
-        builder.clickEvent(ClickEvent.runCommand(command))
+    fun execute(command: String?): Text {
+        builder.clickEvent(command?.let { ClickEvent.runCommand(it) })
         return this
     }
 
-    fun hover(text: Text): Text {
-        builder.hoverEvent(HoverEvent.showText(text.component))
+    fun hover(text: Text?): Text {
+        builder.hoverEvent(text?.component?.let { HoverEvent.showText(it) })
         return this
     }
 

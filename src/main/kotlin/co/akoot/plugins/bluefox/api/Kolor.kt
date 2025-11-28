@@ -48,6 +48,10 @@ class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
     val player by lazy { ColorUtil.mix(PLAYER.text, raw) }
     val number by lazy { ColorUtil.mix(NUMBER.text, raw) }
 
+    operator fun invoke(any: Any, bedrock: Boolean = false, rawColor: Boolean = false): Text {
+        return Text(any.toString(), get(bedrock, rawColor))
+    }
+
     operator fun invoke(string: String, bedrock: Boolean = false, rawColor: Boolean = false): Text {
         return Text(string, get(bedrock, rawColor))
     }
