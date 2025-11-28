@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
+import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.TestCommand
@@ -22,6 +23,7 @@ import org.bukkit.World
 import org.bukkit.entity.Player
 import org.geysermc.api.Geyser
 import org.geysermc.api.GeyserApiBase
+import java.io.File
 import java.sql.Connection
 
 class BlueFox : FoxPlugin("bluefox") {
@@ -32,6 +34,7 @@ class BlueFox : FoxPlugin("bluefox") {
         lateinit var spawnLocation: Location
         lateinit var instance: BlueFox
         lateinit var db: Connection
+
         var world: World? = null
 
         val geyser: GeyserApiBase? get() = instance.getGeyser()
@@ -60,6 +63,8 @@ class BlueFox : FoxPlugin("bluefox") {
         }
 
     }
+
+    val legacyWarps: MutableSet<LegacyWarp> = mutableSetOf()
 
     fun getCoreProtect(): CoreProtectAPI? {
         val plugin = server.pluginManager.getPlugin("CoreProtect")
@@ -215,7 +220,31 @@ class BlueFox : FoxPlugin("bluefox") {
         setupDatabases()
         Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
+        loadLegacyWarps()
         logger.info("Good day!")
+    }
+
+    private val legacyWarpsFolder = File("warps")
+    fun loadLegacyWarps() {
+        for (it in legacyWarpsFolder.listFiles {
+            it.isFile && it.name.endsWith(".json")
+        }) {
+            val config = FoxConfig(it)
+            val name = config.getString("name") ?: continue
+            val world = config.getString("world").let {
+                when(it) {
+                    "nether" -> "world_nether"
+                    "end" -> "world_the_end"
+                    else -> it
+                }
+            }?.let { server.getWorld(it) } ?: continue
+            val coordinates = config.getDoubleList("coordinates").ifEmpty { continue }
+            val direction = config.getDoubleList("direction").ifEmpty { continue }
+            val location = Location(world, coordinates[0], coordinates[1], coordinates[2], direction[0].toFloat(), direction[1].toFloat())
+            legacyWarps += LegacyWarp(name, location)
+        }
+        println("[Legacy Warps]")
+        legacyWarps.forEach { println(it) }
     }
 
     override fun unload() {
