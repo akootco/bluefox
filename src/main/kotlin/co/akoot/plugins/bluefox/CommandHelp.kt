@@ -7,6 +7,8 @@ import co.akoot.plugins.bluefox.util.Text
 
 class CommandHelp(val text: Text = Text()) {
 
+    constructor(string: String) : this(Text(string)) {}
+
     fun description(description: String): CommandHelp {
         text += Kolor.QUOTE(description).italic()
         return this

@@ -1,14 +1,12 @@
 package co.akoot.plugins.bluefox.commands
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.CommandHelp
 import co.akoot.plugins.bluefox.api.CatCommand
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.extensions.*
 import co.akoot.plugins.bluefox.util.Text
-import com.mojang.brigadier.context.CommandContext
-import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import io.papermc.paper.command.brigadier.CommandSourceStack
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -84,6 +82,22 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
                 }
             }
         }
+//        then {
+//            subcommand("clean") {
+//                permissionCheck(it, "clean") ?: return@subcommand false
+//                val player = getPlayerSender(it) ?: return@subcommand false
+//                player.sendMessage(CommandHelp("Usage: ").usage("/home clean").usage("query", literal = false, final = true).text)
+//                true
+//            } then {
+//                greedyString("query") {
+//                    permissionCheck(it, "clean") ?: return@greedyString false
+//                    val player = getPlayerSender(it) ?: return@greedyString false
+//                    val query = getString(it, "query")
+//                    val confirm = query.contains("--confirm")
+//                    clean(player, query.replace("--confirm", ""), confirm)
+//                }
+//            }
+//        }
     }
 }
 
@@ -101,6 +115,23 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                 val player = getOfflinePlayer(it) ?: return@offlinePlayer false
                 teleport(player, "home", sender)
             } then {
+                subcommand("remove") {
+                    permissionCheck(it, "remove")
+                    val sender = getSender(it)
+                    val player = getOfflinePlayer(it) ?: return@subcommand false
+                    remove(player, "home", sender)
+                } then {
+                    greedyString(
+                        "home name",
+                        { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
+                        permissionCheck(it, "remove")
+                        val sender = getSender(it)
+                        val player = getOfflinePlayer(it) ?: return@greedyString false
+                        val homeName = getString(it, "home name")
+                        remove(player, homeName, sender)
+                    }
+                }
+            } then {
                 subcommand("set") {
                     permissionCheck(it, "set")
                     val sender = getSender(it)
@@ -113,20 +144,6 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                         val player = getOfflinePlayer(it) ?: return@greedyString false
                         val homeName = getString(it, "home name")
                         set(player, homeName, sender)
-                    }
-                }
-                subcommand("remove") {
-                    permissionCheck(it, "remove")
-                    val sender = getSender(it)
-                    val player = getOfflinePlayer(it) ?: return@subcommand false
-                    remove(player, "home", sender)
-                } then {
-                    greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
-                        permissionCheck(it, "remove")
-                        val sender = getSender(it)
-                        val player = getOfflinePlayer(it) ?: return@greedyString false
-                        val homeName = getString(it, "home name")
-                        remove(player, homeName, sender)
                     }
                 }
             } then {
@@ -153,6 +170,37 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                     }
                 }
             }
+            then {
+                subcommand("clear") {
+                    permissionCheck(it, "clear")
+                    val sender = getSender(it)
+                    val player = getOfflinePlayer(it) ?: return@subcommand false
+                    clear(player, false, sender)
+                } then {
+                    subcommand("confirm") {
+                        val sender = getSender(it)
+                        val player = getOfflinePlayer(it) ?: return@subcommand false
+                        clear(player, true, sender)
+                    }
+                }
+            }
+//            then {
+//                subcommand("clean") {
+//                    permissionCheck(it, "clean") ?: return@subcommand false
+//                    val sender = getSender(it)
+//                    sender.sendMessage(CommandHelp("Usage: ").usage("/home clean").usage("query", literal = false, final = true).text)
+//                    true
+//                } then {
+//                    greedyString("query") {
+//                        permissionCheck(it, "clean") ?: return@greedyString false
+//                        val sender = getSender(it)
+//                        val player = getOfflinePlayer(it) ?: return@greedyString false
+//                        val query = getString(it, "query")
+//                        val confirm = query.contains("--confirm")
+//                        clean(player, query.replace("--confirm", ""), confirm, sender)
+//                    }
+//                }
+//            }
         }
     }
 }
@@ -205,6 +253,53 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
     }
 }
 
+private enum class QueryMode(val argument: String, val description: String) {
+    CONTAINS("has", "Select homes that have the specified text anywhere in the name"),
+    STARTS_WITH("startsWith", "Select homes start with the specified text"),
+    ENDS_WITH("endsWith", "Select homes that end with the specified text"),
+    NOT_CONTAINS("without", "Select homes that DO NOT have the specified text anywhere in the name"),
+    LONGER_THAN("longerThan", "Select homes that have a name longer than the specified number"),
+    SHORTER_THAN("shorterThan", "Select homes that have a name shorter than the specified number"),
+    IN("in", "Select homes that are in the specified world"),
+    NOT_IN("notIn", "Select homes that ARE NOT in the specified world"),
+    ;
+    companion object {
+        fun of(string: String): QueryMode? {
+            return QueryMode.entries.find { it.argument == string }
+        }
+    }
+}
+private val queryModes: List<Pair<String, Text>> = QueryMode.entries.map {
+    it.argument to Text(it.description)
+}
+private fun clean(player: OfflinePlayer, queryMode: QueryMode, queryString: String, sender: CommandSender? = player as? Player): Boolean {
+    val confirm = "--confirm" in queryString
+    val query = queryString.replace("--confirm", "").trim()
+    val self = player == sender
+    val homes = player.legacyHomes
+    val found = player.legacyHomes.filter {
+        when(queryMode) {
+            QueryMode.CONTAINS -> it.name.contains(query, true)
+            QueryMode.STARTS_WITH -> it.name.startsWith(query, true)
+            QueryMode.ENDS_WITH -> it.name.endsWith(query, true)
+            QueryMode.NOT_CONTAINS -> !it.name.contains(query, true)
+            QueryMode.LONGER_THAN -> it.name.length > query.toInt()
+            QueryMode.SHORTER_THAN -> it.name.length < query.toInt()
+            QueryMode.IN -> it.location.world.name == query
+            QueryMode.NOT_IN -> it.location.world.name != query
+        }
+    }
+    val foundSize = found.size
+    val command = if(self) "/home clean $query --confirm" else "/userhome ${player.username} clean $query --confirm"
+    val message =
+        if(foundSize == 0) Kolor.WARNING("No homes found!")
+        else if(!confirm) Kolor.WARNING("Found ") + Kolor.WARNING(foundSize) + Kolor.WARNING(" homes.\n") + Kolor.WARNING("Type ") + Kolor.WARNING.quote(command).italic().suggest(command)
+        else Kolor.TEXT("Removed ") + foundSize + Kolor.TEXT(" homes!")
+    sender?.sendMessage(message)
+    if(confirm) player.legacyHomes = homes - found.toSet()
+    return true
+}
+
 private fun homeSuggestions(player: OfflinePlayer?, includeBed: Boolean = false): List<Pair<String, Text>> {
     val homes = player?.legacyHomes?.toMutableList() ?: mutableListOf()
     if(includeBed) (player as? Player)?.legacyHomeBed?.let { homes += it }
@@ -215,9 +310,9 @@ private fun clear(player: OfflinePlayer, confirm: Boolean = false, sender: Comma
     val self = player == sender
     val homesSize = player.legacyHomes.size
     val message = if(self) {
-        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of your homes!") else Kolor.WARNING("Are you sure? Type ") + Kolor.WARNING.accent("/home clear confirm") + Kolor.WARNING(" if so...")
+        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of your homes!") else Kolor.WARNING("Are you sure you want to remove ") + Kolor.WARNING.number("all $homesSize") + Kolor.WARNING(" of your homes? Type ") + Kolor.WARNING.accent("/home clear confirm") + Kolor.WARNING(" if so...")
     } else {
-        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of ") + player.textPosessive() + Kolor.TEXT(" homes!") else Kolor.WARNING("Are you sure? Type ") + Kolor.WARNING.accent("/userhome ${player.username} clear confirm") + Kolor.WARNING(" if so...")
+        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of ") + player.textPosessive() + Kolor.TEXT(" homes!") else Kolor.WARNING("Are you sure you want to remove ") + Kolor.WARNING.number("all $homesSize") + Kolor.WARNING(" of ") + player.textPosessive(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" homes? Type ") + Kolor.WARNING.accent("/userhome ${player.username} clear confirm") + Kolor.WARNING(" if so...")
     }
     sender?.sendMessage(message)
     if(confirm) player.legacyHomes = listOf()
@@ -294,7 +389,7 @@ private fun get(player: OfflinePlayer, homeName: String, sender: CommandSender? 
 }
 
 private fun teleport(player: OfflinePlayer, homeName: String, sender: CommandSender? = player as? Player): Boolean {
-    val home = get(player, homeName) ?: return false
+    val home = get(player, homeName, sender) ?: return false
     val isHome = homeName == "home"
     val message = if (player == sender) {
         Kolor.TEXT("Teleported ") + (if (isHome) Text() else Kolor.TEXT("to ")) + Kolor.ACCENT(homeName) + "!"
@@ -360,7 +455,7 @@ private fun set(player: OfflinePlayer, homeName: String, sender: CommandSender? 
         ) + Kolor.TEXT(" to ") + home.location.text + "!"
     } else {
         Kolor.TEXT(if (replaced) "Moved " else "Set ") + player.textPosessive() + (if (isHome) Text(" ") else Kolor.TEXT(
-            "home "
+            " home "
         )) + Kolor.ACCENT(homeName) + Kolor.TEXT(" to ") + home.location.text + "!"
     }
     sender.sendMessage(message)
@@ -369,8 +464,8 @@ private fun set(player: OfflinePlayer, homeName: String, sender: CommandSender? 
 
 private fun suggestSetHome(player: OfflinePlayer, homeName: String, sender: CommandSender? = player as? Player) {
     val self = player == sender
-    val command = if (self) "home" else "userhome ${player.name}"
-    val suggestion = if (homeName == "home") "/$command set" else "/$command set $homeName"
+    val command = if (self) "sethome" else "userhome ${player.name} set"
+    val suggestion = if (homeName == "home") "/$command " else "/$command $homeName "
     val isHome = homeName == "home"
     val message = if (self) {
         Kolor.WARNING("You do not have a ") + (if (isHome) Kolor.WARNING.accent(homeName) else Kolor.WARNING("home named ") + Kolor.WARNING.accent(
