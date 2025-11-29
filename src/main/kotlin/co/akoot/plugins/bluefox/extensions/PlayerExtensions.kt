@@ -2,6 +2,7 @@ package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.FoxConfig
+import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.Profile
@@ -217,7 +218,7 @@ fun OfflinePlayer.setLegacyHome(home: LegacyHome): Boolean {
 /**
  * @return true if removed
  */
-fun OfflinePlayer.deleteLegacyHome(name: String): Boolean {
+fun OfflinePlayer.removeLegacyHome(name: String): Boolean {
     val homes = legacyHomes.toMutableList()
     val removed = homes.removeIf { it.name == name }
     if(!removed) return false
@@ -226,3 +227,8 @@ fun OfflinePlayer.deleteLegacyHome(name: String): Boolean {
 }
 
 fun Player.teleport(legacyWarp: LegacyWarp) = teleport(legacyWarp.location)
+
+val OfflinePlayer.username: String get() = (this as? Player)?.name ?: name ?: "Unknown Player"
+val OfflinePlayer.usernamePosessive: String get() = "$username's"
+fun OfflinePlayer.text(kolor: Kolor = Kolor.PLAYER): Text = (this as? Player)?.displayName()?.let { Text(it).color(kolor) } ?: kolor(username)
+fun OfflinePlayer.textPosessive(textKolor: Kolor = Kolor.TEXT, playerKolor: Kolor = Kolor.PLAYER): Text = text(textKolor + playerKolor) + textKolor("'s")

@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.extensions.mix
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.invert
@@ -58,6 +59,14 @@ class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
 
     operator fun invoke(component: Component, bedrock: Boolean = false, rawColor: Boolean = false): Text {
         return Text(component).color(get(bedrock, rawColor))
+    }
+
+    operator fun plus(kolor: Kolor): Kolor {
+        return Kolor(raw.mix(kolor.raw))
+    }
+
+    operator fun plus(textColor: TextColor): Kolor {
+        return Kolor(raw.mix(textColor))
     }
 
     fun get(isBedrock: Boolean = false, rawColor: Boolean = false): TextColor {

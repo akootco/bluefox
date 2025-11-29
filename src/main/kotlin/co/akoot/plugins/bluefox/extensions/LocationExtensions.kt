@@ -6,6 +6,6 @@ import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
 
-val Location.text: Text get() = Text() + blockX + ", " + blockY + ", " + blockZ + " in " + Kolor.ACCENT(world.name)
+val Location.text: Text get() = Text() + blockX + ", " + blockY + ", " + blockZ + " in " + world.text()
 
 val Location.xyz: XYZ get() = XYZ(this)

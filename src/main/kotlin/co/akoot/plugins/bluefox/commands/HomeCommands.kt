@@ -15,31 +15,20 @@ import org.bukkit.entity.Player
 import kotlin.math.ceil
 
 class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayOf("h")) {
-    private val allHomeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getPlayerSender(ctx)
-            val homes = player?.legacyHomes?.toMutableList() ?: mutableListOf()
-            player?.legacyHomeBed?.let { homes += it }
-            suggest(builder, homes.map { it.name to it.location.text })
-        }
-
-    private val homeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getPlayerSender(ctx)
-            player?.legacyHomes?.let { homes -> suggest(builder, homes.map { it.name to it.location.text }) }
-        }
-
     init {
         noargs {
+            permissionCheck(it) ?: return@noargs false
             val player = getPlayerSender(it) ?: return@noargs false
             teleport(player, "home")
         }
         then {
             subcommand("set") {
+                permissionCheck(it, "set") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
                 set(player, "home")
             } then {
-                greedyString("home name", suggestions = homeSuggestions) {
+                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                    permissionCheck(it, "set.named") ?: return@greedyString false
                     val player = getPlayerSender(it) ?: return@greedyString false
                     val homeName = getString(it, "home name")
                     set(player, homeName)
@@ -48,10 +37,12 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
         }
         then {
             subcommand("remove") {
+                permissionCheck(it, "remove") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
                 remove(player, "home")
             } then {
-                greedyString("home name", suggestions = homeSuggestions) {
+                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                    permissionCheck(it, "remove.named") ?: return@greedyString false
                     val player = getPlayerSender(it) ?: return@greedyString false
                     val homeName = getString(it, "home name")
                     remove(player, homeName)
@@ -60,25 +51,20 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
         }
         then {
             subcommand("clear") {
+                permissionCheck(it, "clear") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
-                player.sendMessage(
-                    Kolor.WARNING("Are you sure? Type ") + Kolor.WARNING.accent("/homes clear confirm") + Kolor.WARNING(
-                        " if so..."
-                    )
-                )
-                true
+                clear(player)
             } then {
                 subcommand("confirm") {
+                    permissionCheck(it, "clear") ?: return@subcommand false
                     val player = getPlayerSender(it) ?: return@subcommand false
-                    val homes = player.legacyHomes.size
-                    player.legacyHomes = listOf()
-                    player.sendMessage(Kolor.TEXT("Cleared ") + homes + Kolor.TEXT(" homes!"))
-                    true
+                    clear(player, true)
                 }
             }
         }
         then {
-            greedyString("home name", suggestions = allHomeSuggestions) {
+            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx), true)) }) {
+                permissionCheck(it) ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 teleport(player, homeName)
@@ -86,14 +72,15 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
         }
         then {
             subcommand("list") {
+                permissionCheck(it, "list") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
                 listHomes(player, 1)
             } then {
                 int("page", min = 1) {
+                    permissionCheck(it, "list") ?: return@int false
                     val player = getPlayerSender(it) ?: return@int false
                     val page = getInt(it, "page")
                     listHomes(player, page)
-                    true
                 }
             }
         }
@@ -101,20 +88,6 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
 }
 
 class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases = arrayOf("uh")) {
-    private val allHomeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getOfflinePlayer(ctx)
-            val homes = player?.legacyHomes?.toMutableList() ?: mutableListOf()
-            (player as? Player)?.legacyHomeBed?.let { homes += it }
-            suggest(builder, homes.map { it.name to it.location.text })
-        }
-
-    private val homeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getOfflinePlayer(ctx)
-            suggest(builder, player?.legacyHomes?.map { it.name to it.location.text } ?: mutableListOf())
-        }
-
     init {
         noargs {
             val sender = getSender(it)
@@ -123,16 +96,19 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
         }
         then {
             offlinePlayer {
+                permissionCheck(it)
                 val sender = getPlayerSender(it) ?: return@offlinePlayer false
                 val player = getOfflinePlayer(it) ?: return@offlinePlayer false
                 teleport(player, "home", sender)
             } then {
                 subcommand("set") {
+                    permissionCheck(it, "set")
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     set(player, "home", sender)
                 } then {
-                    greedyString("home name", suggestions = allHomeSuggestions) {
+                    greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
+                        permissionCheck(it, "set")
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
                         val homeName = getString(it, "home name")
@@ -140,11 +116,13 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                     }
                 }
                 subcommand("remove") {
+                    permissionCheck(it, "remove")
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     remove(player, "home", sender)
                 } then {
-                    greedyString("home name", suggestions = homeSuggestions) {
+                    greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
+                        permissionCheck(it, "remove")
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
                         val homeName = getString(it, "home name")
@@ -152,7 +130,8 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                     }
                 }
             } then {
-                greedyString("home name", suggestions = allHomeSuggestions) {
+                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
+                    permissionCheck(it)
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@greedyString false
                     val homeName = getString(it, "home name")
@@ -160,11 +139,13 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                 }
             } then {
                 subcommand("list") {
+                    permissionCheck(it, "list")
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     listHomes(player, 1, sender)
                 } then {
                     int("page", min = 1) {
+                        permissionCheck(it, "list")
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@int false
                         val page = getInt(it, "page")
@@ -176,19 +157,14 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
     }
 }
 
-class SetHomeCommand(plugin: BlueFox): CatCommand(plugin, "sethome", aliases = arrayOf("sh")) {
-    private val homeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getPlayerSender(ctx)
-            player?.legacyHomes?.let { homes -> suggest(builder, homes.map { it.name to it.location.text }) }
-        }
+class SetHomeCommand(plugin: BlueFox) : CatCommand(plugin, "sethome", aliases = arrayOf("sh")) {
     init {
         noargs {
             val player = getPlayerSender(it) ?: return@noargs false
             set(player, "home", player)
         }
         then {
-            greedyString("home name", suggestions = homeSuggestions) {
+            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 set(player, homeName, player)
@@ -197,19 +173,14 @@ class SetHomeCommand(plugin: BlueFox): CatCommand(plugin, "sethome", aliases = a
     }
 }
 
-class DelHomeCommand(plugin: BlueFox): CatCommand(plugin, "delhome", aliases = arrayOf("dh")) {
-    private val homeSuggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit =
-        { ctx, builder ->
-            val player = getPlayerSender(ctx)
-            player?.legacyHomes?.let { homes -> suggest(builder, homes.map { it.name to it.location.text }) }
-        }
+class DelHomeCommand(plugin: BlueFox) : CatCommand(plugin, "delhome", aliases = arrayOf("dh")) {
     init {
         noargs {
             val player = getPlayerSender(it) ?: return@noargs false
             remove(player, "home", player)
         }
         then {
-            greedyString("home name", suggestions = homeSuggestions) {
+            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 remove(player, homeName, player)
@@ -218,7 +189,7 @@ class DelHomeCommand(plugin: BlueFox): CatCommand(plugin, "delhome", aliases = a
     }
 }
 
-class HomesCommand(plugin: BlueFox): CatCommand(plugin, "homes") {
+class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
     init {
         noargs {
             val player = getPlayerSender(it) ?: return@noargs false
@@ -234,30 +205,66 @@ class HomesCommand(plugin: BlueFox): CatCommand(plugin, "homes") {
     }
 }
 
+private fun homeSuggestions(player: OfflinePlayer?, includeBed: Boolean = false): List<Pair<String, Text>> {
+    val homes = player?.legacyHomes?.toMutableList() ?: mutableListOf()
+    if(includeBed) (player as? Player)?.legacyHomeBed?.let { homes += it }
+    return homes.map { it.name to it.location.text }
+}
+
+private fun clear(player: OfflinePlayer, confirm: Boolean = false, sender: CommandSender? = player as? Player): Boolean {
+    val self = player == sender
+    val homesSize = player.legacyHomes.size
+    val message = if(self) {
+        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of your homes!") else Kolor.WARNING("Are you sure? Type ") + Kolor.WARNING.accent("/home clear confirm") + Kolor.WARNING(" if so...")
+    } else {
+        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of ") + player.textPosessive() + Kolor.TEXT(" homes!") else Kolor.WARNING("Are you sure? Type ") + Kolor.WARNING.accent("/userhome ${player.username} clear confirm") + Kolor.WARNING(" if so...")
+    }
+    sender?.sendMessage(message)
+    if(confirm) player.legacyHomes = listOf()
+    return true
+}
+
 private const val homesPerPage = 10
 private fun listHomes(player: OfflinePlayer, page: Int, sender: CommandSender? = player as? Player): Boolean {
     val self = player == sender
-    val command = if (self) "home" else "userhome"
+    val command = if (self) "home" else "userhome ${player.username}"
     val homes = player.legacyHomes
     val homesSize = homes.size
     val totalPages = ceil(homesSize.toDouble() / homesPerPage).toInt()
+    val setCommand = if (self) {
+        "sethome"
+    } else {
+        "userhome ${player.username} set"
+    }
     if (homesSize == 0) {
-        sender?.sendMessage(
-            Kolor.WARNING("You are homeless!") + Text.newline + (Kolor.QUOTE("- Set one using ") + Kolor.QUOTE.alt(
-                "/sethome"
-            ) + Kolor.QUOTE(" maybe?")).italic()
-        )
+        val message = if (self) {
+            Kolor.WARNING("You are homeless!") + Text.newline + (Kolor.QUOTE("- Set one using ") + Kolor.QUOTE.alt("/$setCommand") + Kolor.QUOTE(
+                " maybe?"
+            )).italic().suggest(setCommand)
+        } else {
+            player.text(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" is homeless!") + Text.newline + (Kolor.QUOTE("- Set one for them using ") + Kolor.QUOTE.alt(
+                "/$setCommand"
+            ) + Kolor.QUOTE(" maybe?")).italic().suggest(setCommand)
+        }
+        sender?.sendMessage(message)
         return false
     }
     if (page > totalPages) {
-        sender?.sendMessage(
+        val message = if (self) {
             Kolor.WARNING("Nice fail, you have like ") + Kolor.WARNING.number(totalPages.toString()) + Kolor.WARNING(
                 " page(s) of homes MAX..."
             )
-        )
+        } else {
+            Kolor.WARNING("Nice fail, ") + player.text(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" has like ") + Kolor.WARNING.number(
+                totalPages.toString()
+            ) + Kolor.WARNING(
+                " page(s) of homes MAX..."
+            )
+        }
+        sender?.sendMessage(message)
         return false
     }
-    sender?.sendMessage(Kolor.TEXT("[") + Kolor.PLAYER(player.name ?: "Player") + Kolor.ACCENT("'s homes") + Kolor.TEXT("]"))
+    sender?.sendMessage(Kolor.TEXT("[") + player.textPosessive() + Kolor.ACCENT(" homes") + Kolor.TEXT("]"))
     val start = (page - 1) * homesPerPage
     val end = minOf(start + homesPerPage, homesSize)
     homes.subList(start, end).stream()
@@ -265,7 +272,9 @@ private fun listHomes(player: OfflinePlayer, page: Int, sender: CommandSender? =
         .forEach { sender?.sendMessage(it) }
     sender?.sendMessage(
         (if (page > 1) Kolor.TEXT("◀ ").execute("/$command list ${page - 1}") else Kolor.QUOTE("◀ ")
-            .execute(null)) + Kolor.ACCENT("Page ") + Kolor.NUMBER(page) + Kolor.TEXT(" / ") + Kolor.NUMBER(totalPages) + (if (page < totalPages) Kolor.TEXT(
+            .execute(null)) + (Kolor.ACCENT("Page ") + Kolor.NUMBER(page) + Kolor.TEXT(" / ") + Kolor.NUMBER(totalPages)).suggest(
+            "/$command list "
+        ) + (if (page < totalPages) Kolor.TEXT(
             " ▶"
         ).execute("/$command list ${page + 1}") else Kolor.QUOTE(" ▶").execute(null))
     )
@@ -286,11 +295,15 @@ private fun get(player: OfflinePlayer, homeName: String, sender: CommandSender? 
 
 private fun teleport(player: OfflinePlayer, homeName: String, sender: CommandSender? = player as? Player): Boolean {
     val home = get(player, homeName) ?: return false
-    sender?.sendMessage(
-        Kolor.TEXT("Teleported ") + (if (homeName == "home") Text() else Kolor.TEXT("to ")) + Kolor.ACCENT(
-            homeName
-        ) + "!"
-    )
+    val isHome = homeName == "home"
+    val message = if (player == sender) {
+        Kolor.TEXT("Teleported ") + (if (isHome) Text() else Kolor.TEXT("to ")) + Kolor.ACCENT(homeName) + "!"
+    } else {
+        Kolor.TEXT("Teleported to ") + Kolor.PLAYER(
+            player.name ?: "Player"
+        ) + Kolor.TEXT("'s ") + (if (isHome) Text() else Kolor.TEXT("home ")) + Kolor.ACCENT(homeName) + "!"
+    }
+    sender?.sendMessage(message)
     if (sender !is Player) {
         sender?.sendMessage("Player only!")
         return false
@@ -301,21 +314,27 @@ private fun teleport(player: OfflinePlayer, homeName: String, sender: CommandSen
 private fun remove(player: OfflinePlayer, homeName: String, sender: CommandSender? = player as? Player): Boolean {
     val self = player == sender
     if (homeName == "bed") {
-        sender?.sendMessage(
-            Kolor.WARNING("If you want to delete ${if (self) "your" else "${player.name}'s"} home ") + Kolor.WARNING.accent(
+        val message = if (self) {
+            Kolor.WARNING("If you want to remove your home ") + Kolor.WARNING.accent(homeName) + Kolor.WARNING(", just break it!")
+        } else {
+            Kolor.WARNING("If you want to remove ") + player.textPosessive(Kolor.WARNING) + Kolor.WARNING(" home ") + Kolor.WARNING.accent(
                 homeName
-            ) + Kolor.WARNING(", just break it!")
-        )
+            ) + Kolor.WARNING(", just make them break it!")
+        }
+        sender?.sendMessage(message)
         return false
     }
     val home = get(player, homeName) ?: return false
-    val removed = player.deleteLegacyHome(homeName)
+    val removed = player.removeLegacyHome(homeName)
     if (removed) {
-        sender?.sendMessage(
-            Kolor.TEXT("Removed ${if (self) "" else "${player.name}'s "}home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(
+        val message = if (self) {
+            Kolor.TEXT("Removed home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(" at ") + home.location.text + "!"
+        } else {
+            Kolor.TEXT("Removed ") + player.textPosessive() + Kolor.TEXT(" home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(
                 " at "
             ) + home.location.text + "!"
-        )
+        }
+        sender?.sendMessage(message)
     } else {
         suggestSetHome(player, homeName)
     }
@@ -334,11 +353,17 @@ private fun set(player: OfflinePlayer, homeName: String, sender: CommandSender? 
     }
     val home = LegacyHome(homeName, sender.location)
     val replaced = player.setLegacyHome(home)
-    sender.sendMessage(
-        Kolor.TEXT(if (replaced) "Moved " else "Set ") + (if (self) "" else "${player.name}'s ") + (if (homeName == "home") Text() else Kolor.TEXT(
+    val isHome = homeName == "home"
+    val message = if (self) {
+        Kolor.TEXT(if (replaced) "Moved " else "Set ") + (if (isHome) Text() else Kolor.TEXT("home ")) + Kolor.ACCENT(
+            homeName
+        ) + Kolor.TEXT(" to ") + home.location.text + "!"
+    } else {
+        Kolor.TEXT(if (replaced) "Moved " else "Set ") + player.textPosessive() + (if (isHome) Text(" ") else Kolor.TEXT(
             "home "
         )) + Kolor.ACCENT(homeName) + Kolor.TEXT(" to ") + home.location.text + "!"
-    )
+    }
+    sender.sendMessage(message)
     return true
 }
 
@@ -346,20 +371,30 @@ private fun suggestSetHome(player: OfflinePlayer, homeName: String, sender: Comm
     val self = player == sender
     val command = if (self) "home" else "userhome ${player.name}"
     val suggestion = if (homeName == "home") "/$command set" else "/$command set $homeName"
-    sender?.sendMessage(
-        Kolor.WARNING("${if (self) "You do" else "${player.name} does"} not have a ") + (if (homeName == "home") Kolor.WARNING.accent(
+    val isHome = homeName == "home"
+    val message = if (self) {
+        Kolor.WARNING("You do not have a ") + (if (isHome) Kolor.WARNING.accent(homeName) else Kolor.WARNING("home named ") + Kolor.WARNING.accent(
             homeName
-        ) else Kolor.WARNING("home named ") + Kolor.WARNING.accent(homeName)) + Kolor.WARNING("!")
-                + Text.newline + (Kolor.QUOTE("- Set it with ") + Kolor.QUOTE.alt(suggestion)).italic()
+        )) + Kolor.WARNING("!") + Text.newline + (Kolor.QUOTE("- Set it with ") + Kolor.QUOTE.alt(suggestion)).italic()
             .suggest(suggestion)
-    )
+    } else {
+        player.text(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" does not have a ") + (if (isHome) Kolor.WARNING.accent(
+            homeName
+        ) else Kolor.WARNING("home named ") + Kolor.WARNING.accent(homeName)) + Kolor.WARNING("!") + Text.newline + (Kolor.QUOTE(
+            "- Set it with "
+        ) + Kolor.QUOTE.alt(suggestion)).italic().suggest(suggestion)
+    }
+    sender?.sendMessage(message)
 }
 
 private fun suggestSetBed(player: OfflinePlayer, sender: CommandSender? = player as? Player) {
     val self = player == sender
-    sender?.sendMessage(
-        Kolor.WARNING("If you want set ${if (self) "" else "${player.name}'s"} a home ") + Kolor.WARNING.accent(
-            "bed"
-        ) + Kolor.WARNING(", just ${if (self) "" else "make them"} sleep in one!")
-    )
+    val message = if (self) {
+        Kolor.WARNING("If you want to set a home ") + Kolor.WARNING.accent("bed") + Kolor.WARNING(", just sleep in one!")
+    } else {
+        Kolor.WARNING("If you want to set a home ") + Kolor.WARNING.accent("bed") + Kolor.WARNING(" for ") + player.text(
+            Kolor.WARNING + Kolor.PLAYER
+        ) + Kolor.WARNING(", just make them sleep in one!")
+    }
+    sender?.sendMessage(message)
 }
