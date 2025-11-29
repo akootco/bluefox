@@ -186,18 +186,18 @@ fun Player.playSound(sound: Sound, volume: Float = 1f, pitch: Float = 1f) {
     playSound(location, sound, volume, pitch)
 }
 
-val Player.isAfk get() = this.config.getBoolean("flags.afk") ?: false
+val OfflinePlayer.isAfk get() = this.config.getBoolean("flags.afk") ?: false
 
 var Player.deathMessage: Component?
     get() = getMeta<Component>("deathMessage")
     set(value) = setMeta("deathMessage", value)
 
-var Player.legacyHomes: List<LegacyHome>
+var OfflinePlayer.legacyHomes: List<LegacyHome>
     get() = config.getStringList("data.homes").mapNotNull { LegacyHome.from(it) }
     set(value) = config.set("data.homes", value.map { it.toString() })
 
-fun Player.getLegacyHome(name: String): LegacyHome? {
-    if (name == "bed") return legacyHomeBed
+fun OfflinePlayer.getLegacyHome(name: String): LegacyHome? {
+    if (this is Player && name == "bed") return legacyHomeBed
     return legacyHomes.firstOrNull { it.name == name }
 }
 
@@ -206,7 +206,7 @@ val Player.legacyHomeBed: LegacyHome? get() = respawnLocation?.let { LegacyHome(
 /**
  * @return true if replaced
  */
-fun Player.setLegacyHome(home: LegacyHome): Boolean {
+fun OfflinePlayer.setLegacyHome(home: LegacyHome): Boolean {
     val homes = legacyHomes.toMutableList()
     val replaced = homes.removeIf { it.name == home.name }
     homes += home
@@ -217,7 +217,7 @@ fun Player.setLegacyHome(home: LegacyHome): Boolean {
 /**
  * @return true if removed
  */
-fun Player.deleteLegacyHome(name: String): Boolean {
+fun OfflinePlayer.deleteLegacyHome(name: String): Boolean {
     val homes = legacyHomes.toMutableList()
     val removed = homes.removeIf { it.name == name }
     if(!removed) return false

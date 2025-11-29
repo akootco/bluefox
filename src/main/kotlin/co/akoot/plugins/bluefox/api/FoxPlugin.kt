@@ -79,7 +79,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     fun registerCommand(command: CatCommand) {
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
-            it.registrar().register(command.build())
+            it.registrar().register(command.build(), command.description, command.aliases.toSet())
         }
     }
 

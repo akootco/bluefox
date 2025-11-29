@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.CommandHelp
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.sendMessage
 import co.akoot.plugins.bluefox.util.Text
@@ -26,6 +27,7 @@ import io.papermc.paper.math.BlockPosition
 import io.papermc.paper.math.FinePosition
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.OfflinePlayer
 import org.bukkit.World
 import org.bukkit.block.BlockState
 import org.bukkit.command.CommandSender
@@ -33,11 +35,16 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import java.time.ZoneId
 
-abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
-    LiteralArgumentBuilder<CommandSourceStack>(id) {
+abstract class CatCommand(
+    val plugin: FoxPlugin,
+    val id: String,
+    val description: String = "A ${plugin.id} command.",
+    vararg val aliases: String
+) : LiteralArgumentBuilder<CommandSourceStack>(id) {
 
     protected val win = Command.SINGLE_SUCCESS
     protected val fail = -1
+    open var help: CommandHelp = CommandHelp().description(description)
 
     protected fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
@@ -129,19 +136,25 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
 
     protected fun word(
         argName: String,
+        suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
-        return Commands.argument(argName, StringArgumentType.word()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, StringArgumentType.word())
+            .suggests { ctx, builder ->
+                suggestions(ctx, builder)
+                builder.buildFuture()
+            }
+            .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun string(
         argName: String,
-        suggests: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
+        suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
         return Commands.argument(argName, StringArgumentType.string())
             .suggests { ctx, builder ->
-                suggests(ctx, builder)
+                suggestions(ctx, builder)
                 builder.buildFuture()
             }
             .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
@@ -210,6 +223,18 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
 
     protected fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String): Double {
         return DoubleArgumentType.getDouble(ctx, argName)
+    }
+
+    protected fun offlinePlayer(
+        argName: String = "player",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, OfflinePlayer> {
+        return Commands.argument(argName, OfflinePlayerArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getOfflinePlayer(ctx: CommandContext<CommandSourceStack>, argName: String = "player"): OfflinePlayer? {
+        val player = runCatching { ctx.getArgument(argName, OfflinePlayer::class.java) }.getOrNull()
+        return player
     }
 
     protected fun player(
@@ -367,8 +392,8 @@ abstract class CatCommand(val plugin: FoxPlugin, val id: String) :
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
-    protected fun then(something: () -> ArgumentBuilder<CommandSourceStack, *>) {
-        then(something())
+    protected fun then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
+        return then(something())
     }
 
     protected infix fun ArgumentBuilder<CommandSourceStack, *>.then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {

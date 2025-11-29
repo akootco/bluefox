@@ -161,6 +161,10 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             return Text(this).suggest(command)
         }
 
+        fun String.hm(boolean: Boolean): String {
+            return if(boolean) this else ""
+        }
+
         operator fun String.invoke(kolor: Kolor = Kolor.TEXT, bedrock: Boolean = false, rawColor: Boolean = false): Text {
             return Text(this, kolor.get(bedrock, rawColor))
         }

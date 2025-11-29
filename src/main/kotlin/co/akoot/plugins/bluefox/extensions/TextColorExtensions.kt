@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.extensions
 
+import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
@@ -26,6 +27,10 @@ fun TextColor.isGray(tolerance: Double = 0.1): Boolean {
 fun TextColor.mix(color: TextColor?, mix: Double = 0.5, points: Int = 3): TextColor {
     if(color == null) return this
     return ColorUtil.mix(this, color, mix, points)
+}
+
+fun TextColor.mix(kolor: Kolor, mix: Double = 0.5, points: Int = 3): TextColor {
+    return ColorUtil.mix(this, kolor.raw, mix, points)
 }
 
 operator fun TextColor.invoke(string: String): Text {

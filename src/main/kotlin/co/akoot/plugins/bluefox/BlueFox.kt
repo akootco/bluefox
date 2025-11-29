@@ -4,15 +4,17 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.economy.Market
+import co.akoot.plugins.bluefox.commands.DelHomeCommand
 import co.akoot.plugins.bluefox.commands.HomeCommand
+import co.akoot.plugins.bluefox.commands.HomesCommand
 import co.akoot.plugins.bluefox.commands.MarketCommand
-import co.akoot.plugins.bluefox.commands.TestCommand
+import co.akoot.plugins.bluefox.commands.SetHomeCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
+import co.akoot.plugins.bluefox.commands.UserHomeCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
-import co.akoot.plugins.bluefox.util.async
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
@@ -294,7 +296,11 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(WalletCommand(this))
         registerCommand(TradeCommand(this))
         registerCommand(MarketCommand(this))
-//        registerCommand(HomeCommand(this))
+        registerCommand(HomeCommand(this))
+        registerCommand(HomesCommand(this))
+        registerCommand(SetHomeCommand(this))
+        registerCommand(DelHomeCommand(this))
+        registerCommand(UserHomeCommand(this))
 //        registerCommand(TestCommand(this))
     }
 
