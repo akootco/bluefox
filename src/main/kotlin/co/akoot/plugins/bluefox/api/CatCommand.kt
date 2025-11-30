@@ -395,7 +395,7 @@ abstract class CatCommand(
 
     protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<String>) {
         suggestions.stream()
-            .filter { entry -> entry.startsWith(builder.remaining) }
+            .filter { entry -> entry.contains(builder.remaining, true) }
             .forEach(builder::suggest)
     }
 
@@ -408,7 +408,7 @@ abstract class CatCommand(
     @JvmName("suggestTextRaw")
     protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
         suggestions.stream()
-            .filter { entry -> entry.first.startsWith(builder.remaining) }
+            .filter { entry -> entry.first.contains(builder.remaining, true) }
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
