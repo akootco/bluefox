@@ -76,6 +76,20 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             return result + Text(postfix, textColor)
         }
 
+        fun list(items: List<Text>, separator: String = "\n"): Text {
+            return list(items, Text(separator))
+        }
+
+        fun list(items: List<Text>, separator: Text = newline): Text {
+            val result = Text()
+            for((i, item) in items.withIndex()) {
+                result += item
+                if(i == items.size - 1) break
+                result += separator
+            }
+            return result
+        }
+
         operator fun TextColor.plus(string: String): Text {
             return Text(string).color(this)
         }

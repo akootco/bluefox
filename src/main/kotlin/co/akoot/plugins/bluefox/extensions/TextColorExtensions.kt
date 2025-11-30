@@ -37,6 +37,10 @@ operator fun TextColor.invoke(string: String): Text {
     return Text(string).color(this)
 }
 
+operator fun TextColor.invoke(number: Number): Text {
+    return Text(number.toString()).color(this)
+}
+
 operator fun TextColor.invoke(component: Component): Text {
     return Text(component).color(this)
 }

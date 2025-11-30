@@ -11,6 +11,7 @@ import co.akoot.plugins.bluefox.commands.MarketCommand
 import co.akoot.plugins.bluefox.commands.SetHomeCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.UserHomeCommand
+import co.akoot.plugins.bluefox.commands.UserHomesCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
@@ -301,6 +302,7 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(SetHomeCommand(this))
         registerCommand(DelHomeCommand(this))
         registerCommand(UserHomeCommand(this))
+        registerCommand(UserHomesCommand(this))
 //        registerCommand(TestCommand(this))
     }
 

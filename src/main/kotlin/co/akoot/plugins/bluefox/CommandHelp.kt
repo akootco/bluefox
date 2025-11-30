@@ -31,13 +31,13 @@ class CommandHelp(val text: Text = Text()) {
             list -> "[$part...]"
             else -> "<$part>"
         }
-        text += Text(word, ColorUtil.randomColor())
+        text += Text(word, ColorUtil.randomColor(1f, 1f).mix(Kolor.QUOTE.raw))
         if(!final) text += Text.space
         return this
     }
 
     fun example(commandLine: String, description: String? = null): CommandHelp {
-        val color = ColorUtil.randomColor()
+        val color = ColorUtil.randomColor(1f, 1f).mix(Kolor.QUOTE.raw, 0.75)
         text += Text(commandLine, color.mix(Kolor.QUOTE))
         if(description != null) text += Text(" - $description", color)
         return this
