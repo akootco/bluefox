@@ -21,7 +21,7 @@ class HomeCommand(plugin: BlueFox) : CatCommand(plugin, "home", aliases = arrayO
             teleport(player, "home")
         }
         then {
-            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx), true)) }) {
+            greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getPlayerSender(ctx), true)) }) {
                 permissionCheck(it) ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
@@ -45,7 +45,7 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
                 val player = getOfflinePlayer(it) ?: return@offlinePlayer false
                 teleport(player, "home", sender)
             } then {
-                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
+                greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
                     permissionCheck(it)
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@greedyString false
@@ -65,8 +65,8 @@ class SetHomeCommand(plugin: BlueFox) : CatCommand(plugin, "sethome", aliases = 
             set(player, "home", player)
         }
         then {
-            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
-                permissionCheck(it) ?: return@greedyString false
+            greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                permissionCheck(it, "named") ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 set(player, homeName, player)
@@ -83,8 +83,8 @@ class DelHomeCommand(plugin: BlueFox) : CatCommand(plugin, "delhome", aliases = 
             remove(player, "home", player)
         }
         then {
-            greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
-                permissionCheck(it) ?: return@greedyString false
+            greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                permissionCheck(it, "named") ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 remove(player, homeName, player)
@@ -106,7 +106,7 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
                 val player = getPlayerSender(it) ?: return@subcommand false
                 set(player, "home")
             } then {
-                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getPlayerSender(ctx))) }) {
                     permissionCheck(it, "set.named") ?: return@greedyString false
                     val player = getPlayerSender(it) ?: return@greedyString false
                     val homeName = getString(it, "home name")
@@ -120,7 +120,7 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
                 val player = getPlayerSender(it) ?: return@subcommand false
                 remove(player, "home")
             } then {
-                greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getPlayerSender(ctx))) }) {
                     permissionCheck(it, "remove.named") ?: return@greedyString false
                     val player = getPlayerSender(it) ?: return@greedyString false
                     val homeName = getString(it, "home name")
@@ -209,7 +209,7 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                 } then {
                     greedyString(
                         "home name",
-                        { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
+                        { ctx, builder -> suggestRaw(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
                         permissionCheck(it, "remove") ?: return@greedyString false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
@@ -224,7 +224,7 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     set(player, "home", sender)
                 } then {
-                    greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
+                    greedyString("home name", { ctx, builder -> suggestRaw(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
                         permissionCheck(it, "set") ?: return@greedyString false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
@@ -386,6 +386,7 @@ private const val homesPerPage = 10
 private fun listHomes(player: OfflinePlayer, page: Int, sender: CommandSender? = player as? Player): Boolean {
     val self = player == sender
     val command = if (self) "homes" else "userhome ${player.username}"
+    val tpCommand = if (self) "home" else "userhome ${player.username}"
     val homes = player.legacyHomes
     val homesSize = homes.size
     val totalPages = ceil(homesSize.toDouble() / homesPerPage).toInt()
@@ -426,7 +427,7 @@ private fun listHomes(player: OfflinePlayer, page: Int, sender: CommandSender? =
     val start = (page - 1) * homesPerPage
     val end = minOf(start + homesPerPage, homesSize)
     homes.subList(start, end).stream()
-        .map { homeItem(it, command) }
+        .map { homeItem(it, tpCommand) }
         .forEach { sender?.sendMessage(it) }
     sender?.sendMessage(
         (if (page > 1) Kolor.TEXT("◀ ").execute("/$command list ${page - 1}") else Kolor.QUOTE("◀ ")

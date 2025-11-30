@@ -393,6 +393,31 @@ abstract class CatCommand(
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
+    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<String>) {
+        suggestions.stream()
+            .filter { entry -> entry.startsWith(builder.remaining) }
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestIntRaw")
+    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Int>) {
+        suggestions.stream()
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestTextRaw")
+    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
+        suggestions.stream()
+            .filter { entry -> entry.first.startsWith(builder.remaining) }
+            .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
+    }
+
+    @JvmName("suggestIntTextRaw")
+    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
+        suggestions.stream()
+            .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
+    }
+
     protected fun then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
         return then(something())
     }
