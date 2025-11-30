@@ -34,6 +34,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import java.time.ZoneId
+import kotlin.jvm.java
 
 abstract class CatCommand(
     val plugin: FoxPlugin,

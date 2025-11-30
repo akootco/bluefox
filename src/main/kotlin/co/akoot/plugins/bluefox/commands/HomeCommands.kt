@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.extensions.*
 import co.akoot.plugins.bluefox.util.Text
+import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -59,11 +60,13 @@ class UserHomeCommand(plugin: BlueFox) : CatCommand(plugin, "userhome", aliases 
 class SetHomeCommand(plugin: BlueFox) : CatCommand(plugin, "sethome", aliases = arrayOf("sh")) {
     init {
         noargs {
+            permissionCheck(it) ?: return@noargs false
             val player = getPlayerSender(it) ?: return@noargs false
             set(player, "home", player)
         }
         then {
             greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                permissionCheck(it) ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 set(player, homeName, player)
@@ -75,11 +78,13 @@ class SetHomeCommand(plugin: BlueFox) : CatCommand(plugin, "sethome", aliases = 
 class DelHomeCommand(plugin: BlueFox) : CatCommand(plugin, "delhome", aliases = arrayOf("dh")) {
     init {
         noargs {
+            permissionCheck(it) ?: return@noargs false
             val player = getPlayerSender(it) ?: return@noargs false
             remove(player, "home", player)
         }
         then {
             greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getPlayerSender(ctx))) }) {
+                permissionCheck(it) ?: return@greedyString false
                 val player = getPlayerSender(it) ?: return@greedyString false
                 val homeName = getString(it, "home name")
                 remove(player, homeName, player)
@@ -91,6 +96,7 @@ class DelHomeCommand(plugin: BlueFox) : CatCommand(plugin, "delhome", aliases = 
 class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
     init {
         noargs {
+            permissionCheck(it, "list") ?: return@noargs false
             val player = getPlayerSender(it) ?: return@noargs false
             listHomes(player, 1)
         }
@@ -153,15 +159,16 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
             subcommand("clean") {
                 permissionCheck(it, "clean") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
-                player.sendMessage(CommandHelp("Usage: ").usage("/home clean").usage("query", literal = false, final = true).text)
-                true
+                player.sendMessage(cleanHelp())
+                false
             } then {
                 word("query mode", { ctx, builder -> suggest(builder, queryModes) }) {
+                    permissionCheck(it, "clean") ?: return@word false
                     val player = getPlayerSender(it) ?: return@word false
-                    player.sendMessage(CommandHelp("Usage: ").usage("/homes clean").usage("query mode", literal = false).usage("query", literal = false).text)
+                    player.sendMessage(cleanHelp())
                     false
                 } then {
-                    greedyString("query") {
+                    greedyString("query", { ctx, builder -> if(getString(ctx, "query mode") in setOf(QueryMode.IN.argument, QueryMode.NOT_IN.argument)) suggest(builder, Bukkit.getWorlds().map { it.name }) }) {
                         permissionCheck(it, "clean") ?: return@greedyString false
                         val player = getPlayerSender(it) ?: return@greedyString false
                         val queryModeString = getString(it, "query mode")
@@ -180,20 +187,22 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
     }
 }
 
-class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases = arrayOf("uhh")) {
+class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases = arrayOf("uhs")) {
     init {
         noargs {
+            val sender = getSender(it)
+            sender.sendMessage(Kolor.QUOTE("uhhhh ;o").italic())
             false
         }
         then {
             offlinePlayer {
-                permissionCheck(it, "list")
+                permissionCheck(it, "list") ?: return@offlinePlayer false
                 val sender = getSender(it)
                 val player = getOfflinePlayer(it) ?: return@offlinePlayer false
                 listHomes(player, 1, sender)
             } then {
                 subcommand("remove") {
-                    permissionCheck(it, "remove")
+                    permissionCheck(it, "remove") ?: return@subcommand false
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     remove(player, "home", sender)
@@ -201,7 +210,7 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                     greedyString(
                         "home name",
                         { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx))) }) {
-                        permissionCheck(it, "remove")
+                        permissionCheck(it, "remove") ?: return@greedyString false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
                         val homeName = getString(it, "home name")
@@ -210,13 +219,13 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                 }
             } then {
                 subcommand("set") {
-                    permissionCheck(it, "set")
+                    permissionCheck(it, "set") ?: return@subcommand false
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     set(player, "home", sender)
                 } then {
                     greedyString("home name", { ctx, builder -> suggest(builder, homeSuggestions(getOfflinePlayer(ctx), true)) }) {
-                        permissionCheck(it, "set")
+                        permissionCheck(it, "set") ?: return@greedyString false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@greedyString false
                         val homeName = getString(it, "home name")
@@ -225,13 +234,13 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                 }
             } then {
                 subcommand("list") {
-                    permissionCheck(it, "list")
+                    permissionCheck(it, "list") ?: return@subcommand false
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     listHomes(player, 1, sender)
                 } then {
                     int("page", min = 1) {
-                        permissionCheck(it, "list")
+                        permissionCheck(it, "list") ?: return@int false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@int false
                         val page = getInt(it, "page")
@@ -240,12 +249,13 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                 }
             } then {
                 subcommand("clear") {
-                    permissionCheck(it, "clear")
+                    permissionCheck(it, "clear") ?: return@subcommand false
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@subcommand false
                     clear(player, false, sender)
                 } then {
                     subcommand("confirm") {
+                        permissionCheck(it, "clear") ?: return@subcommand false
                         val sender = getSender(it)
                         val player = getOfflinePlayer(it) ?: return@subcommand false
                         clear(player, true, sender)
@@ -255,16 +265,16 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
                 subcommand("clean") {
                     permissionCheck(it, "clean") ?: return@subcommand false
                     val sender = getSender(it)
-                    sender.sendMessage(CommandHelp("Usage: ").usage("/userhomes").usage("player", literal = false).usage("clean").usage("query mode", literal = false).usage("query", literal = false).text)
+                    sender.sendMessage(cleanUserHelp())
                     true
                 } then {
                     word("query mode", suggestions = { ctx, builder -> suggest(builder, queryModes) }) {
                         permissionCheck(it, "clean") ?: return@word false
                         val sender = getSender(it)
-                        sender.sendMessage(CommandHelp("Usage: ").usage("/userhomes").usage("player", literal = false).usage("clean").usage("query mode", literal = false).usage("query", literal = false).text)
+                        sender.sendMessage(cleanUserHelp())
                         true
                     } then {
-                        greedyString("query") {
+                        greedyString("query", { ctx, builder -> if(getString(ctx, "query mode") in setOf(QueryMode.IN.argument, QueryMode.NOT_IN.argument)) suggest(builder, Bukkit.getWorlds().map { it.name })  }) {
                             permissionCheck(it, "clean") ?: return@greedyString false
                             val sender = getSender(it)
                             val player = getOfflinePlayer(it) ?: return@greedyString false
@@ -282,6 +292,26 @@ class UserHomesCommand(plugin: BlueFox): CatCommand(plugin, "userhomes", aliases
             }
         }
     }
+}
+
+private fun cleanHelp(): Text {
+    return CommandHelp("Usage: ")
+        .usage("/homes").usage("clean").usage("query mode", literal = false).usage("query", literal = false, final = true)
+        .newLine()
+        .example("/homes clean startsWith test", "removed all homes that start with \"test\"")
+        .newLine()
+        .example("/homes clean in world_the_end", "removes all homes in the end")
+        .text
+}
+
+private fun cleanUserHelp(): Text {
+    return CommandHelp("Usage: ")
+        .usage("/userhomes").usage("player", literal = false).usage("clean").usage("query mode", literal = false).usage("query", literal = false, final = true)
+        .newLine()
+        .example("/userhome Akoot_ clean startsWith test", "removed all homes that start with \"test\"")
+        .newLine()
+        .example("/userhome Akoot_ clean in world_the_end", "removes all homes in the end")
+        .text
 }
 
 private enum class QueryMode(val argument: String, val description: String) {
