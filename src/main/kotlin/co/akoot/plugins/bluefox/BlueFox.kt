@@ -241,9 +241,10 @@ class BlueFox : FoxPlugin("bluefox") {
 
     private val legacyWarpsFolder = File("warps")
     fun loadLegacyWarps() {
-        for (file in legacyWarpsFolder.listFiles {
+        val warpFiles = legacyWarpsFolder.listFiles {
             it.isFile && it.name.endsWith(".json")
-        }) {
+        } ?: return
+        for (file in warpFiles) {
             val warp = getLegacyWarp(file.name.substringBeforeLast('.')) ?: continue
             legacyWarps += warp
         }

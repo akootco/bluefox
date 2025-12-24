@@ -23,7 +23,6 @@ class BlueFoxListener: Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         BlueFox.cachedOfflinePlayerNames += event.player.name
-        BlueFox.instance.registerConfig(event.player.name)
         val player = event.player
         val wallet = Wallet.get(player) ?: Wallet.create(player)
         if (wallet == null) {
@@ -31,11 +30,6 @@ class BlueFoxListener: Listener {
         }
         wallet.load()
         Wallet.playerWallets[player] = wallet
-        BlueFox.instance.configs[player.name] = (player as OfflinePlayer).config
-    }
-    @EventHandler
-    fun onPlayerQuit(event: PlayerQuitEvent) {
-        BlueFox.instance.configs.remove(event.player.name)
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
