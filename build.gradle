@@ -4,6 +4,7 @@ version = project.version
 dependencies {
     // Kotlin is implemented and included in the final jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
 
     // Libraries
     implementation 'com.mysql:mysql-connector-j:9.4.0'

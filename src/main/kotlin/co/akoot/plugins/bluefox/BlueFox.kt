@@ -13,6 +13,7 @@ import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.UserHomeCommand
 import co.akoot.plugins.bluefox.commands.UserHomesCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
+import co.akoot.plugins.bluefox.extensions.prefsFile
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
@@ -31,10 +32,12 @@ import org.geysermc.api.Geyser
 import org.geysermc.api.GeyserApiBase
 import java.io.File
 import java.sql.Connection
+import java.util.UUID
 
 class BlueFox : FoxPlugin("bluefox") {
 
     companion object {
+        const val PREFS_FOLDER = "userprefs"
         lateinit var auth: FoxConfig
         lateinit var server: Server
         lateinit var spawnLocation: Location
@@ -48,6 +51,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
+        val prefs = mutableMapOf<UUID, FoxConfig>()
 
         fun getPlayer(name: String, exact: Boolean = false): Player? {
             if (exact) return server.onlinePlayers.find { it.name.equals(name, true) }
@@ -77,6 +81,12 @@ class BlueFox : FoxPlugin("bluefox") {
             return Bukkit.getWorld(name)
         }
 
+        fun getPrefs(offlinePlayer: OfflinePlayer) = getPrefs(offlinePlayer.uniqueId)
+
+        fun getPrefs(uuid: UUID): FoxConfig {
+            val configFile = File(PREFS_FOLDER, "$uuid.conf")
+            return prefs.getOrPut(uuid) { FoxConfig(configFile) }
+        }
     }
 
     val legacyWarps: MutableSet<LegacyWarp> = mutableSetOf()
@@ -232,6 +242,7 @@ class BlueFox : FoxPlugin("bluefox") {
         instance = this
         BlueFox.server = server
         world = server.getWorld("world")
+        File(PREFS_FOLDER).mkdirs()
         setupDatabases()
         Market.load()
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()

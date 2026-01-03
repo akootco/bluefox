@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.delegating.Delegate
 import io.papermc.paper.persistence.PersistentDataViewHolder
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -14,6 +15,7 @@ import org.bukkit.persistence.PersistentDataType
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+import kotlin.reflect.KClass
 
 
 /**
@@ -279,3 +281,5 @@ fun NamespacedKey.value(newValue: String): NamespacedKey {
 operator fun NamespacedKey.plus(value: String): NamespacedKey {
     return value("${value()}.$value")
 }
+
+fun <T>PersistentDataHolder.delegate(default: T? = null) =  Delegate<T>(this)

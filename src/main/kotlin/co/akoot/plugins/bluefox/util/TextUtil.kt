@@ -68,6 +68,7 @@ fun <T> tint(color: TextColor, vararg components: T): MutableList<Component> {
         when (it) {
             is Component -> it
             is Number -> Color.Number + it.toString()
+            is Boolean -> Color.Tertiary + it.toString()
             is String -> Component.text(it)
             is Player -> it.displayName().colorIfAbsent(Color.Secondary)
             is OfflinePlayer -> Color.Secondary + it.username
@@ -124,13 +125,17 @@ fun MutableList<Component>.join(separator: Component?, tint: TextColor? = null, 
 
 fun MutableList<Component>.join(separator: String = " "): Component = this.join(Component.text(separator))
 
-fun CommandSender.sendMessage(components: MutableList<Component>, separator: Component? = Component.space(), color: TextColor? = null) {
+fun CommandSender.sendMessage(components: MutableList<Component>, separator: Component? = null, color: TextColor? = null) {
     this.sendMessage(components.join(separator, color) { it })
 }
 
 fun CommandSender.sendList(components: MutableList<Component>, separator: Component = Component.newline(), color: TextColor? = null,  mutator: (Component) -> Component = { it }) {
     this.sendMessage(components.join(separator, color, mutator))
 }
+
+fun CommandSender.sendText(vararg text: Any) = sendMessage(text(*text))
+fun CommandSender.sendWarning(vararg warning: Any) = sendMessage(warning(*warning))
+fun CommandSender.sendError(vararg error: Any) = sendMessage(error(*error))
 
 operator fun Component.div(component: Component): MutableList<Component> = mutableListOf(this, Component.newline(), component)
 
@@ -149,9 +154,11 @@ fun Component.hover(itemStack: ItemStack): Component = this.hoverEvent(itemStack
 
 fun sprite(key: Key): Component = Component.`object`(ObjectContents.sprite(key))
 fun sprite(location: String): Component = sprite(NamespacedKey.minecraft(location))
+
 fun head(name: String): Component = Component.`object`(ObjectContents.playerHead(name))
 fun head(uuid: UUID): Component = Component.`object`(ObjectContents.playerHead(uuid))
 fun head(offlinePlayer: OfflinePlayer): Component = Component.`object`(ObjectContents.playerHead(offlinePlayer.uniqueId))
+
 fun keybind(keybind: String): Component = Component.keybind(keybind)
 fun translatable(translatable: String): Component = Component.translatable(translatable)
 
@@ -169,13 +176,3 @@ fun execute(command: String): ClickEvent = ClickEvent.runCommand(command)
 fun suggest(command: String): ClickEvent = ClickEvent.suggestCommand(command)
 fun open(url: String): ClickEvent = ClickEvent.openUrl(url)
 fun copy(text: String): ClickEvent = ClickEvent.copyToClipboard(text)
-
-@Deprecated("Test function for demonstration purposes only!!!")
-fun test() {
-    text("hello, ", secondary("joe"), "... how are you?")
-    warning("you don't have enough ", primary("rupees"), ".")
-    error(player1("crate"), " will be boiled by ", player2("invictus"), " for ", 10, " minutes...")
-    quote("have a nice day, ", head("mahoose"))
-    text("click ", clickable("here!") { /* code to run when clicked */ }, " to win!")
-    error("click ", clickable("here!", clickEvent = open("https://maltsburg.com")), " to win!")
-}

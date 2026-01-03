@@ -5,16 +5,29 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
+import co.akoot.plugins.bluefox.api.Preferences
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.extensions.getPDC
 import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
+import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataHolder
+import org.bukkit.plugin.Plugin
+import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.util.UUID
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+
+val OfflinePlayer.prefsFile: File get() = File(BlueFox.PREFS_FOLDER, "$uniqueId.conf")
+val OfflinePlayer.prefs: Preferences get() = Preferences(uniqueId)
 
 val OfflinePlayer.defaultWalletAddress: String get() = this.uniqueId.toString().replace("-", "")
 
@@ -22,8 +35,8 @@ fun OfflinePlayer.getDataFile(): File {
     return File("world/playerdata/$uniqueId.dat")
 }
 
-val OfflinePlayer.configFile: File get() = File("users/$uniqueId.json")
-val OfflinePlayer.config: FoxConfig get() = FoxConfig(configFile)
+val OfflinePlayer.legacyConfigFile: File get() = File("users/$uniqueId.json")
+val OfflinePlayer.legacyConfig: FoxConfig get() = FoxConfig(legacyConfigFile)
 
 val OfflinePlayer.profile: Profile
     get() = Profile(this.uniqueId)
@@ -186,15 +199,15 @@ fun Player.playSound(sound: Sound, volume: Float = 1f, pitch: Float = 1f) {
     playSound(location, sound, volume, pitch)
 }
 
-val OfflinePlayer.isAfk get() = this.config.getBoolean("flags.afk") ?: false
+val OfflinePlayer.isAfk get() = this.legacyConfig.getBoolean("flags.afk") ?: false
 
 var Player.deathMessage: Component?
     get() = getMeta<Component>("deathMessage")
     set(value) = setMeta("deathMessage", value)
 
 var OfflinePlayer.legacyHomes: List<LegacyHome>
-    get() = config.getStringList("data.homes").mapNotNull { LegacyHome.from(it) }
-    set(value) = config.set("data.homes", value.map { it.toString() })
+    get() = legacyConfig.getStringList("data.homes").mapNotNull { LegacyHome.from(it) }
+    set(value) = legacyConfig.set("data.homes", value.map { it.toString() })
 
 fun OfflinePlayer.getLegacyHome(name: String): LegacyHome? {
     if (this is Player && name == "bed") return legacyHomeBed

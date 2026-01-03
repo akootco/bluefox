@@ -2,15 +2,15 @@ package co.akoot.plugins.bluefox.listeners
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.api.events.PlayerDepositEvent
-import co.akoot.plugins.bluefox.api.events.PlayerWithdrawEvent
-import co.akoot.plugins.bluefox.api.events.WalletAcceptTradeEvent
-import co.akoot.plugins.bluefox.api.events.WalletRequestSwapEvent
-import co.akoot.plugins.bluefox.extensions.config
+import co.akoot.plugins.bluefox.extensions.prefsFile
 import co.akoot.plugins.bluefox.extensions.deathMessage
+import co.akoot.plugins.bluefox.extensions.prefs
 import co.akoot.plugins.bluefox.util.Text.Companion.asString
+import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.sendText
+import co.akoot.plugins.bluefox.util.text
 import net.kyori.adventure.text.TextReplacementConfig
-import org.bukkit.OfflinePlayer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
