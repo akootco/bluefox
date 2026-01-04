@@ -113,6 +113,11 @@ object Market {
                 continue
             }
         }
+        // tsk tsk
+        prices[Coin.NTRI to Coin.AD] = BigDecimal.ONE.divide(BigDecimal(4))
+        prices[Coin.AD to Coin.NTRI] = BigDecimal(4)
+        prices[Coin.DIA to Coin.AD] = prices[Coin.DIA to Coin.NTRI]!!.divide(BigDecimal(4))
+        prices[Coin.AD to Coin.DIA] = prices[Coin.NTRI to Coin.DIA]!!.multiply(BigDecimal(4))
     }
 
     private data class CoinBacking(val backing: ItemStack? = null, val backingBlock: ItemStack? = null, val backingBlockAmount: Int = 9) {
