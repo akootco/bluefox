@@ -10,12 +10,18 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.`object`.ObjectContents
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
+import org.bukkit.block.ShulkerBox
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.BlockStateMeta
+import java.math.BigDecimal
+import java.text.DecimalFormat
 import java.util.Calendar
 import java.util.UUID
 
@@ -137,6 +143,14 @@ fun CommandSender.sendText(vararg text: Any) = sendMessage(text(*text))
 fun CommandSender.sendWarning(vararg warning: Any) = sendMessage(warning(*warning))
 fun CommandSender.sendError(vararg error: Any) = sendMessage(error(*error))
 
+fun Player.sendActionBar(components: MutableList<Component>, separator: Component? = null, color: TextColor? = null) {
+    this.sendActionBar(components.join(separator, color) { it })
+}
+
+fun Player.sendActionBarText(vararg text: Any) = sendActionBar(text(*text))
+fun Player.sendActionBarWarning(vararg text: Any) = sendActionBar(warning(*text))
+fun Player.sendActionBarError(vararg text: Any) = sendActionBar(error(*text))
+
 operator fun Component.div(component: Component): MutableList<Component> = mutableListOf(this, Component.newline(), component)
 
 fun Component.bold(bold: Boolean = true): Component = this.decoration(TextDecoration.BOLD, bold)
@@ -151,6 +165,16 @@ fun Component.boldItalic(bold: Boolean = true, italic: Boolean = bold): Componen
 fun Component.hover(component: Component): Component = this.hoverEvent(HoverEvent.showText(component))
 fun Component.hover(string: String): Component = this.hoverEvent(HoverEvent.showText(Component.text(string)))
 fun Component.hover(itemStack: ItemStack): Component = this.hoverEvent(itemStack)
+fun Component.hover(items: Array<ItemStack>, title: Component = Component.text("Contents")): Component {
+    val item = ItemStack(Material.SHULKER_BOX)
+    val meta = item.itemMeta as BlockStateMeta
+    meta.displayName(title)
+    val shulker = meta.blockState as ShulkerBox
+    shulker.inventory.contents = items.copyOf(27)
+    meta.blockState = shulker
+    item.itemMeta = meta
+    return this.hoverEvent(item)
+}
 
 fun sprite(key: Key): Component = Component.`object`(ObjectContents.sprite(key))
 fun sprite(location: String): Component = sprite(NamespacedKey.minecraft(location))
@@ -176,3 +200,8 @@ fun execute(command: String): ClickEvent = ClickEvent.runCommand(command)
 fun suggest(command: String): ClickEvent = ClickEvent.suggestCommand(command)
 fun open(url: String): ClickEvent = ClickEvent.openUrl(url)
 fun copy(text: String): ClickEvent = ClickEvent.copyToClipboard(text)
+
+private val df = DecimalFormat("#.################")
+
+val BigDecimal.asCurrency: String get() = stripTrailingZeros().toPlainString()
+val Double.asCurrency: String get() = df.format(this)

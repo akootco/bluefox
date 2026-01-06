@@ -7,24 +7,26 @@ import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.Preferences
 import co.akoot.plugins.bluefox.api.Profile
+import co.akoot.plugins.bluefox.api.economy.Economy
+import co.akoot.plugins.bluefox.api.economy.Invoice
 import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.extensions.getPDC
+import co.akoot.plugins.bluefox.util.Color
+import co.akoot.plugins.bluefox.util.Promise
 import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.asCurrency
+import co.akoot.plugins.bluefox.util.plus
+import co.akoot.plugins.bluefox.util.primary
+import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.sendActionBarText
+import co.akoot.plugins.bluefox.util.sendWarning
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
-import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.bukkit.persistence.PersistentDataHolder
-import org.bukkit.plugin.Plugin
-import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.util.UUID
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
+import java.math.BigDecimal
 
 val OfflinePlayer.prefsFile: File get() = File(BlueFox.PREFS_FOLDER, "$uniqueId.conf")
 val OfflinePlayer.prefs: Preferences get() = Preferences(uniqueId)
@@ -195,8 +197,9 @@ fun Player.sendActionBar(text: Text) {
 //
 //} ?: Component.text(name ?: uniqueId.toString())
 
-fun Player.playSound(sound: Sound, volume: Float = 1f, pitch: Float = 1f) {
+fun Player.playSound(sound: Sound, volume: Float = 1f, pitch: Float = 1f): Promise {
     playSound(location, sound, volume, pitch)
+    return Promise()
 }
 
 val OfflinePlayer.isAfk get() = this.legacyConfig.getBoolean("flags.afk") ?: false
@@ -241,6 +244,38 @@ fun OfflinePlayer.removeLegacyHome(name: String): Boolean {
 fun Player.teleport(legacyWarp: LegacyWarp) = teleport(legacyWarp.location)
 
 val OfflinePlayer.username: String get() = (this as? Player)?.name ?: name ?: "Unknown Player"
-val OfflinePlayer.usernamePosessive: String get() = "$username's"
+val OfflinePlayer.usernamePossessive: String get() = "$username's"
 fun OfflinePlayer.text(kolor: Kolor = Kolor.PLAYER): Text = (this as? Player)?.displayName()?.let { Text(it).color(kolor) } ?: kolor(username)
-fun OfflinePlayer.textPosessive(textKolor: Kolor = Kolor.TEXT, playerKolor: Kolor = Kolor.PLAYER): Text = text(textKolor + playerKolor) + textKolor("'s")
+fun OfflinePlayer.textPossessive(textKolor: Kolor = Kolor.TEXT, playerKolor: Kolor = Kolor.PLAYER): Text = text(textKolor + playerKolor) + textKolor("'s")
+
+fun Player.sendCantAffordMessage(invoice: Invoice) {
+    val coin = invoice.coin
+    val balance = wallet?.balance[coin] ?: BigDecimal.ZERO
+    sendWarning("You can't afford ", primary(invoice.description), ",")
+    sendWarning("You need ", Color.Number + invoice.finalPrice.asCurrency, " ", secondary(coin), ", you have ", Color.Number + Color.Tertiary + balance.asCurrency, ".")
+}
+
+fun Player.canAfford(invoice: Invoice, sendMessage: Boolean = true): Boolean? {
+    val purse = wallet ?: return null
+    if(!invoice.canAfford(purse)) {
+        if(sendMessage) sendCantAffordMessage(invoice)
+        return null
+    } else return true
+}
+
+fun Player.payInvoice(invoice: Invoice): Int {
+    val purse = wallet ?: return -1
+    val coin = invoice.coin
+    val price = invoice.finalPrice
+    val description = invoice.description
+    if(invoice.canAfford(purse)) {
+        sendActionBarText("Spent ", Color.Number + price.asCurrency, " ", secondary(coin), " on ", primary(description), ".")
+        playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME).then(20) {
+            playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, pitch = 1.5f)
+        }
+        return invoice.charge(purse)//purse.send(Wallet.BANK, invoice.coin, price)
+    } else {
+        sendCantAffordMessage(invoice)
+        return Economy.Error.INSUFFICIENT_BALANCE
+    }
+}

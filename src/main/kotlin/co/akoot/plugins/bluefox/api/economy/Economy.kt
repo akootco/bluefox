@@ -4,13 +4,41 @@ import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.economy.Market.round
 import co.akoot.plugins.bluefox.extensions.invoke
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import co.akoot.plugins.bluefox.util.Text.Companion.text
+import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.asCurrency
+import co.akoot.plugins.bluefox.util.plus
+import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.text
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import java.math.BigDecimal
+
+class Invoice(
+    var amount: BigDecimal,
+    var coin: Coin = Coin.AKC,
+    var discount: BigDecimal = BigDecimal.ZERO,
+    var tax: BigDecimal = BigDecimal.ZERO,
+    var description: String
+) {
+
+    val priceWithDiscount: BigDecimal get() = amount - (amount * discount)
+    val finalPrice: BigDecimal get() = priceWithDiscount + (priceWithDiscount * tax)
+
+    fun canAfford(wallet: Wallet): Boolean {
+        return finalPrice <= (wallet.balance[coin] ?: BigDecimal.ZERO)
+    }
+
+    fun charge(wallet: Wallet): Int {
+        return wallet.send(Wallet.BANK, coin, finalPrice)
+    }
+
+    val buyMessage: MutableList<Component> = text("Spent ", Color.Number + finalPrice.asCurrency, "", secondary(coin), " on ", accent(description), ".")
+}
 
 object Economy {
 

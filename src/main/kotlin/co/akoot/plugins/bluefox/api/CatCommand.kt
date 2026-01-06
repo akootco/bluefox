@@ -1,9 +1,20 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.CommandHelp
+import co.akoot.plugins.bluefox.api.economy.Coin
+import co.akoot.plugins.bluefox.api.economy.Invoice
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.sendMessage
+import co.akoot.plugins.bluefox.extensions.wallet
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.asCurrency
+import co.akoot.plugins.bluefox.util.plus
+import co.akoot.plugins.bluefox.util.primary
+import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.sendText
+import co.akoot.plugins.bluefox.util.sendWarning
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.DoubleArgumentType
@@ -25,6 +36,7 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySele
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver
 import io.papermc.paper.math.BlockPosition
 import io.papermc.paper.math.FinePosition
+import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
@@ -33,6 +45,7 @@ import org.bukkit.block.BlockState
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import java.math.BigDecimal
 import java.time.ZoneId
 import kotlin.jvm.java
 
@@ -190,7 +203,7 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String): Int {
+    protected fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Int {
         return IntegerArgumentType.getInteger(ctx, argName)
     }
 

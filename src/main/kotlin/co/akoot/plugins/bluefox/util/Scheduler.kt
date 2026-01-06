@@ -40,3 +40,13 @@ fun loopAsync(period: Long, delay: Long = 0, runnable: Runnable): Int {
         it.server.scheduler.scheduleSyncRepeatingTask(it, runnable, delay, period)
     }
 }
+
+class Promise(val task: BukkitTask? = null) {
+    fun thenAsync(ticks: Long = 1, runnable: Runnable): Promise {
+        return Promise(runLaterAsync(ticks, runnable))
+    }
+
+    fun then(ticks: Long = 1, runnable: Runnable): Promise {
+        return Promise(runLater(ticks, runnable))
+    }
+}

@@ -21,6 +21,8 @@ open class Coin(
 ) {
 
     companion object {
+        private val DEFAULT_AKC = Coin(1, "AKC", "Akoot Coin", "Akoot&Co Social Credit Token")
+        private val DEFAULT_HOPCOIN = Coin(1, "hopcoin", "hopcoin", "hopcoin")
         private val DEFAULT_DIA = Coin(1, "DIA", "Diamond", "Diamond Coin", Material.DIAMOND.itemStack, Material.DIAMOND_BLOCK.itemStack)
         private val DEFAULT_NTRI = Coin(2, "NTRI", "Netherite", "Netherite Coin", Material.NETHERITE_INGOT.itemStack, Material.NETHERITE_BLOCK.itemStack)
         private val DEFAULT_AD = Coin(3, "AD", "Ancient Debris", "Ancient Debris Coin", Material.ANCIENT_DEBRIS.itemStack)
@@ -31,6 +33,8 @@ open class Coin(
         val NTRI: Coin get() = Market.coins["NTRI"] ?: DEFAULT_NTRI
         val AD: Coin get() = Market.coins["AD"] ?: DEFAULT_AD
         val AMETHYST: Coin get() = Market.coins["AMETHYST"] ?: DEFAULT_AMETHYST
+        val AKC: Coin get() = Market.coins["AKC"] ?: DEFAULT_AKC
+        val hopcoin: Coin get() = Market.coins["hopcoin"] ?: DEFAULT_HOPCOIN
     }
 
     override fun toString(): String {

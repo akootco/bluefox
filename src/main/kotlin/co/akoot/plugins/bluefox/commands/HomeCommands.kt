@@ -375,7 +375,7 @@ private fun clear(player: OfflinePlayer, confirm: Boolean = false, sender: Comma
     val message = if(self) {
         if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of your homes!") else Kolor.WARNING("Are you sure you want to remove ") + Kolor.WARNING.number("all $homesSize") + Kolor.WARNING(" of your homes? Type ") + Kolor.WARNING.accent("/home clear confirm") + Kolor.WARNING(" if so...")
     } else {
-        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of ") + player.textPosessive() + Kolor.TEXT(" homes!") else Kolor.WARNING("Are you sure you want to remove ") + Kolor.WARNING.number("all $homesSize") + Kolor.WARNING(" of ") + player.textPosessive(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" homes? Type ") + Kolor.WARNING.accent("/userhome ${player.username} clear confirm") + Kolor.WARNING(" if so...")
+        if(confirm) Kolor.TEXT("Removed all ") + homesSize + Kolor.TEXT(" of ") + player.textPossessive() + Kolor.TEXT(" homes!") else Kolor.WARNING("Are you sure you want to remove ") + Kolor.WARNING.number("all $homesSize") + Kolor.WARNING(" of ") + player.textPossessive(Kolor.WARNING + Kolor.PLAYER) + Kolor.WARNING(" homes? Type ") + Kolor.WARNING.accent("/userhome ${player.username} clear confirm") + Kolor.WARNING(" if so...")
     }
     sender?.sendMessage(message)
     if(confirm) player.legacyHomes = listOf()
@@ -423,7 +423,7 @@ private fun listHomes(player: OfflinePlayer, page: Int, sender: CommandSender? =
         sender?.sendMessage(message)
         return false
     }
-    sender?.sendMessage(Kolor.TEXT("[") + player.textPosessive() + Kolor.ACCENT(" homes") + Kolor.TEXT("]"))
+    sender?.sendMessage(Kolor.TEXT("[") + player.textPossessive() + Kolor.ACCENT(" homes") + Kolor.TEXT("]"))
     val start = (page - 1) * homesPerPage
     val end = minOf(start + homesPerPage, homesSize)
     homes.subList(start, end).stream()
@@ -476,7 +476,7 @@ private fun remove(player: OfflinePlayer, homeName: String, sender: CommandSende
         val message = if (self) {
             Kolor.WARNING("If you want to remove your home ") + Kolor.WARNING.accent(homeName) + Kolor.WARNING(", just break it!")
         } else {
-            Kolor.WARNING("If you want to remove ") + player.textPosessive(Kolor.WARNING) + Kolor.WARNING(" home ") + Kolor.WARNING.accent(
+            Kolor.WARNING("If you want to remove ") + player.textPossessive(Kolor.WARNING) + Kolor.WARNING(" home ") + Kolor.WARNING.accent(
                 homeName
             ) + Kolor.WARNING(", just make them break it!")
         }
@@ -489,7 +489,7 @@ private fun remove(player: OfflinePlayer, homeName: String, sender: CommandSende
         val message = if (self) {
             Kolor.TEXT("Removed home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(" at ") + home.location.text + "!"
         } else {
-            Kolor.TEXT("Removed ") + player.textPosessive() + Kolor.TEXT(" home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(
+            Kolor.TEXT("Removed ") + player.textPossessive() + Kolor.TEXT(" home ") + Kolor.ACCENT(homeName) + Kolor.TEXT(
                 " at "
             ) + home.location.text + "!"
         }
@@ -518,7 +518,7 @@ private fun set(player: OfflinePlayer, homeName: String, sender: CommandSender? 
             homeName
         ) + Kolor.TEXT(" to ") + home.location.text + "!"
     } else {
-        Kolor.TEXT(if (replaced) "Moved " else "Set ") + player.textPosessive() + (if (isHome) Text(" ") else Kolor.TEXT(
+        Kolor.TEXT(if (replaced) "Moved " else "Set ") + player.textPossessive() + (if (isHome) Text(" ") else Kolor.TEXT(
             " home "
         )) + Kolor.ACCENT(homeName) + Kolor.TEXT(" to ") + home.location.text + "!"
     }
