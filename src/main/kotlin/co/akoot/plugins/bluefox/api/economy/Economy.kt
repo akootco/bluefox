@@ -27,7 +27,7 @@ class Invoice(
 ) {
 
     val priceWithDiscount: BigDecimal get() = amount - (amount * discount)
-    val finalPrice: BigDecimal get() = priceWithDiscount + (priceWithDiscount * tax)
+    val finalPrice: BigDecimal get() = (priceWithDiscount + (priceWithDiscount * tax)).round(2)
 
     fun canAfford(wallet: Wallet): Boolean {
         return finalPrice <= (wallet.balance[coin] ?: BigDecimal.ZERO)

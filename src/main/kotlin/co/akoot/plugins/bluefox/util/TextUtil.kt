@@ -205,3 +205,5 @@ private val df = DecimalFormat("#.################")
 
 val BigDecimal.asCurrency: String get() = stripTrailingZeros().toPlainString()
 val Double.asCurrency: String get() = df.format(this)
+
+fun String.s(n: Number) = if(n == 1) this else "${this}s"
