@@ -33,6 +33,7 @@ import org.geysermc.api.GeyserApiBase
 import java.io.File
 import java.sql.Connection
 import java.util.UUID
+import kotlin.random.Random
 
 class BlueFox : FoxPlugin("bluefox") {
 
@@ -86,6 +87,14 @@ class BlueFox : FoxPlugin("bluefox") {
         fun getPrefs(uuid: UUID): FoxConfig {
             val configFile = File(PREFS_FOLDER, "$uuid.conf")
             return prefs.getOrPut(uuid) { FoxConfig(configFile) }
+        }
+
+        fun generateToken(): String { //TODO anything but this
+            var token = ""
+            for (i in 0..128) {
+                token += Random.nextInt(65, 91).toChar().toString()
+            }
+            return token
         }
     }
 
