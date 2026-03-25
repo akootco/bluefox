@@ -69,7 +69,7 @@ class Profile(val uuid: UUID) {
     }
 
     fun getToken(): String? {
-        val id = getId() ?: setId() ?: return null
+        val id = id ?: return null
         val now = java.sql.Date.valueOf(java.time.LocalDate.now())
 
         val sql = """
@@ -95,7 +95,7 @@ class Profile(val uuid: UUID) {
     }
 
     fun setToken(token: String? = null): String? {
-        val id = getId() ?: setId() ?: return null
+        val id = id ?: return null
         val newToken = token ?: BlueFox.generateToken()
         val date = java.sql.Date.valueOf(java.time.LocalDate.now().plusDays(30))
         return try {
