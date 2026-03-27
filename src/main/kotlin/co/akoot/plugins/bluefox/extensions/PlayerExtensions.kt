@@ -279,5 +279,3 @@ fun Player.payInvoice(invoice: Invoice): Int {
         return Economy.Error.INSUFFICIENT_BALANCE
     }
 }
-
-val Player.token: String = BlueFox.getToken(this)

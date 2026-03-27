@@ -56,7 +56,7 @@ object Market {
 
     fun registerCoin(coin: Coin): Boolean {
         CoinCreateEvent(coin).fire() ?: return false
-        val statement = BlueFox.db.prepareStatement("INSERT INTO coins (ticker, name, description) VALUES (?,?,?)")
+        val statement = BlueFox.query("INSERT INTO coins (ticker, name, description) VALUES (?,?,?)")
         statement.setString(1, coin.ticker)
         statement.setString(2, coin.name)
         statement.setString(3, coin.description)
@@ -73,7 +73,7 @@ object Market {
         WalletAcceptTradeEvent(buyer, seller, buyerCoin, sellerCoin, buyerCoinAmount, sellerCoinAmount).fire() ?: return Economy.Error.EVENT_CANCELLED
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
         val sentId =  seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
-        val statement = BlueFox.db.prepareStatement("UPDATE wallet_transactions SET related_transaction = ? WHERE id = ?")
+        val statement = BlueFox.query("UPDATE wallet_transactions SET related_transaction = ? WHERE id = ?")
         statement.setInt(1, sentId)
         statement.setInt(2, transactionId)
         statement.executeUpdate()
@@ -91,7 +91,7 @@ object Market {
     }
 
     fun loadPrices() {
-        val statement = BlueFox.db.prepareStatement("""
+        val statement = BlueFox.query("""
             SELECT
                 t1.coin_id AS coin_id1,
                 t2.coin_id AS coin_id2,
@@ -125,7 +125,7 @@ object Market {
     }
 
     fun loadCoins() {
-        val statement = BlueFox.db.prepareStatement("SELECT * FROM coins")
+        val statement = BlueFox.query("SELECT * FROM coins")
         val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
         while(result.next()) {
             try {

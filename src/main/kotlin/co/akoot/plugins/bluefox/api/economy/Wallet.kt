@@ -33,7 +33,7 @@ open class Wallet(val id: Int, val address: String) {
         val playerWallets: MutableMap<OfflinePlayer, Wallet> = mutableMapOf()
 
         fun get(address: String): Wallet? {
-            val statement = BlueFox.db.prepareStatement("SELECT id FROM wallets WHERE address = ?")
+            val statement = BlueFox.query("SELECT id FROM wallets WHERE address = ?")
             statement.setString(1, address)
             val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return null
             while(resultSet.next()) {
@@ -50,7 +50,7 @@ open class Wallet(val id: Int, val address: String) {
         fun create(address: String): Wallet? {
             val existingWallet = get(address)
             if(existingWallet != null) return existingWallet
-            val statement = BlueFox.db.prepareStatement("INSERT INTO wallets (address) VALUES (?)")
+            val statement = BlueFox.query("INSERT INTO wallets (address) VALUES (?)")
             statement.run {
                 setString(1, address)
             }
@@ -127,7 +127,7 @@ open class Wallet(val id: Int, val address: String) {
         WalletSendCoinEvent(this, wallet, coin, amount, relatedId).fire() ?: return Economy.Error.EVENT_CANCELLED
         val hasRelatedId = relatedId != null
         val extraRelated = if(hasRelatedId) ",related_transaction" to ",?" else "" to ""
-        val statement = BlueFox.db.prepareStatement("""
+        val statement = BlueFox.query("""
             INSERT INTO wallet_transactions (coin_id,sender_id,recipient_id,amount${extraRelated.first}) 
             VALUES (?,?,?,?${extraRelated.second})
         """.trimIndent(), Statement.RETURN_GENERATED_KEYS)
@@ -151,7 +151,7 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun load() {
-        val statement = BlueFox.db.prepareStatement("""
+        val statement = BlueFox.query("""
             SELECT coin_id, (
                 COALESCE(SUM(CASE WHEN recipient_id = $id THEN amount ELSE 0 END), 0) -
                 COALESCE(SUM(CASE WHEN sender_id = $id THEN amount ELSE 0 END), 0)
