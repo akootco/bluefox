@@ -603,7 +603,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
     }
 
     fun sprite(path: String): Text {
-        builder.append(Component.`object` { it.contents(ObjectContents.sprite(Key.key(path))).build() })
+        builder.append(sprite(path).component)
         return this
     }
 
