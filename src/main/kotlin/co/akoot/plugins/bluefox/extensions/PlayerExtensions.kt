@@ -297,8 +297,8 @@ fun Player.payInvoice(invoice: Invoice): Int {
 }
 
 fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
-    return if(canAfford(invoice) == true) {
-        sync { payInvoice(invoice) }
+    return if(canAfford(invoice, false) == true) {
+        payInvoice(invoice)
         result(true)
         true
     } else {
