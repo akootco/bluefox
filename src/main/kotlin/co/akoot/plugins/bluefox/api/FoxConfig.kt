@@ -57,6 +57,19 @@ class FoxConfig(val file: File) {
         file.writeText(config.root().render(options))
     }
 
+    fun save(block: FoxConfig.() -> Unit) {
+        val wasAutosave = autosave
+        autosave = false
+        block()
+        autosave = wasAutosave
+        save()
+    }
+
+    fun load(block: FoxConfig.() -> Unit) {
+        load()
+        block()
+    }
+
     fun set(path: String, value: Any?) {
         config = config.withValue(path, ConfigValueFactory.fromAnyRef(value))
         if (autosave) save()
@@ -118,6 +131,50 @@ class FoxConfig(val file: File) {
         else Location(world, coordinates[0], coordinates[1], coordinates[2], target[0].toFloat(), target[1].toFloat())
     }
 
+    fun getLocationList(path: String): List<Location> {
+        val list = runCatching { config.getConfigList(path) }.getOrNull() ?: return emptyList()
+        return list.mapNotNull { entry ->
+            val world = entry.getString("world")?.let { Bukkit.getWorld(it) } ?: return@mapNotNull null
+
+            val coordinates = entry.getDoubleList("xyz")
+            val target = if (entry.hasPath("target")) entry.getDoubleList("target") else emptyList()
+
+            if (coordinates.size != 3) return@mapNotNull null
+
+            if (target.size == 2) {
+                Location(
+                    world,
+                    coordinates[0],
+                    coordinates[1],
+                    coordinates[2],
+                    target[0].toFloat(),
+                    target[1].toFloat()
+                )
+            } else {
+                Location(
+                    world,
+                    coordinates[0],
+                    coordinates[1],
+                    coordinates[2]
+                )
+            }
+        }
+    }
+
+    fun setLocationList(path: String, locations: List<Location>) {
+        val list = locations.map { loc ->
+            ConfigValueFactory.fromMap(
+                mapOf(
+                    "world" to loc.world.name,
+                    "xyz" to listOf(loc.x, loc.y, loc.z),
+                    "target" to listOf(loc.yaw.toDouble(), loc.pitch.toDouble())
+                )
+            )
+        }
+
+        config = config.withValue(path, ConfigValueFactory.fromIterable(list))
+    }
+
     fun getWarp(path: String): Warp? {
         val location = getLocation("$path.location") ?: return null
         val name = getString("$path.name")
@@ -160,10 +217,10 @@ class FoxConfig(val file: File) {
         set(path, list - item)
     }
 
-    fun setLocation(path: String, location: Location) {
-        set("$path.world", location.world.name)
-        set("$path.xyz", listOf(location.x, location.y, location.z))
-        set("$path.target", listOf(location.pitch, location.yaw))
+    fun setLocation(path: String, location: Location?) {
+        set("$path.world", location?.world?.name)
+        set("$path.xyz", listOf(location?.x, location?.y, location?.z))
+        set("$path.target", listOf(location?.pitch, location?.yaw))
     }
 
     fun increment(path: String, amount: Long = 1, max: Long = Long.MAX_VALUE) {
@@ -196,5 +253,6 @@ class FoxConfig(val file: File) {
         set(path, (value - amount).coerceAtLeast(min))
     }
 
-    fun <T> delegate(default: T? = null): Delegate<T> = Delegate(this, default)
+    infix fun <T> delegate(default: T? = null): Delegate<T> = Delegate(this, default)
+    infix fun <T> default(default: T? = null): Delegate<T> = Delegate(this, default)
 }

@@ -7,8 +7,10 @@ import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import java.net.URI
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -173,3 +175,7 @@ val Number.ticks: Long get() = this.toLong()
 val Number.seconds: Long get() = this.toDouble().times(20).toLong()
 val Number.minutes: Long get() = this.toDouble().times(1200).toLong()
 val Number.hours: Long get() = this.toDouble().times(72000).toLong()
+
+fun Long.toLocalDate() = Instant.ofEpochMilli(this)
+    .atZone(ZoneId.systemDefault())
+    .toLocalDate()

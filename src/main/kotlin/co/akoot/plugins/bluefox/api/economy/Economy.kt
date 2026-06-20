@@ -63,6 +63,9 @@ object Economy {
         const val EVENT_CANCELLED = -14
     }
 
+    val Int.bd: BigDecimal get() = BigDecimal(this)
+    val Double.bd: BigDecimal get() = BigDecimal(this)
+
     val Double.rounded: String get() = "%.9f".format(this)
     val BigDecimal.rounded: Text get() = this.round(9).text
     val BigDecimal.isMoreThanZero: Boolean get()  {

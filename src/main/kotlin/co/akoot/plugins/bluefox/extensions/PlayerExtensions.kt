@@ -7,26 +7,41 @@ import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.Preferences
 import co.akoot.plugins.bluefox.api.Profile
+import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Economy
+import co.akoot.plugins.bluefox.api.economy.Economy.bd
 import co.akoot.plugins.bluefox.api.economy.Invoice
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Promise
 import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.Text.Companion.invoke
+import co.akoot.plugins.bluefox.util.accent
 import co.akoot.plugins.bluefox.util.asCurrency
+import co.akoot.plugins.bluefox.util.open
 import co.akoot.plugins.bluefox.util.plus
 import co.akoot.plugins.bluefox.util.primary
+import co.akoot.plugins.bluefox.util.quote
 import co.akoot.plugins.bluefox.util.secondary
 import co.akoot.plugins.bluefox.util.sendActionBarText
+import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
+import co.akoot.plugins.bluefox.util.sync
+import co.akoot.plugins.bluefox.util.tertiary
+import co.akoot.plugins.bluefox.util.toLocalDate
+import co.akoot.plugins.bluefox.util.underline
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
+import org.bukkit.Statistic
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.io.File
 import java.math.BigDecimal
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 val OfflinePlayer.prefsFile: File get() = File(BlueFox.PREFS_FOLDER, "$uniqueId.conf")
 val OfflinePlayer.prefs: Preferences get() = Preferences(uniqueId)
@@ -37,7 +52,7 @@ fun OfflinePlayer.getDataFile(): File {
     return File("world/playerdata/$uniqueId.dat")
 }
 
-val OfflinePlayer.legacyConfigFile: File get() = File("users/$uniqueId.json")
+val OfflinePlayer.legacyConfigFile: File get() = File("users/$uniqueId.json").touch("{}")
 val OfflinePlayer.legacyConfig: FoxConfig get() = FoxConfig(legacyConfigFile)
 
 val OfflinePlayer.profile: Profile
@@ -253,6 +268,7 @@ fun Player.sendCantAffordMessage(invoice: Invoice) {
     val balance = wallet?.balance[coin] ?: BigDecimal.ZERO
     sendWarning("You can't afford ", primary(invoice.description), ",")
     sendWarning("You need ", Color.Number + invoice.finalPrice.asCurrency, " ", secondary(coin), ", you have ", Color.Number + Color.Tertiary + balance.asCurrency, ".")
+    sendText("Check out ", accent("akoot.co/AKC").underline().clickEvent(open("https://akoot.co/AKC")), " for more info!")
 }
 
 fun Player.canAfford(invoice: Invoice, sendMessage: Boolean = true): Boolean? {
@@ -277,5 +293,17 @@ fun Player.payInvoice(invoice: Invoice): Int {
     } else {
         sendCantAffordMessage(invoice)
         return Economy.Error.INSUFFICIENT_BALANCE
+    }
+}
+
+fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
+    return if(canAfford(invoice) == true) {
+        sync { payInvoice(invoice) }
+        result(true)
+        true
+    } else {
+        sendCantAffordMessage(invoice)
+        result(false)
+        false
     }
 }

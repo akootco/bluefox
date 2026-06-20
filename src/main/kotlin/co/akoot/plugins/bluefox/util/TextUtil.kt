@@ -1,6 +1,8 @@
 package co.akoot.plugins.bluefox.util
 
+import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.extensions.mix
+import co.akoot.plugins.bluefox.extensions.text
 import co.akoot.plugins.bluefox.extensions.username
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.key.Key
@@ -10,9 +12,12 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.`object`.ObjectContents
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
+import org.bukkit.World
+import org.bukkit.block.Biome
 import org.bukkit.block.ShulkerBox
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
@@ -139,9 +144,20 @@ fun CommandSender.sendList(components: MutableList<Component>, separator: Compon
     this.sendMessage(components.join(separator, color, mutator))
 }
 
-fun CommandSender.sendText(vararg text: Any) = sendMessage(text(*text))
-fun CommandSender.sendWarning(vararg warning: Any) = sendMessage(warning(*warning))
-fun CommandSender.sendError(vararg error: Any) = sendMessage(error(*error))
+fun CommandSender.sendText(vararg text: Any): Boolean {
+    sendMessage(text(*text))
+    return true
+}
+
+fun CommandSender.sendWarning(vararg warning: Any): Boolean {
+    sendMessage(warning(*warning))
+    return false
+}
+
+fun CommandSender.sendError(vararg error: Any): Boolean {
+    sendMessage(error(*error))
+    return false
+}
 
 fun Player.sendActionBar(components: MutableList<Component>, separator: Component? = null, color: TextColor? = null) {
     this.sendActionBar(components.join(separator, color) { it })
@@ -214,3 +230,18 @@ val BigDecimal.asCurrency: String get() = stripTrailingZeros().toPlainString()
 val Double.asCurrency: String get() = df.format(this)
 
 fun String.s(n: Number) = if(n == 1) this else "${this}s"
+
+fun World.component(color: TextColor = Color.Secondary): Component {
+    val envColor = when (environment) {
+        World.Environment.NETHER -> TextColor.color(0xff0000)
+        World.Environment.THE_END -> TextColor.color(0xff00ff)
+        World.Environment.NORMAL -> TextColor.color(0x00ff00)
+        else -> TextColor.color(0x000000)
+    }
+    return color.mix(envColor) + name
+}
+
+val Location.biome: Biome get() = block.biome
+val Location.biomeName: Component get() = Component.translatable(block.biome.translationKey())
+
+fun Location.toComponent(): Component = text(blockX, ", ", blockY, ", ", blockZ, " in ", world.component()).join("")

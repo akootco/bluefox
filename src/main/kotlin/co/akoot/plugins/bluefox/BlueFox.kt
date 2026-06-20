@@ -43,6 +43,7 @@ import kotlin.random.Random
 class BlueFox : FoxPlugin("bluefox") {
 
     companion object {
+        val today = System.currentTimeMillis()
         const val PREFS_FOLDER = "userprefs"
         lateinit var auth: FoxConfig
         lateinit var server: Server

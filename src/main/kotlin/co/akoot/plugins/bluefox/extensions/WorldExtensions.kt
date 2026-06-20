@@ -14,6 +14,15 @@ val World.legacyName: String get() {
     }
 }
 
+val World.executeName: String get() {
+    return when(name) {
+        "world_the_end" -> "minecraft:the_end"
+        "world_nether" -> "minecraft:the_nether"
+        "world" -> "minecraft:overworld"
+        else -> name
+    }
+}
+
 fun World.text(color: TextColor = Kolor.TEXT.accent): Text {
     val envColor = when (environment) {
         World.Environment.NETHER -> TextColor.color(0xff0000)

@@ -9,3 +9,6 @@ import org.bukkit.Location
 val Location.text: Text get() = Text() + blockX + ", " + blockY + ", " + blockZ + " in " + world.text()
 
 val Location.xyz: XYZ get() = XYZ(this)
+
+val Location.tpCommand: String get() = "tp $x $y $z"
+val Location.tpCommandPrecise: String get() = "execute in ${world.executeName} run tp @s $x $y $z $yaw $pitch"

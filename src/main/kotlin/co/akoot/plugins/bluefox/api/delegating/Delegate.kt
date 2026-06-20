@@ -11,7 +11,8 @@ import kotlin.reflect.KProperty
 
 class Delegate<T>(
     private val backend: DelegateBacking,
-    private val default: T? = null
+    private val default: T? = null,
+    private var parent: String? = null,
 ) : ReadWriteProperty<Any?, T> {
 
     constructor(config: FoxConfig, default: T? = null) : this(ConfigBacking(config), default)
@@ -67,5 +68,7 @@ class Delegate<T>(
         annotations.filterIsInstance<Key>().firstOrNull()?.namespace?.let { Bukkit.getServer().pluginManager.getPlugin(it) } ?: BlueFox.instance
 
     private fun KProperty<*>.findKey(): String =
-        annotations.filterIsInstance<Key>().firstOrNull()?.path ?: name
+        annotations.filterIsInstance<Key>().firstOrNull()?.path ?: "${parent?.let { "$it." } ?: ""}$name"
+
+    infix fun from(parent: String) = this.apply { this.parent = parent }
 }
