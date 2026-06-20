@@ -44,6 +44,7 @@ import org.bukkit.World
 import org.bukkit.block.BlockState
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import java.math.BigDecimal
 import java.time.ZoneId
@@ -62,6 +63,21 @@ abstract class CatCommand(
 
     protected fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
+    }
+
+    protected fun getPlayersFromEntities(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "entities"
+    ): List<Player> {
+        val resolver = ctx.getArgument(argName, EntitySelectorArgumentResolver::class.java)
+        return resolver.resolve(ctx.source).filterIsInstance<Player>()
+    }
+
+    protected fun getPlayerFromEntities(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "entities"
+    ): Player? {
+        return getPlayersFromEntities(ctx, argName).firstOrNull()
     }
 
     protected fun getPlayer(
