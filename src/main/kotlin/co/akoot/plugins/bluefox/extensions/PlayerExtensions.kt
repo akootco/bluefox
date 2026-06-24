@@ -28,7 +28,6 @@ import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
 import co.akoot.plugins.bluefox.util.sync
 import co.akoot.plugins.bluefox.util.tertiary
-import co.akoot.plugins.bluefox.util.toLocalDate
 import co.akoot.plugins.bluefox.util.underline
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
@@ -53,7 +52,9 @@ fun OfflinePlayer.getDataFile(): File {
 }
 
 val OfflinePlayer.legacyConfigFile: File get() = File("users/$uniqueId.json").touch("{}")
+val OfflinePlayer.configFile: File get() = File("users/$uniqueId.conf").touch("{}")
 val OfflinePlayer.legacyConfig: FoxConfig get() = FoxConfig(legacyConfigFile)
+val OfflinePlayer.config: FoxConfig get() = FoxConfig(configFile)
 
 val OfflinePlayer.profile: Profile
     get() = Profile(this.uniqueId)

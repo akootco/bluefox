@@ -8,9 +8,11 @@ import net.kyori.adventure.text.event.HoverEvent
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -176,6 +178,9 @@ val Number.seconds: Long get() = this.toDouble().times(20).toLong()
 val Number.minutes: Long get() = this.toDouble().times(1200).toLong()
 val Number.hours: Long get() = this.toDouble().times(72000).toLong()
 
-fun Long.toLocalDate() = Instant.ofEpochMilli(this)
-    .atZone(ZoneId.systemDefault())
-    .toLocalDate()
+fun getTodayMillis(): Long {
+    return LocalDate.now()
+        .atStartOfDay()
+        .toInstant(ZoneOffset.UTC)
+        .toEpochMilli()
+}

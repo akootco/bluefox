@@ -245,3 +245,5 @@ val Location.biome: Biome get() = block.biome
 val Location.biomeName: Component get() = Component.translatable(block.biome.translationKey())
 
 fun Location.toComponent(): Component = text(blockX, ", ", blockY, ", ", blockZ, " in ", world.component()).join("")
+
+val Double.percent: String get() = String.format("%.2f", this * 100)
