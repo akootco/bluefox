@@ -41,4 +41,10 @@ class ConfigBacking(private val backing: FoxConfig): DelegateBacking {
     ) {
         backing.set(key, list)
     }
+
+    override fun getRoot(): String = "${backing.file.path}:"
 }
+
+infix fun <T> FoxConfig.default(default: T? = null): Delegate<T> = Delegate(this, default)
+infix fun <T> FoxConfig.of(transform: (String) -> T): Delegate<T> = Delegate(ConfigBacking(this), fromString = transform)
+infix fun <T> FoxConfig.from(parent: String): Delegate<T> = Delegate(ConfigBacking(this), parent = parent)

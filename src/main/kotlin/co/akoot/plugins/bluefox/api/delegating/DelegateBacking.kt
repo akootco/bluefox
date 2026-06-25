@@ -8,4 +8,6 @@ interface DelegateBacking {
     fun <T> set(plugin: Plugin, key: String, value: T?)
     fun getList(plugin: Plugin, key: String, type: KType?): List<*>?
     fun setList(plugin: Plugin, key: String, list: List<*>, elementType: KType?)
+
+    fun getRoot(): String
 }

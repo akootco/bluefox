@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.api.delegating.ConfigBacking
 import co.akoot.plugins.bluefox.api.delegating.Delegate
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -252,7 +253,4 @@ class FoxConfig(val file: File) {
         val value = getDouble(path) ?: 0.0
         set(path, (value - amount).coerceAtLeast(min))
     }
-
-    infix fun <T> delegate(default: T? = null): Delegate<T> = Delegate(this, default)
-    infix fun <T> default(default: T? = null): Delegate<T> = Delegate(this, default)
 }

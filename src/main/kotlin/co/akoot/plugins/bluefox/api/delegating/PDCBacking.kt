@@ -43,6 +43,10 @@ class PDCBacking(private val backing: PersistentDataHolder): DelegateBacking {
         val key = NamespacedKey(plugin, key)
         backing.setPDC(key, list)
     }
+
+    override fun getRoot(): String = "${toString()}.pdc:"
 }
 
 infix fun <T> PersistentDataHolder.default(default: T? = null): Delegate<T> = Delegate(this, default)
+infix fun <T> PersistentDataHolder.of(transform: (String) -> T): Delegate<T> = Delegate(PDCBacking(this), null, fromString = transform)
+infix fun <T> PersistentDataHolder.from(parent: String): Delegate<T> = Delegate(PDCBacking(this), parent = parent)

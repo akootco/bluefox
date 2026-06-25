@@ -1,5 +1,6 @@
 package co.akoot.plugins.bluefox.api.delegating
 
+import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.extensions.getMeta
 import co.akoot.plugins.bluefox.extensions.setMeta
 import org.bukkit.metadata.Metadatable
@@ -28,6 +29,10 @@ class MetaBacking(private val backing: Metadatable): DelegateBacking {
     ) {
         backing.setMeta(key, list, plugin)
     }
+
+    override fun getRoot(): String = "${toString()}.meta:"
 }
 
 infix fun <T> Metadatable.default(default: T? = null): Delegate<T> = Delegate(this, default)
+infix fun <T> Metadatable.of(transform: (String) -> T): Delegate<T> = Delegate(MetaBacking(this), null, fromString = transform)
+infix fun <T> Metadatable.from(parent: String): Delegate<T> = Delegate(MetaBacking(this), parent = parent)
