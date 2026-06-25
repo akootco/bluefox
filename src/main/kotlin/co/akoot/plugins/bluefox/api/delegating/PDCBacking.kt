@@ -4,6 +4,7 @@ import co.akoot.plugins.bluefox.extensions.getPDC
 import co.akoot.plugins.bluefox.extensions.getPDCList
 import co.akoot.plugins.bluefox.extensions.setPDC
 import org.bukkit.NamespacedKey
+import org.bukkit.metadata.Metadatable
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KType
@@ -43,3 +44,5 @@ class PDCBacking(private val backing: PersistentDataHolder): DelegateBacking {
         backing.setPDC(key, list)
     }
 }
+
+infix fun <T> PersistentDataHolder.default(default: T? = null): Delegate<T> = Delegate(this, default)

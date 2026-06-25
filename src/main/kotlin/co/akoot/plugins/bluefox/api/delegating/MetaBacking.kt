@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox.api.delegating
 import co.akoot.plugins.bluefox.extensions.getMeta
 import co.akoot.plugins.bluefox.extensions.setMeta
 import org.bukkit.metadata.Metadatable
+import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KType
 
@@ -28,3 +29,5 @@ class MetaBacking(private val backing: Metadatable): DelegateBacking {
         backing.setMeta(key, list, plugin)
     }
 }
+
+infix fun <T> Metadatable.default(default: T? = null): Delegate<T> = Delegate(this, default)
