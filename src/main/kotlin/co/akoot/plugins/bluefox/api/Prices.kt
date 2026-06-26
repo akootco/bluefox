@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.delegating.default
 import co.akoot.plugins.bluefox.extensions.touch
 
 object Prices {

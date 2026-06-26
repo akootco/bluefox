@@ -251,7 +251,7 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String): Double {
+    protected fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Double {
         return DoubleArgumentType.getDouble(ctx, argName)
     }
 

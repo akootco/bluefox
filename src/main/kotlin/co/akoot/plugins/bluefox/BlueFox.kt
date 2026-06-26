@@ -8,6 +8,7 @@ import co.akoot.plugins.bluefox.commands.DelHomeCommand
 import co.akoot.plugins.bluefox.commands.HomeCommand
 import co.akoot.plugins.bluefox.commands.HomesCommand
 import co.akoot.plugins.bluefox.commands.MarketCommand
+import co.akoot.plugins.bluefox.commands.PayCommand
 import co.akoot.plugins.bluefox.commands.SetHomeCommand
 import co.akoot.plugins.bluefox.commands.TokenCommand
 import co.akoot.plugins.bluefox.commands.TradeCommand
@@ -342,6 +343,7 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(UserHomeCommand(this))
         registerCommand(UserHomesCommand(this))
         registerCommand(TokenCommand(this))
+        registerCommand(PayCommand(this))
 //        registerCommand(TestCommand(this))
     }
 
