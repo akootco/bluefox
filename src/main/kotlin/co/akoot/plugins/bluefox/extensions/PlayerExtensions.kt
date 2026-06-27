@@ -7,40 +7,30 @@ import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
 import co.akoot.plugins.bluefox.api.Preferences
 import co.akoot.plugins.bluefox.api.Profile
-import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Economy
-import co.akoot.plugins.bluefox.api.economy.Economy.bd
 import co.akoot.plugins.bluefox.api.economy.Invoice
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Promise
 import co.akoot.plugins.bluefox.util.Text
-import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import co.akoot.plugins.bluefox.util.accent
 import co.akoot.plugins.bluefox.util.asCurrency
 import co.akoot.plugins.bluefox.util.open
 import co.akoot.plugins.bluefox.util.plus
 import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.quote
 import co.akoot.plugins.bluefox.util.secondary
 import co.akoot.plugins.bluefox.util.sendActionBarText
 import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
-import co.akoot.plugins.bluefox.util.sync
-import co.akoot.plugins.bluefox.util.tertiary
 import co.akoot.plugins.bluefox.util.underline
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
-import org.bukkit.Statistic
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.io.File
 import java.math.BigDecimal
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 val OfflinePlayer.prefsFile: File get() = File(BlueFox.PREFS_FOLDER, "$uniqueId.conf")
 val OfflinePlayer.prefs: Preferences get() = Preferences(uniqueId)
@@ -54,7 +44,12 @@ fun OfflinePlayer.getDataFile(): File {
 val OfflinePlayer.legacyConfigFile: File get() = File("users/$uniqueId.json").touch("{}")
 val OfflinePlayer.configFile: File get() = File("users/$uniqueId.conf").touch("{}")
 val OfflinePlayer.legacyConfig: FoxConfig get() = FoxConfig(legacyConfigFile)
-val OfflinePlayer.config: FoxConfig get() = FoxConfig(configFile)
+val OfflinePlayer.settings: FoxConfig get() = FoxConfig(configFile)
+
+fun OfflinePlayer.giveRole(name: String) = settings.append("roles", name)
+fun OfflinePlayer.removeRole(name: String) = settings.remove("roles", name)
+
+val OfflinePlayer.roles: List<String> get() = settings.getStringList("roles")
 
 val OfflinePlayer.profile: Profile
     get() = Profile(this.uniqueId)

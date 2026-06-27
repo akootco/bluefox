@@ -247,3 +247,5 @@ val Location.biomeName: Component get() = Component.translatable(block.biome.tra
 fun Location.toComponent(): Component = text(blockX, ", ", blockY, ", ", blockZ, " in ", world.component()).join("")
 
 val Double.percent: String get() = String.format("%.2f", this * 100)
+
+fun <T> Boolean.get(whenTrue: T, whenFalse: T) = if(this) whenTrue else whenFalse

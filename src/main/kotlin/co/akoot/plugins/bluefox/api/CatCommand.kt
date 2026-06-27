@@ -36,16 +36,26 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySele
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver
 import io.papermc.paper.math.BlockPosition
 import io.papermc.paper.math.FinePosition
+import io.papermc.paper.registry.RegistryKey
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
+import org.bukkit.Registry
+import org.bukkit.Sound
 import org.bukkit.World
+import org.bukkit.block.Biome
 import org.bukkit.block.BlockState
+import org.bukkit.block.BlockType
 import org.bukkit.command.CommandSender
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.Item
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
+import org.bukkit.potion.PotionType
 import java.math.BigDecimal
 import java.time.ZoneId
 import kotlin.jvm.java
@@ -262,6 +272,72 @@ abstract class CatCommand(
         return Commands.argument(argName, OfflinePlayerArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    protected fun sound(
+        argName: String = "sound",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, Sound> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.SOUND_EVENT)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getSound(ctx: CommandContext<CommandSourceStack>, argName: String = "sound"): Sound {
+        return ctx.getArgument(argName, Sound::class.java)
+    }
+
+    protected fun item(
+        argName: String = "item",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, ItemType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ITEM)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getItem(ctx: CommandContext<CommandSourceStack>, argName: String = "item"): ItemType {
+        return ctx.getArgument(argName, ItemType::class.java)
+    }
+
+    protected fun block(
+        argName: String = "block",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, BlockType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BLOCK)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getBlock(ctx: CommandContext<CommandSourceStack>, argName: String = "block"): BlockType {
+        return ctx.getArgument(argName, BlockType::class.java)
+    }
+
+    protected fun biome(
+        argName: String = "biome",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, Biome> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BIOME)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getBiome(ctx: CommandContext<CommandSourceStack>, argName: String = "biome"): Biome {
+        return ctx.getArgument(argName, Biome::class.java)
+    }
+
+    protected fun potion(
+        argName: String = "potion",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, PotionType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.POTION)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getPotion(ctx: CommandContext<CommandSourceStack>, argName: String = "potion"): PotionType {
+        return ctx.getArgument(argName, PotionType::class.java)
+    }
+
+    protected fun enchantment(
+        argName: String = "enchantment",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ):  RequiredArgumentBuilder<CommandSourceStack, Enchantment> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ENCHANTMENT)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    protected fun getEnchantment(ctx: CommandContext<CommandSourceStack>, argName: String = "enchantment"): Enchantment {
+        return ctx.getArgument(argName, Enchantment::class.java)
+    }
+
     protected fun getOfflinePlayer(ctx: CommandContext<CommandSourceStack>, argName: String = "player"): OfflinePlayer? {
         val player = runCatching { ctx.getArgument(argName, OfflinePlayer::class.java) }.getOrNull()
         return player
@@ -447,8 +523,8 @@ abstract class CatCommand(
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
-    protected fun then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
-        return then(something())
+    protected fun then(something: (LiteralArgumentBuilder<CommandSourceStack>) -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
+        return then(something(this))
     }
 
     protected infix fun ArgumentBuilder<CommandSourceStack, *>.then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {

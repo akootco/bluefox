@@ -1,14 +1,11 @@
 package co.akoot.plugins.bluefox.api
 
-import co.akoot.plugins.bluefox.api.delegating.ConfigBacking
-import co.akoot.plugins.bluefox.api.delegating.Delegate
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValueFactory
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import org.bukkit.WorldCreator
 import java.io.File
 import java.util.UUID
 
@@ -21,6 +18,7 @@ class FoxConfig(val file: File) {
     }
 
     private var config = ConfigFactory.parseFile(file)
+    val conf: Config get() = config
     private val options = ConfigRenderOptions.concise().setFormatted(true)
     var autoload = true
     var autosave = true
