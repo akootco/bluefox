@@ -63,8 +63,8 @@ class BlueFox : FoxPlugin("bluefox") {
         val prefs = mutableMapOf<UUID, FoxConfig>()
 
         fun getPlayer(name: String, exact: Boolean = false): Player? {
-            if (exact) return server.onlinePlayers.find { it.name.equals(name, true) }
-            return server.onlinePlayers.find { it.name.startsWith(name, true) }
+            return if(exact) server.onlinePlayers.find { it.name.equals(name, true) }
+            else server.onlinePlayers.find { it.name.contains(name, true) }
         }
 
         fun getPlayers(playerNames: String, exact: Boolean = false): List<Player> {
@@ -73,8 +73,8 @@ class BlueFox : FoxPlugin("bluefox") {
         }
 
         fun getOfflinePlayer(name: String, exact: Boolean = false): OfflinePlayer? {
-            if (exact) return cachedOfflinePlayerNames.find { it.equals(name, true) }?.let { server.getOfflinePlayer(it) }
-            return cachedOfflinePlayerNames.find {it.startsWith(name, true)}?.let { server.getOfflinePlayer(it) }
+            return if (exact) cachedOfflinePlayerNames.find { it.equals(name, true) }?.let { server.getOfflinePlayer(it) }
+            else cachedOfflinePlayerNames.find { it.contains(name, true) }?.let { server.getOfflinePlayer(it) }
         }
 
         fun key(key: String): NamespacedKey {

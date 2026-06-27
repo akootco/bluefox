@@ -94,6 +94,14 @@ abstract class CatCommand(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): Player {
+        val player = runCatching { ctx.getArgument(argName, Player::class.java) }.getOrNull()
+        return player ?: getPlayerSelector(ctx, argName)
+    }
+
+    protected fun getPlayerSelector(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "player"
+    ): Player {
         return getPlayers(ctx, argName).first()
     }
 
@@ -346,8 +354,8 @@ abstract class CatCommand(
     protected fun player(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ): RequiredArgumentBuilder<CommandSourceStack, PlayerSelectorArgumentResolver> {
-        return Commands.argument(argName, ArgumentTypes.player()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, Player> {
+        return Commands.argument(argName, PlayerArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun players(
