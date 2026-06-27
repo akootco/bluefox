@@ -27,6 +27,7 @@ import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
+import org.bukkit.Statistic
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.io.File
@@ -303,3 +304,7 @@ fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
         false
     }
 }
+
+val Player.ticksPlayed: Int get() = runCatching { getStatistic(Statistic.PLAY_ONE_MINUTE) }.getOrElse { 0 }
+
+val Player.playtime: Int get() = ticksPlayed / 20
