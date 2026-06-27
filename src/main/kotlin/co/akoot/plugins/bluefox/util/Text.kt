@@ -42,6 +42,7 @@ val snakeCaseRegex = Regex("\\s|-")
 fun String.snakeCase() = this.replace(snakeCaseRegex, "_").lowercase().alphaNumeric()
 fun String.alphaNumeric() = this.replace(alphaNumericRegex, "")
 
+@Deprecated("do not use ts, deleting in v3")
 class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
 
     enum class EnumOption {

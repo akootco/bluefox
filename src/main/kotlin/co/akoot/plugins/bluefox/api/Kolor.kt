@@ -3,11 +3,12 @@ package co.akoot.plugins.bluefox.api
 import co.akoot.plugins.bluefox.extensions.mix
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
-import co.akoot.plugins.bluefox.util.invert
+import co.akoot.plugins.bluefox.util.inverted
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import java.awt.Color
 
+@Deprecated("do not use ts, deleting in v3")
 class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
 
     companion object {
@@ -93,5 +94,5 @@ class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
     }
 
 
-    val invert get() = text.invert
+    val invert get() = text.inverted
 }
