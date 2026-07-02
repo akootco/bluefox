@@ -223,12 +223,29 @@ fun suggest(command: String): ClickEvent = ClickEvent.suggestCommand(command)
 fun open(url: String): ClickEvent = ClickEvent.openUrl(url)
 fun copy(text: String): ClickEvent = ClickEvent.copyToClipboard(text)
 
+// 26.2
+//fun clickable(string: String, color: TextColor = Color.Tertiary + Color.Month, underline: Boolean = true, clickEvent: ClickEvent<*>): Component {
+//    return (color + string)
+//        .underline(underline)
+//        .clickEvent(clickEvent)
+//}
+//
+//fun execute(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.runCommand(command)
+//fun suggest(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.suggestCommand(command)
+//fun open(url: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.openUrl(url)
+//fun copy(text: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.copyToClipboard(text)
+
 private val df = DecimalFormat("#.################")
 
 val BigDecimal.asCurrency: String get() = stripTrailingZeros().toPlainString()
 val Double.asCurrency: String get() = df.format(this)
 
 fun String.s(n: Number) = if(n == 1) this else "${this}s"
+val String.s: String get() {
+    val parts = this.split(" ")
+    val number = parts[0].toIntOrNull() ?: toDoubleOrNull() ?: return this
+    return if(number == 1) this else "${this}s"
+}
 
 fun World.component(color: TextColor = Color.Secondary): Component {
     val envColor = when (environment) {
@@ -244,6 +261,9 @@ val Location.biome: Biome get() = block.biome
 val Location.biomeName: Component get() = Component.translatable(block.biome.translationKey())
 
 fun Location.toComponent(): Component = text(blockX, ", ", blockY, ", ", blockZ, " in ", world.component()).join("")
+
+val Double.oneZero: String get() = String.format("%.1f", this)
+val Double.twoZeros: String get() = String.format("%.2f", this)
 
 val Double.percent: String get() = String.format("%.2f", this * 100)
 

@@ -18,7 +18,6 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.`object`.ObjectContents
 import net.kyori.adventure.text.`object`.PlayerHeadObjectContents
-import net.kyori.examination.Examinable
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.title.Title
@@ -590,16 +589,6 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
     fun sendActionBar(player: Player): Text {
         player.sendActionBar(component)
-        return this
-    }
-
-    fun playerHead(username: String): Text {
-        builder.append(Component.`object` { it.contents(ObjectContents.playerHead().name(username).build()).build() })
-        return this
-    }
-
-    fun playerHead(player: Player): Text {
-        builder.append(Component.`object` { it.contents(ObjectContents.playerHead().skin(player).build()).build() })
         return this
     }
 

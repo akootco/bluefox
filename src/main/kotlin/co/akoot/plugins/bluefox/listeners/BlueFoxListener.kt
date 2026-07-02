@@ -2,12 +2,17 @@ package co.akoot.plugins.bluefox.listeners
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.extensions.clearLoginMessages
 import co.akoot.plugins.bluefox.extensions.prefsFile
 import co.akoot.plugins.bluefox.extensions.deathMessage
+import co.akoot.plugins.bluefox.extensions.loginMessages
 import co.akoot.plugins.bluefox.extensions.prefs
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text.Companion.asString
 import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.parse
 import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.sendMessage
 import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.text
 import net.kyori.adventure.text.TextReplacementConfig
@@ -37,6 +42,12 @@ class BlueFoxListener: Listener {
         }
         wallet.load()
         Wallet.playerWallets[player] = wallet
+
+        player.loginMessages.forEach { message ->
+            val component = message.parse(Color.Month)
+            player.sendMessage(component)
+        }
+        player.clearLoginMessages()
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

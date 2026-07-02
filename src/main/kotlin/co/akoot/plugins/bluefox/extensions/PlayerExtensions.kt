@@ -308,3 +308,15 @@ fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
 val Player.ticksPlayed: Int get() = runCatching { getStatistic(Statistic.PLAY_ONE_MINUTE) }.getOrElse { 0 }
 
 val Player.playtime: Int get() = ticksPlayed / 20
+
+fun OfflinePlayer.addLoginMessage(message: String) {
+    settings.append("loginMessages", message)
+}
+
+fun OfflinePlayer.removeLoginMessage(message: String) {
+    settings.remove("loginMessages", message)
+}
+
+val OfflinePlayer.loginMessages: List<String> get() = settings.getStringList("loginMessages")
+
+fun OfflinePlayer.clearLoginMessages() = settings.set("loginMessages", null)
