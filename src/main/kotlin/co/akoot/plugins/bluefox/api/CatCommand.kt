@@ -500,6 +500,14 @@ abstract class CatCommand(
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
+    @JvmName("suggestComponent")
+    protected fun suggest(builder: SuggestionsBuilder, suggestions: Map<String, Component>) {
+        suggestions.filter { entry -> entry.key.startsWith(builder.remainingLowerCase) }
+            .forEach { (string, component) ->
+                builder.suggest(string, MessageComponentSerializer.message().serialize(component))
+            }
+    }
+
     @JvmName("suggestIntText")
     protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
         suggestions.stream()
