@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox
 import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.api.LegacyWarp
+import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.DelHomeCommand
 import co.akoot.plugins.bluefox.commands.HomeCommand
@@ -16,10 +17,11 @@ import co.akoot.plugins.bluefox.commands.TradeCommand
 import co.akoot.plugins.bluefox.commands.UserHomeCommand
 import co.akoot.plugins.bluefox.commands.UserHomesCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
-import co.akoot.plugins.bluefox.extensions.prefsFile
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.IOUtil
+import co.akoot.plugins.bluefox.util.loop
+import co.akoot.plugins.bluefox.util.minutes
 import com.mysql.cj.xdevapi.SqlStatement
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -45,8 +47,6 @@ import kotlin.random.Random
 class BlueFox : FoxPlugin("bluefox") {
 
     companion object {
-        val today = System.currentTimeMillis()
-        const val PREFS_FOLDER = "userprefs"
         lateinit var auth: FoxConfig
         lateinit var server: Server
         lateinit var spawnLocation: Location
@@ -60,7 +60,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
-        val prefs = mutableMapOf<UUID, FoxConfig>()
+        val profiles = mutableMapOf<UUID, Profile>()
 
         fun getPlayer(name: String, exact: Boolean = false): Player? {
             return if(exact) server.onlinePlayers.find { it.name.equals(name, true) }
@@ -88,13 +88,6 @@ class BlueFox : FoxPlugin("bluefox") {
                 else -> legacyName
             }
             return Bukkit.getWorld(name)
-        }
-
-        fun getPrefs(offlinePlayer: OfflinePlayer) = getPrefs(offlinePlayer.uniqueId)
-
-        fun getPrefs(uuid: UUID): FoxConfig {
-            val configFile = File(PREFS_FOLDER, "$uuid.conf")
-            return prefs.getOrPut(uuid) { FoxConfig(configFile) }
         }
 
         fun generateToken(): String {
@@ -266,7 +259,6 @@ class BlueFox : FoxPlugin("bluefox") {
         instance = this
         BlueFox.server = server
         world = server.getWorld("world")
-        File(PREFS_FOLDER).mkdirs()
         setupDatabases()
         try {
             Market.load()
@@ -276,6 +268,10 @@ class BlueFox : FoxPlugin("bluefox") {
         cachedOfflinePlayerNames = server.offlinePlayers.mapNotNull { it.name }.toMutableSet()
         loadLegacyWarps()
         logger.info("Good day!")
+
+        loop(30.minutes, 30.minutes) {
+            profiles.clear()
+        }
     }
 
     private val legacyWarpsFolder = File("warps")

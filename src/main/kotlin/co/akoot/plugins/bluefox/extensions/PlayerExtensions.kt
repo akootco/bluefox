@@ -5,7 +5,6 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.api.LegacyWarp
-import co.akoot.plugins.bluefox.api.Preferences
 import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Economy
 import co.akoot.plugins.bluefox.api.economy.Invoice
@@ -33,9 +32,6 @@ import org.bukkit.inventory.ItemStack
 import java.io.File
 import java.math.BigDecimal
 
-val OfflinePlayer.prefsFile: File get() = File(BlueFox.PREFS_FOLDER, "$uniqueId.conf")
-val OfflinePlayer.prefs: Preferences get() = Preferences(uniqueId)
-
 val OfflinePlayer.defaultWalletAddress: String get() = this.uniqueId.toString().replace("-", "")
 
 fun OfflinePlayer.getDataFile(): File {
@@ -53,7 +49,7 @@ fun OfflinePlayer.removeRole(name: String) = settings.remove("roles", name)
 val OfflinePlayer.roles: List<String> get() = settings.getStringList("roles")
 
 val OfflinePlayer.profile: Profile
-    get() = Profile(this.uniqueId)
+    get() = BlueFox.profiles.getOrPut(uniqueId) { Profile(uniqueId) }
 
 fun List<OfflinePlayer>.names(): List<String> {
     return this.mapNotNull { it.name }

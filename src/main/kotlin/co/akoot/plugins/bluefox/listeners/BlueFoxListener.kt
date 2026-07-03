@@ -3,10 +3,8 @@ package co.akoot.plugins.bluefox.listeners
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.extensions.clearLoginMessages
-import co.akoot.plugins.bluefox.extensions.prefsFile
 import co.akoot.plugins.bluefox.extensions.deathMessage
 import co.akoot.plugins.bluefox.extensions.loginMessages
-import co.akoot.plugins.bluefox.extensions.prefs
 import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text.Companion.asString
 import co.akoot.plugins.bluefox.util.accent
@@ -32,6 +30,7 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 class BlueFoxListener: Listener {
+
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         BlueFox.cachedOfflinePlayerNames += event.player.name
@@ -63,5 +62,11 @@ class BlueFoxListener: Listener {
             event.deathMessage(message)
             player.deathMessage = null
         }
+    }
+
+    @EventHandler
+    fun onPlayerLeave(event: PlayerQuitEvent) {
+        val player = event.player
+        BlueFox.profiles.remove(player.uniqueId)
     }
 }

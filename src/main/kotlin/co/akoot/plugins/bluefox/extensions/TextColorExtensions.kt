@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.api.Kolor
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
@@ -32,6 +33,9 @@ fun TextColor.mix(color: TextColor?, mix: Double = 0.5, points: Int = 3): TextCo
 fun TextColor.mix(kolor: Kolor, mix: Double = 0.5, points: Int = 3): TextColor {
     return ColorUtil.mix(this, kolor.raw, mix, points)
 }
+
+fun getTextColor(string: String): TextColor = TextColor.fromHexString(string) ?: Color.White
+fun setTextColor(color: TextColor): String = color.hex()
 
 operator fun TextColor.invoke(string: String): Text {
     return Text(string).color(this)
