@@ -1,5 +1,8 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.api.events.FoxConfigAppendToListEvent
+import co.akoot.plugins.bluefox.api.events.FoxConfigRemoveFromListEvent
+import co.akoot.plugins.bluefox.api.events.FoxConfigSetEvent
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
@@ -70,6 +73,7 @@ class FoxConfig(val file: File) {
     }
 
     fun set(path: String, value: Any?) {
+        FoxConfigSetEvent(this, path, value).fire() ?: return
         config = config.withValue(path, ConfigValueFactory.fromAnyRef(value))
         if (autosave) save()
     }
@@ -193,6 +197,7 @@ class FoxConfig(val file: File) {
     }
 
     inline fun <reified T : Any> append(path: String, item: T) {
+        FoxConfigAppendToListEvent(this, path, item).fire() ?: return
         val list = when(T::class) {
             UUID::class -> getUUIDList(path)
             Long::class -> getLongList(path)
@@ -205,6 +210,7 @@ class FoxConfig(val file: File) {
     }
 
     inline fun <reified T : Any> remove(path: String, item: T) {
+        FoxConfigRemoveFromListEvent(this, path, item).fire() ?: return
         val list = when(T::class) {
             UUID::class -> getUUIDList(path)
             Long::class -> getLongList(path)

@@ -48,10 +48,20 @@ class Profile(val uuid: String) {
     fun addMail(mail: String) = data.append("mail", mail)
     fun deleteMail(mail: String) = data.remove("mail", mail)
 
+    val titles: List<String> by data default listOf()
+    fun giveTitle(title: String) = data.append("titles", title)
+    fun removeTitle(title: String) = data.remove("titles", title)
+    fun hasTitle(title: String) = titles.contains(title)
+
     val ignoredPlayers: List<String> by data default listOf()
     fun ignorePlayer(player: OfflinePlayer) = data.append("ignoredPlayers", player.uniqueId.toString())
     fun unignorePlayer(player: OfflinePlayer) = data.remove("ignoredPlayers", player.uniqueId.toString())
     fun isIgnoring(player: OfflinePlayer) = ignoredPlayers.contains(player.uniqueId.toString())
+
+    val friends: List<String> by data default listOf()
+    fun friend(player: OfflinePlayer) = data.append("friends", player.uniqueId.toString())
+    fun unfriend(player: OfflinePlayer) = data.remove("friends", player.uniqueId.toString())
+    fun isFriendsWith(player: OfflinePlayer) = friends.contains(player.uniqueId.toString())
 
     val marriageProposals: List<String> by data default listOf()
     fun proposeBy(player: OfflinePlayer) = data.append("marriageProposals", player.uniqueId.toString())
@@ -75,9 +85,14 @@ class Profile(val uuid: String) {
         get() = data.getString("lastDmTarget")?.let { BlueFox.server.getOfflinePlayer(it) }
         set(value) = data.set("lastDmTarget", value?.uniqueId?.toString())
 
+    enum class TitleStyle {
+        NORMAL, SMALL_TEXT, NONE
+    }
+
     var nickname: String by data default ""
     var title: String by data default "Guest"
-    var status: String by data default "Offline"
+    var status: String by data default ""
+    var titleStyle: TitleStyle by data of TitleStyle::valueOf default TitleStyle.NORMAL
     var heartSymbol: String by data default "❤"
     var lastWords: String by data default ""
     var lastChangelogVersion: String by data default ""
