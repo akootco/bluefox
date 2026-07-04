@@ -2,31 +2,27 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.delegating.default
-import co.akoot.plugins.bluefox.api.delegating.from
 import co.akoot.plugins.bluefox.api.delegating.of
-import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.extensions.getTextColor
+import co.akoot.plugins.bluefox.extensions.hex
 import co.akoot.plugins.bluefox.extensions.mkdirp
-import co.akoot.plugins.bluefox.extensions.setTextColor
 import co.akoot.plugins.bluefox.extensions.touch
-import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.ColorUtil
+import co.akoot.plugins.bluefox.extensions.username
+import co.akoot.plugins.bluefox.util.or
+import co.akoot.plugins.bluefox.util.parse
+import co.akoot.plugins.bluefox.util.prefix
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import java.io.File
 import java.sql.Date
 import java.sql.SQLIntegrityConstraintViolationException
-import java.sql.SQLType
 import java.sql.Types
-import java.time.Instant
 import java.time.LocalDate
-import java.time.temporal.TemporalUnit
 import java.util.*
 
-class Profile(val uuid: String) {
-    constructor(uuid: UUID): this(uuid.toString())
-    constructor(player: OfflinePlayer): this(player.uniqueId.toString())
+class Profile(val uuid: String, val username: String) {
+    constructor(uuid: UUID, username: String): this(uuid.toString(), username)
+    constructor(player: OfflinePlayer): this(player.uniqueId.toString(), player.username)
 
     val folder = File("users").resolve(uuid).mkdirp()
     val settings = FoxConfig(folder.resolve("settings.conf").touch("{}"))
@@ -48,10 +44,20 @@ class Profile(val uuid: String) {
     fun addMail(mail: String) = data.append("mail", mail)
     fun deleteMail(mail: String) = data.remove("mail", mail)
 
-    val titles: List<String> by data default listOf()
+    val unlockedTitles: List<String> by data default listOf()
     fun giveTitle(title: String) = data.append("titles", title)
     fun removeTitle(title: String) = data.remove("titles", title)
-    fun hasTitle(title: String) = titles.contains(title)
+    fun hasTitle(title: String) = unlockedTitles.contains(title)
+
+    val unlockedChatThemes: List<String> by data default listOf()
+    fun giveChatTheme(chatTheme: String) = data.append("chatThemes", chatTheme)
+    fun removeChatTheme(chatTheme: String) = data.remove("chatThemes", chatTheme)
+    fun hasChatTheme(chatTheme: String) = unlockedChatThemes.contains(chatTheme)
+
+    val unlockedPalettes: List<String> by data default listOf()
+    fun givePalette(palette: String) = data.append("palettes", palette)
+    fun removePalette(palette: String) = data.remove("palettes", palette)
+    fun hasPalette(palette: String) = unlockedPalettes.contains(palette)
 
     val ignoredPlayers: List<String> by data default listOf()
     fun ignorePlayer(player: OfflinePlayer) = data.append("ignoredPlayers", player.uniqueId.toString())
@@ -96,6 +102,18 @@ class Profile(val uuid: String) {
     var heartSymbol: String by data default "❤"
     var lastWords: String by data default ""
     var lastChangelogVersion: String by data default ""
+    var chatFormat: String by data default ""
+    var chatTint: String by data default ""
+    var chatTintIntensity: Double by data default -1.0
+    var universalChatFormat: String by data default ""
+    var universalChatTint: String by data default ""
+    var universalChatTintIntensity: Double by data default -1.0
+
+    var favColor: String by settings default ""
+    var skullColor: String by settings default ""
+    var heartColor: String by settings default ""
+    var chatColor: String by settings default ""
+    var bracketColor: String by settings default ""
 
     var diamondsEaten: Int by data default 0
     var netheriteIngotsEaten: Int by data default 0
@@ -124,11 +142,6 @@ class Profile(val uuid: String) {
     var outgoingChatLanguage: String by settings default ""
     var dateFormat: String by settings default ""
     var timeFormat: String by settings default ""
-
-    var favColor: TextColor by settings of ::getTextColor from ::setTextColor default Color.White
-    var skullColor: TextColor by settings of ::getTextColor from ::setTextColor default Color.White
-    var heartColor: TextColor by settings of ::getTextColor from ::setTextColor default Color.White
-    var chatColor: TextColor by settings of ::getTextColor from ::setTextColor default Color.White
 
     var timeZone: TimeZone by settings of TimeZone::getTimeZone from TimeZone::getID default TimeZone.getDefault()
 
@@ -380,4 +393,34 @@ class Profile(val uuid: String) {
             null
         }
     }
+
+    fun parseTheme(
+        format: String,
+        tint: TextColor? = null,
+        tintIntensity: Double = 1.0,
+        nick: String = nickname,
+        name: String = username,
+        title: String = this.title,
+        bracketColor: String = this.bracketColor,
+        chatColor: String = this.chatColor
+    ): Component {
+        return format
+            .replace("{bracketColor}", bracketColor prefix "&")
+            .replace("{title}", title)
+            .replace("{nick}", nick or name)
+            .replace("{name}", name)
+            .replace("{chatColor}", chatColor prefix "&")
+            .parse(tint, tintIntensity)
+    }
+
+    fun parseTheme(format: String, profile: Profile, tint: TextColor? = null, tintIntensity: Double = 1.0) = parseTheme(
+        format = format,
+        tint = tint,
+        tintIntensity = tintIntensity,
+        nick = profile.nickname,
+        name = profile.username,
+        title = profile.title,
+        bracketColor = profile.bracketColor,
+        chatColor = profile.chatColor
+    )
 }

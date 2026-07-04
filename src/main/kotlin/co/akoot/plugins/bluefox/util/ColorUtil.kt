@@ -11,6 +11,7 @@ import java.awt.color.ColorSpace
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class Gradient(val colors: List<TextColor>) {
@@ -69,7 +70,7 @@ object ColorUtil {
     }
 
     fun month(color: TextColor, mix: Double = 0.25, brighten: Double = 0.15): TextColor {
-        val result = mix(color, MONTH_COLOR, mix, 10)
+        val result = mix(color, MONTH_COLOR, mix)
         return if(brighten <= 0.0) result
         else result.brighten(brighten)
     }
@@ -211,9 +212,15 @@ object ColorUtil {
      * @param color2 Color 2
      * @return The resulting color of mixing color1 and color2
      */
-    fun mix(color1: TextColor, color2: TextColor, percentage: Double = 0.5, points: Int = 3): TextColor {
-        return getGradient(points, color1, color2)[(points * percentage).toInt()]
+    fun mix(color1: TextColor, color2: TextColor, percent: Double = 0.5): TextColor {
+        val r = lerp(color1.red(), color2.red(), percent)
+        val g = lerp(color1.green(), color2.green(), percent)
+        val b = lerp(color1.blue(), color2.blue(), percent)
+        return TextColor.color(r, g, b)
     }
+
+    fun lerp(a: Int, b: Int, t: Double): Int =
+        (a + (b - a) * t).roundToInt()
 
     private val cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
     private val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)

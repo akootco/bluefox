@@ -65,11 +65,11 @@ object Color {
     }
 }
 
-fun Component.tint(color: TextColor?): Component {
+fun Component.tint(color: TextColor?, intensity: Double = 0.5): Component {
     return if(color == null) {
         this.color(null)
     } else {
-        this.color(this.color()?.mix(color) ?: color)
+        this.color((this.color()?: Color.White).mix(color, intensity))
     }
 }
 
@@ -321,6 +321,10 @@ fun stripColor(input: String): String = buildString {
     }
 }
 
+fun getColor(string: String): TextColor? {
+    return colorCodes[string] ?: palettes[string.dropLast(1)]?.getOrNull(string.last().digitToInt()) ?: TextColor.fromHexString(string)
+}
+
 // Sealed type makes match kinds explicit and exhausting
 sealed interface Token {
     data class ColorCode(val codes: String, val inverted: Boolean) : Token
@@ -404,7 +408,7 @@ private data class FormatState(
     fun reset() = FormatState()
 }
 
-fun String.parse(tint: TextColor? = null): Component {
+fun String.parse(tint: TextColor? = null, tintIntensity: Double = 0.5): Component {
     val root = Component.text()
     var state = FormatState()
 
@@ -438,7 +442,7 @@ fun String.parse(tint: TextColor? = null): Component {
         }
     }
 
-    return root.build()
+    return root.build().tint(tint, tintIntensity)
 }
 
 private fun applyColorCode(token: Token.ColorCode, state: FormatState): FormatState {
@@ -535,6 +539,7 @@ private fun resolvePlaceholder(args: List<String>): Component? {
                 .append(Component.text("]")).color(TextColor.color(0xffffff))
             else -> null
         }
+        "random" -> Color.Number + args[1]
         else -> null
     }
 }
@@ -561,3 +566,9 @@ fun color(text: String, vararg colors: TextColor?): TextComponent {
     }
     return component.build()
 }
+
+infix fun String.or(block: () -> String): String = ifEmpty { block() }
+infix fun String.or(string: String): String = ifEmpty { string }
+fun String.ifNotEmpty(block: () -> String): String = if(isEmpty()) this else block()
+fun String.ifNotEmpty(string: String): String = if(isEmpty()) this else string
+infix fun String.prefix(prefix: String): String = ifNotEmpty("$prefix$this")

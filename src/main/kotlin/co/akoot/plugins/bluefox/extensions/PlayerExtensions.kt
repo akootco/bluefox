@@ -49,7 +49,7 @@ fun OfflinePlayer.removeRole(name: String) = settings.remove("roles", name)
 val OfflinePlayer.roles: List<String> get() = settings.getStringList("roles")
 
 val OfflinePlayer.profile: Profile
-    get() = BlueFox.profiles.getOrPut(uniqueId) { Profile(uniqueId) }
+    get() = BlueFox.profiles.getOrPut(uniqueId) { Profile(this) }
 
 fun List<OfflinePlayer>.names(): List<String> {
     return this.mapNotNull { it.name }

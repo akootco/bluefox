@@ -465,9 +465,9 @@ abstract class CatCommand(
         executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getPlayerSender(ctx: CommandContext<CommandSourceStack>): Player? {
+    protected fun getPlayerSender(ctx: CommandContext<CommandSourceStack>, sendError: Boolean = true): Player? {
         val sender = getSender(ctx)
-        if(sender !is Player) {
+        if(sendError && sender !is Player) {
             sender.sendMessage("You must be a player to run this command.")
         }
         return sender as? Player
@@ -477,7 +477,7 @@ abstract class CatCommand(
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
         if(sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
-        sender.sendMessage(Kolor.WARNING("You do not have permission to run ") + Kolor.WARNING.accent("/${ctx.input}"))
+        sender.sendWarning("You do not have permission to run ", accent("/${ctx.input}"))
         return null
     }
 

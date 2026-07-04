@@ -25,13 +25,13 @@ fun TextColor.isGray(tolerance: Double = 0.1): Boolean {
     return ColorUtil.isGray(this.value(), (tolerance * 255).toInt())
 }
 
-fun TextColor.mix(color: TextColor?, mix: Double = 0.5, points: Int = 3): TextColor {
-    if(color == null) return this
-    return ColorUtil.mix(this, color, mix, points)
+fun TextColor.mix(color: TextColor?, mix: Double = 0.5): TextColor {
+    if(color == null) return ColorUtil.mix(Color.White, this, mix)
+    return ColorUtil.mix(this, color, mix)
 }
 
-fun TextColor.mix(kolor: Kolor, mix: Double = 0.5, points: Int = 3): TextColor {
-    return ColorUtil.mix(this, kolor.raw, mix, points)
+fun TextColor.mix(kolor: Kolor, mix: Double = 0.5): TextColor {
+    return ColorUtil.mix(this, kolor.raw, mix)
 }
 
 fun getTextColor(string: String): TextColor = TextColor.fromHexString(string) ?: Color.White
