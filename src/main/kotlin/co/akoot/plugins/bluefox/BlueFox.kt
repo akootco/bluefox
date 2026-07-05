@@ -9,6 +9,8 @@ import co.akoot.plugins.bluefox.commands.DelHomeCommand
 import co.akoot.plugins.bluefox.commands.HomeCommand
 import co.akoot.plugins.bluefox.commands.HomesCommand
 import co.akoot.plugins.bluefox.commands.MarketCommand
+import co.akoot.plugins.bluefox.commands.PaletteCommand
+import co.akoot.plugins.bluefox.commands.PalettesCommand
 import co.akoot.plugins.bluefox.commands.PayCommand
 import co.akoot.plugins.bluefox.commands.SetHomeCommand
 import co.akoot.plugins.bluefox.commands.SettingsCommand
@@ -19,6 +21,7 @@ import co.akoot.plugins.bluefox.commands.UserHomesCommand
 import co.akoot.plugins.bluefox.commands.WalletCommand
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.IOUtil
 import co.akoot.plugins.bluefox.util.loop
 import co.akoot.plugins.bluefox.util.minutes
@@ -27,6 +30,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
 import net.coreprotect.CoreProtectAPI
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
@@ -107,6 +111,14 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     val legacyWarps: MutableSet<LegacyWarp> = mutableSetOf()
+    private val palettesConfig = registerConfig("palettes")
+    private val colorsConfig = registerConfig("colors")
+    val palettes = palettesConfig.getKeys().associateWith {
+        palettesConfig.getStringList(it).mapNotNull(TextColor::fromHexString)
+    }
+    val colors = colorsConfig.getKeys().associateWith {
+        colorsConfig.getString(it)?.let(TextColor::fromHexString) ?: Color.White
+    }
 
     fun getCoreProtect(): CoreProtectAPI? {
         val plugin = server.pluginManager.getPlugin("CoreProtect")
@@ -131,7 +143,7 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     private fun getGeyser(): GeyserApiBase? {
-        val plugin = server.pluginManager.getPlugin("Geyser-Spigot") ?: return null
+        server.pluginManager.getPlugin("Geyser-Spigot") ?: return null
         return Geyser.api()
     }
 
@@ -342,6 +354,8 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(TokenCommand(this))
         registerCommand(PayCommand(this))
         registerCommand(SettingsCommand(this))
+        registerCommand(PaletteCommand(this))
+        registerCommand(PalettesCommand(this))
 //        registerCommand(TestCommand(this))
     }
 

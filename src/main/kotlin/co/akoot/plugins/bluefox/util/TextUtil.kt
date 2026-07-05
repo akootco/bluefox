@@ -48,20 +48,33 @@ object Color {
     val Error = TextColor.color(0xfc5f5f)
     val Warning = TextColor.color(0xfcae5f)
 
+    val January = TextColor.color(0x77BBE9)
+    val February = TextColor.color(0xFC81B0)
+    val March = TextColor.color(0x44E881)
+    val April = TextColor.color(0xB198FC)
+    val May = TextColor.color(0x8DD232)
+    val June = TextColor.color(0xf9ba23)
+    val July = TextColor.color(0xfca873)
+    val August = TextColor.color(0xfbd17a)
+    val September = TextColor.color(0x86aefc)
+    val October = TextColor.color(0xfc9449)
+    val November = TextColor.color(0xdd9d78)
+    val December = TextColor.color(0xfc4b55)
+
     val Month  = when (Calendar.getInstance().get(Calendar.MONTH)) {
-        Calendar.JANUARY -> TextColor.color(0x77BBE9)
-        Calendar.FEBRUARY -> TextColor.color(0xFC81B0)
-        Calendar.MARCH -> TextColor.color(0x44E881)
-        Calendar.APRIL -> TextColor.color(0xB198FC)
-        Calendar.MAY -> TextColor.color(0x8DD232)
-        Calendar.JUNE -> TextColor.color(0xf9ba23)
-        Calendar.JULY -> TextColor.color(0xfca873)
-        Calendar.AUGUST -> TextColor.color(0xfbd17a)
-        Calendar.SEPTEMBER -> TextColor.color(0x86aefc)
-        Calendar.OCTOBER -> TextColor.color(0xfc9449)
-        Calendar.NOVEMBER -> TextColor.color(0xdd9d78)
-        Calendar.DECEMBER -> TextColor.color(0xfc4b55)
-        else -> TextColor.color(0xffffff)
+        Calendar.JANUARY -> January
+        Calendar.FEBRUARY -> February
+        Calendar.MARCH -> March
+        Calendar.APRIL -> April
+        Calendar.MAY -> May
+        Calendar.JUNE -> June
+        Calendar.JULY -> July
+        Calendar.AUGUST -> August
+        Calendar.SEPTEMBER -> September
+        Calendar.OCTOBER -> October
+        Calendar.NOVEMBER -> November
+        Calendar.DECEMBER -> December
+        else -> White
     }
 }
 
@@ -270,7 +283,7 @@ val Double.percent: String get() = String.format("%.2f", this * 100)
 fun <T> Boolean.get(whenTrue: T, whenFalse: T) = if(this) whenTrue else whenFalse
 
 //TODO: Replace get() with const and =
-val colorCodes get() = mapOf(
+val colorCodes: Map<String, TextColor> get() = mapOf(
     "4" to TextColor.color(0xAA0000),
     "c" to TextColor.color(0xFF5555),
     "6" to TextColor.color(0xFFAA00),
@@ -303,12 +316,25 @@ val colorCodes get() = mapOf(
     "quote" to Color.Quote,
     "error" to Color.Error,
     "warning" to Color.Warning,
-)
+    "month" to Color.Month,
+    "january" to Color.January,
+    "february" to Color.February,
+    "march" to Color.March,
+    "april" to Color.April,
+    "may" to Color.May,
+    "june" to Color.June,
+    "july" to Color.July,
+    "august" to Color.August,
+    "september" to Color.September,
+    "october" to Color.October,
+    "november" to Color.November,
+    "december" to Color.December,
+) + BlueFox.instance.colors
 
-val palettes get() = mapOf(
+val palettes: Map<String, List<TextColor>> get() = mapOf(
     "rgb" to listOf(Color.Red, Color.Green, Color.Blue),
     "cmyk" to listOf(Color.Cyan, Color.Magenta, Color.Yellow, Color.Black),
-)
+) + BlueFox.instance.palettes
 
 fun stripColor(input: String): String = buildString {
     for (token in tokenize(input)) {

@@ -95,19 +95,19 @@ class Profile(val uuid: String, val username: String) {
         NORMAL, SMALL_TEXT, NONE
     }
 
-    var nickname: String by data default ""
-    var title: String by data default "Guest"
-    var status: String by data default ""
-    var titleStyle: TitleStyle by data of TitleStyle::valueOf default TitleStyle.NORMAL
-    var heartSymbol: String by data default "❤"
+    var nickname: String by settings default ""
+    var title: String by settings default "Guest"
+    var status: String by settings default ""
+    var titleStyle: TitleStyle by settings of TitleStyle::valueOf default TitleStyle.NORMAL
+    var heartSymbol: String by settings default "❤"
     var lastWords: String by data default ""
     var lastChangelogVersion: String by data default ""
-    var chatFormat: String by data default ""
-    var chatTint: String by data default ""
-    var chatTintIntensity: Double by data default -1.0
-    var universalChatFormat: String by data default ""
-    var universalChatTint: String by data default ""
-    var universalChatTintIntensity: Double by data default -1.0
+    var chatFormat: String by settings default ""
+    var chatTint: String by settings default ""
+    var chatTintIntensity: Double by settings default -1.0
+    var universalChatFormat: String by settings default ""
+    var universalChatTint: String by settings default ""
+    var universalChatTintIntensity: Double by settings default -1.0
 
     var favColor: String by settings default ""
     var skullColor: String by settings default ""
