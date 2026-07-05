@@ -25,16 +25,25 @@ class Gradient(val colors: List<TextColor>) {
     }
 }
 
-class NamedColor(val id: String, val name: String, val color: TextColor, val author: String = "foxncat", val description: String? = null) {
-    constructor(name: String, color: TextColor): this(name.snakeCase(), name, color)
-    constructor(name: String, color: String): this(name.snakeCase(), name, textColor(color) ?: ColorUtil.WHITE)
+class NamedColor(
+    val id: String,
+    val name: String,
+    val color: TextColor,
+    val author: String = "foxncat",
+    val description: String? = null
+) {
+    constructor(name: String, color: TextColor) : this(name.snakeCase(), name, color)
+    constructor(name: String, color: String) : this(name.snakeCase(), name, textColor(color) ?: ColorUtil.WHITE)
+
     companion object {
         val BLACK = NamedColor("0", "Black", TextColor.color(0x0), "Mojang")
         val WHITE = NamedColor("f", "White", TextColor.color(0xffffff), "Mojang")
     }
+
     fun shadowColor(alpha: Double = 0.5): ShadowColor {
         return color.toShadowColor(alpha)
     }
+
     fun swatch(symbol: String = "█"): Component {
         return Text(symbol, color)
             .hover("$name\n$id\nby $author\n\"$description\"", color)
@@ -65,13 +74,13 @@ object ColorUtil {
     }
 
     fun textColor(nm: String): TextColor? {
-        val color = runCatching {Color.decode(nm)}.getOrNull() ?: return null
+        val color = runCatching { Color.decode(nm) }.getOrNull() ?: return null
         return TextColor.color(color.rgb)
     }
 
     fun month(color: TextColor, mix: Double = 0.25, brighten: Double = 0.15): TextColor {
         val result = mix(color, MONTH_COLOR, mix)
-        return if(brighten <= 0.0) result
+        return if (brighten <= 0.0) result
         else result.brighten(brighten)
     }
 
@@ -190,7 +199,12 @@ object ColorUtil {
      * @param brightness The desired brightness of the color
      * @return A random color
      */
-    fun randomColor(saturation: Float = 0.9f, brightness: Float = 0.9f, minHue: Float = 0f, maxHue: Float = 1f): TextColor {
+    fun randomColor(
+        saturation: Float = 0.9f,
+        brightness: Float = 0.9f,
+        minHue: Float = 0f,
+        maxHue: Float = 1f
+    ): TextColor {
         return TextColor.color(Color.getHSBColor(Random.nextFloat() * (maxHue - minHue), saturation, brightness).rgb)
     }
 
@@ -280,7 +294,6 @@ object ColorUtil {
         return gradient
     }
 }
-
 
 
 val TextColor.inverted get() = TextColor.color(value() xor 0x00FFFFFF)

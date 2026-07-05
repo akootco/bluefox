@@ -3,7 +3,6 @@ package co.akoot.plugins.bluefox.api
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.delegating.default
 import co.akoot.plugins.bluefox.api.delegating.of
-import co.akoot.plugins.bluefox.extensions.hex
 import co.akoot.plugins.bluefox.extensions.mkdirp
 import co.akoot.plugins.bluefox.extensions.touch
 import co.akoot.plugins.bluefox.extensions.username
@@ -21,8 +20,8 @@ import java.time.LocalDate
 import java.util.*
 
 class Profile(val uuid: String, val username: String) {
-    constructor(uuid: UUID, username: String): this(uuid.toString(), username)
-    constructor(player: OfflinePlayer): this(player.uniqueId.toString(), player.username)
+    constructor(uuid: UUID, username: String) : this(uuid.toString(), username)
+    constructor(player: OfflinePlayer) : this(player.uniqueId.toString(), player.username)
 
     val folder = File("users").resolve(uuid).mkdirp()
     val settings = FoxConfig(folder.resolve("settings.conf").touch("{}"))
@@ -197,6 +196,7 @@ class Profile(val uuid: String, val username: String) {
                     }
                 }
         }
+
         val id get() = values.indexOf(this)
         fun process(string: String): String {
             return string
@@ -228,22 +228,33 @@ class Profile(val uuid: String, val username: String) {
                     }
                 }
         }
+
         val id get() = values.indexOf(this)
     }
 
-    data class Bio(val birthday: Birthday? = null, val pronouns: Pronouns? = null, val generation: Generation? = null, val about: String? = null)
+    data class Bio(
+        val birthday: Birthday? = null,
+        val pronouns: Pronouns? = null,
+        val generation: Generation? = null,
+        val about: String? = null
+    )
 
     @JvmName("getLeBio")
     fun getBio(): Bio? {
         val id = id ?: return null
-        BlueFox.query("""
+        BlueFox.query(
+            """
             select * from player_bio where player = ?;
-        """).use { statement ->
+        """
+        ).use { statement ->
             statement.setInt(1, id)
             statement.executeQuery().use { result ->
                 return if (result.next()) {
                     Bio(
-                        Birthday(result.getInt("birth_month").takeIf { it != 0 }, result.getInt("birth_day").takeIf { it != 0 }, result.getInt("birth_year").takeIf { it != 0 }),
+                        Birthday(
+                            result.getInt("birth_month").takeIf { it != 0 },
+                            result.getInt("birth_day").takeIf { it != 0 },
+                            result.getInt("birth_year").takeIf { it != 0 }),
                         Pronouns.values.getOrNull(result.getInt("pronouns").takeIf { it != 0 } ?: -1),
                         Generation.values.getOrNull(result.getInt("generation").takeIf { it != 0 } ?: -1),
                         result.getString("about")
@@ -258,7 +269,7 @@ class Profile(val uuid: String, val username: String) {
     @JvmName("setLeBio")
     fun setBio(bio: Bio?): Bio? {
         val id = id ?: return null
-        if(bio == null) {
+        if (bio == null) {
             BlueFox.query("delete FROM player_bio where player = ?").use { statement ->
                 statement.setInt(1, id)
                 statement.executeUpdate()
@@ -266,7 +277,8 @@ class Profile(val uuid: String, val username: String) {
             return null
         }
         return try {
-            BlueFox.query("""
+            BlueFox.query(
+                """
                 INSERT INTO player_bio (player, birth_month, birth_day, birth_year, generation, pronouns, about) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE 
@@ -274,7 +286,8 @@ class Profile(val uuid: String, val username: String) {
                     generation = VALUES(generation),
                     pronouns = VALUES(pronouns),
                     about = VALUES(about);
-            """).use { stmt ->
+            """
+            ).use { stmt ->
                 stmt.setInt(1, id)
                 bio.birthday?.month?.let { month -> stmt.setInt(2, month) } ?: stmt.setInt(2, Types.INTEGER)
                 bio.birthday?.day?.let { day -> stmt.setInt(3, day) } ?: stmt.setInt(3, Types.INTEGER)
@@ -294,9 +307,11 @@ class Profile(val uuid: String, val username: String) {
     @JvmName("getLeId")
     fun getId(): Int? {
 
-        BlueFox.query("""
+        BlueFox.query(
+            """
             select id from player_id where uuid = ?;
-        """).use { statement ->
+        """
+        ).use { statement ->
             statement.setString(1, uuid)
             statement.executeQuery().use { result ->
                 return if (result.next()) {
@@ -314,11 +329,13 @@ class Profile(val uuid: String, val username: String) {
             if (id == null) {
                 // let MySQL auto-generate ID
 
-                BlueFox.query("""
+                BlueFox.query(
+                    """
                 INSERT INTO player_id (uuid) 
                 VALUES (?)
                 ON DUPLICATE KEY UPDATE uuid = uuid
-            """).use { stmt ->
+            """
+                ).use { stmt ->
                     stmt.setString(1, uuid)
                     stmt.executeUpdate()
                 }
@@ -326,11 +343,13 @@ class Profile(val uuid: String, val username: String) {
             } else {
                 // try to insert with a specific ID
 
-                BlueFox.query("""
+                BlueFox.query(
+                    """
                 INSERT INTO player_id (id, uuid) 
                 VALUES (?, ?)
                 ON DUPLICATE KEY UPDATE uuid = uuid
-            """).use { stmt ->
+            """
+                ).use { stmt ->
                     stmt.setInt(1, id)
                     stmt.setString(2, uuid)
                     val affected = stmt.executeUpdate()
@@ -349,15 +368,17 @@ class Profile(val uuid: String, val username: String) {
         val id = id ?: return null
         val now = Date.valueOf(LocalDate.now())
 
-        BlueFox.query("""
+        BlueFox.query(
+            """
             select token, expires from player_token where player = ?;
-        """).use { statement ->
+        """
+        ).use { statement ->
             statement.setInt(1, id)
             statement.executeQuery().use { result ->
                 if (result.next()) {
-                    var token =  result.getString("token")
+                    var token = result.getString("token")
                     val expires = result.getDate("expires")
-                    if(expires.before(now)) {
+                    if (expires.before(now)) {
                         token = BlueFox.generateToken()
                         setToken(token)
                     }
@@ -375,13 +396,15 @@ class Profile(val uuid: String, val username: String) {
         val newToken = token ?: BlueFox.generateToken()
         val date = Date.valueOf(LocalDate.now().plusDays(30))
         return try {
-            BlueFox.query("""
+            BlueFox.query(
+                """
                 INSERT INTO player_token (player, token, expires) 
                 VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE 
                     token = VALUES(token),
                     expires = VALUES(expires);
-            """).use { stmt ->
+            """
+            ).use { stmt ->
                 stmt.setInt(1, id)
                 stmt.setString(2, newToken)
                 stmt.setDate(3, date)

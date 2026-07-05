@@ -24,8 +24,8 @@ import co.akoot.plugins.bluefox.api.economy.Economy.rounded
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.api.events.PlayerRequestCoinEvent
-import co.akoot.plugins.bluefox.extensions.countItem
 import co.akoot.plugins.bluefox.extensions.countIncludingBlocks
+import co.akoot.plugins.bluefox.extensions.countItem
 import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.wallet
 import co.akoot.plugins.bluefox.util.Text
@@ -34,16 +34,21 @@ import org.bukkit.entity.Player
 import java.math.BigDecimal
 import kotlin.math.round
 
-class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = arrayOf("balance", "bal", "send", "request", "withdraw", "deposit", "swap")) {
+class WalletCommand(plugin: BlueFox) : FoxCommand(
+    plugin,
+    "wallet",
+    aliases = arrayOf("balance", "bal", "send", "request", "withdraw", "deposit", "swap")
+) {
 
-    private val amountPresets = mutableListOf("all", "1", "2", "5", "10", "20", "25", "50", "100", "250", "500", "1000", "2000", "5000")
+    private val amountPresets =
+        mutableListOf("all", "1", "2", "5", "10", "20", "25", "50", "100", "250", "500", "1000", "2000", "5000")
 
     override fun onTabComplete(
         sender: CommandSender,
         alias: String,
         args: Array<out String>
     ): MutableList<String> {
-        if(alias != id) return onTabComplete(sender, id, arrayOf(alias) + args)
+        if (alias != id) return onTabComplete(sender, id, arrayOf(alias) + args)
         return when (args.size) {
             1 -> mutableListOf("deposit", "withdraw", "balance", "swap", "send", "request").permissionCheck(sender)
             2 -> {
@@ -66,7 +71,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         return mutableListOf()
                     }
                     return amountPresets.minus("all").toMutableList()
-                } else if(args[0] == "balance" || args[0] == "bal") {
+                } else if (args[0] == "balance" || args[0] == "bal") {
                     return getOfflinePlayerSuggestions(args, setOf("@" + sender.name), prefix = "@")
                 }
                 when (args[0]) {
@@ -84,7 +89,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     Market.coins.keys.minus(args[2].uppercase()).toMutableList()
                 } else if (args[0] in setOf("send", "request")) {
                     Market.coins.keys.toMutableList()
-                } else  mutableListOf()
+                } else mutableListOf()
             }
 
             else -> mutableListOf()
@@ -96,7 +101,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
         alias: String,
         args: Array<out String>
     ): Boolean {
-        if(alias != id) return onCommand(sender, id, arrayOf(alias) + args)
+        if (alias != id) return onCommand(sender, id, arrayOf(alias) + args)
         val player = getPlayerSender(sender).getAndSend(sender) ?: return false
         val wallet = player.wallet
         if (wallet == null) {
@@ -120,7 +125,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         Kolor.ERROR("Erm? How much ") + Kolor.ERROR.accent(coin1.toString()) + " would you like to swap..?"
                     }
                     return false
-                } else if(!amount.isMoreThanZero) {
+                } else if (!amount.isMoreThanZero) {
                     Text(sender) {
                         Kolor.TEXT("The server glitched and deposited ") + round(Math.random() * 10000) + Kolor.ACCENT(" $coin1") + " to your wallet."
                     }
@@ -139,11 +144,14 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     INSUFFICIENT_SELLER_BALANCE, SELLER_MISSING_COIN -> Kolor.ERROR("You don't have enough ") + Kolor.ERROR.accent(
                         coin1.toString()
                     ) + " to swap!"
+
                     EVENT_CANCELLED -> return false
                     PRICE_UNAVAILABLE -> Kolor.ERROR("No price is set for this trade!")
                     else -> {
                         val swapped = wallet.balance[coin2]?.minus(balance) ?: BigDecimal.ZERO
-                        Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + swapped.rounded + Kolor.ACCENT(" $coin2") + "."
+                        Kolor.ALT("Swapped ") + amount.rounded + Kolor.ACCENT(" $coin1") + Kolor.TEXT(" for ") + swapped.rounded + Kolor.ACCENT(
+                            " $coin2"
+                        ) + "."
                     }
                 }
                 message.send(sender)
@@ -159,6 +167,7 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         val targetPlayer = getOfflinePlayer(targetArg.substring(1)).getAndSend(sender) ?: return false
                         targetPlayer.wallet ?: Wallet.create(targetPlayer) ?: wallet
                     }
+
                     else -> Wallet.get(targetArg.substring(2)) ?: wallet
                 }
 
@@ -175,38 +184,41 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
             "deposit", "withdraw" -> {
                 val amountString = args.getOrNull(1) ?: "all"
                 var coin = args.getOrNull(2)?.let { Market.getCoin(it) }
-                if(coin == null && amountString == "all") {
+                if (coin == null && amountString == "all") {
                     var success = false
                     for ((key, coin) in Market.coins) {
                         if (coin.backing == null) continue
-                        if(action == "withdraw" && ((wallet.balance[coin] ?: BigDecimal.ZERO) < BigDecimal.ONE)) continue
-                        if(action == "deposit") {
-                            val count = if(coin.backingBlock != null) {
+                        if (action == "withdraw" && ((wallet.balance[coin]
+                                ?: BigDecimal.ZERO) < BigDecimal.ONE)
+                        ) continue
+                        if (action == "deposit") {
+                            val count = if (coin.backingBlock != null) {
                                 player.countIncludingBlocks(coin.backing, coin.backingBlock, coin.backingBlockValue)
                             } else {
                                 player.countItem(coin.backing)
                             }
-                            if(count < 1) continue
+                            if (count < 1) continue
                         }
                         success = true
                         val newArgs = args.toMutableList()
-                        if(args.size == 1) newArgs.add("all")
+                        if (args.size == 1) newArgs.add("all")
                         newArgs.add(key)
                         onCommand(sender, alias, newArgs.toTypedArray())
                     }
-                    if(!success) {
+                    if (!success) {
                         Text(sender) {
                             Kolor.WARNING("You are broke!!!!")
                         }
                     }
                     return true
                 }
-                if(coin == null) coin = Coin.DIA
+                if (coin == null) coin = Coin.DIA
                 val amount = if (amountString == "all") {
                     if (action == "deposit") {
-                        if(coin.backing != null) {
-                            if(coin.backingBlock != null) {
-                                player.countIncludingBlocks(coin.backing, coin.backingBlock, coin.backingBlockValue).toBigDecimal()
+                        if (coin.backing != null) {
+                            if (coin.backingBlock != null) {
+                                player.countIncludingBlocks(coin.backing, coin.backingBlock, coin.backingBlockValue)
+                                    .toBigDecimal()
                             } else {
                                 player.countItem(coin.backing).toBigDecimal()
                             }
@@ -306,7 +318,9 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                 } else if (!amount.isMoreThanZero) {
                     Text(sender) {
                         if (action == "request") {
-                            Kolor.ERROR("Poor ") + Kolor.ERROR.alt(args[1]) + Kolor.ERROR(" hasn't any ") + Kolor.ERROR.accent(coin.toString()) + Kolor.ERROR(".")
+                            Kolor.ERROR("Poor ") + Kolor.ERROR.alt(args[1]) + Kolor.ERROR(" hasn't any ") + Kolor.ERROR.accent(
+                                coin.toString()
+                            ) + Kolor.ERROR(".")
                         } else {
                             Kolor.ERROR("You haven't any ") + Kolor.ERROR.accent(coin.toString()) + Kolor.ERROR("...")
                         }
@@ -330,7 +344,9 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                         Kolor.TEXT("Requested ") + amount.rounded + Kolor.ACCENT(" $coin") + " from " + Kolor.ALT(args[1]) + "."
                     }
                     Text(targetPlayer) {
-                        Kolor.ALT("@${sender.name}") + Kolor.TEXT(" is requesting ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT(" from you!\n") +
+                        Kolor.ALT("@${sender.name}") + Kolor.TEXT(" is requesting ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT(
+                            " from you!\n"
+                        ) +
                                 Kolor.ALT.accent("(Click here to send)")
                                     .suggest("/wallet send @${sender.name} $amount ${coin.ticker}")
                     }
@@ -345,9 +361,13 @@ class WalletCommand(plugin: BlueFox) : FoxCommand(plugin, "wallet", aliases = ar
                     EVENT_CANCELLED -> return false
                     else -> {
                         Text(targetPlayer) {
-                            (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT("!")).execute("/wallet balance")
+                            (Kolor.ALT("@${sender.name}") + Kolor.TEXT(" sent you ") + amount.rounded + Kolor.ACCENT(" $coin") + Kolor.TEXT(
+                                "!"
+                            )).execute("/wallet balance")
                         }
-                        (Kolor.TEXT("Sent ") + amount.rounded + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute("/wallet balance")
+                        (Kolor.TEXT("Sent ") + amount.rounded + Kolor.ACCENT(" $coin") + " to " + Kolor.ALT(args[1]) + ".").execute(
+                            "/wallet balance"
+                        )
                     }
                 }
                 message.send(sender)

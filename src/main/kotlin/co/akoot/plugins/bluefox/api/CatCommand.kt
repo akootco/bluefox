@@ -1,26 +1,11 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.CommandHelp
-import co.akoot.plugins.bluefox.api.economy.Coin
-import co.akoot.plugins.bluefox.api.economy.Invoice
-import co.akoot.plugins.bluefox.extensions.invoke
-import co.akoot.plugins.bluefox.extensions.sendMessage
-import co.akoot.plugins.bluefox.extensions.wallet
-import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.accent
-import co.akoot.plugins.bluefox.util.asCurrency
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.secondary
-import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
 import com.mojang.brigadier.Command
-import com.mojang.brigadier.arguments.BoolArgumentType
-import com.mojang.brigadier.arguments.DoubleArgumentType
-import com.mojang.brigadier.arguments.FloatArgumentType
-import com.mojang.brigadier.arguments.IntegerArgumentType
-import com.mojang.brigadier.arguments.StringArgumentType
+import com.mojang.brigadier.arguments.*
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
@@ -38,27 +23,17 @@ import io.papermc.paper.math.BlockPosition
 import io.papermc.paper.math.FinePosition
 import io.papermc.paper.registry.RegistryKey
 import net.kyori.adventure.text.Component
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.OfflinePlayer
-import org.bukkit.Registry
-import org.bukkit.Sound
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockState
 import org.bukkit.block.BlockType
 import org.bukkit.command.CommandSender
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.ItemType
 import org.bukkit.potion.PotionType
-import java.math.BigDecimal
 import java.time.ZoneId
-import kotlin.jvm.java
 
 abstract class CatCommand(
     val plugin: FoxPlugin,
@@ -165,14 +140,15 @@ abstract class CatCommand(
         name: String,
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): LiteralArgumentBuilder<CommandSourceStack> {
-        return Commands.literal(name).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.literal(name).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun boolean(
         argName: String = "true or false",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Boolean> {
-        return Commands.argument(argName, BoolArgumentType.bool()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, BoolArgumentType.bool())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getBoolean(
@@ -192,7 +168,7 @@ abstract class CatCommand(
                 suggestions(ctx, builder)
                 builder.buildFuture()
             }
-            .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun string(
@@ -205,7 +181,7 @@ abstract class CatCommand(
                 suggestions(ctx, builder)
                 builder.buildFuture()
             }
-            .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun greedyString(
@@ -218,7 +194,7 @@ abstract class CatCommand(
                 suggestions(ctx, builder)
                 builder.buildFuture()
             }
-            .executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getString(ctx: CommandContext<CommandSourceStack>, argName: String): String {
@@ -234,7 +210,7 @@ abstract class CatCommand(
         val type = if (min != null && max == null) IntegerArgumentType.integer(min)
         else if (min != null && max != null) IntegerArgumentType.integer(min, max)
         else IntegerArgumentType.integer()
-        return Commands.argument(argName, type).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Int {
@@ -250,7 +226,7 @@ abstract class CatCommand(
         val type = if (min != null && max == null) FloatArgumentType.floatArg(min)
         else if (min != null && max != null) FloatArgumentType.floatArg(min, max)
         else FloatArgumentType.floatArg()
-        return Commands.argument(argName, type).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getFloat(ctx: CommandContext<CommandSourceStack>, argName: String): Float {
@@ -266,7 +242,7 @@ abstract class CatCommand(
         val type = if (min != null && max == null) DoubleArgumentType.doubleArg(min)
         else if (min != null && max != null) DoubleArgumentType.doubleArg(min, max)
         else DoubleArgumentType.doubleArg()
-        return Commands.argument(argName, type).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Double {
@@ -276,15 +252,17 @@ abstract class CatCommand(
     protected fun offlinePlayer(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, OfflinePlayer> {
-        return Commands.argument(argName, OfflinePlayerArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, OfflinePlayer> {
+        return Commands.argument(argName, OfflinePlayerArgument())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun sound(
         argName: String = "sound",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, Sound> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.SOUND_EVENT)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, Sound> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.SOUND_EVENT))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getSound(ctx: CommandContext<CommandSourceStack>, argName: String = "sound"): Sound {
@@ -294,8 +272,9 @@ abstract class CatCommand(
     protected fun item(
         argName: String = "item",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, ItemType> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ITEM)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, ItemType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ITEM))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getItem(ctx: CommandContext<CommandSourceStack>, argName: String = "item"): ItemType {
@@ -305,8 +284,9 @@ abstract class CatCommand(
     protected fun block(
         argName: String = "block",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, BlockType> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BLOCK)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, BlockType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BLOCK))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getBlock(ctx: CommandContext<CommandSourceStack>, argName: String = "block"): BlockType {
@@ -316,8 +296,9 @@ abstract class CatCommand(
     protected fun biome(
         argName: String = "biome",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, Biome> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BIOME)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, Biome> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.BIOME))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getBiome(ctx: CommandContext<CommandSourceStack>, argName: String = "biome"): Biome {
@@ -327,8 +308,9 @@ abstract class CatCommand(
     protected fun potion(
         argName: String = "potion",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, PotionType> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.POTION)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, PotionType> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.POTION))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getPotion(ctx: CommandContext<CommandSourceStack>, argName: String = "potion"): PotionType {
@@ -338,15 +320,22 @@ abstract class CatCommand(
     protected fun enchantment(
         argName: String = "enchantment",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ):  RequiredArgumentBuilder<CommandSourceStack, Enchantment> {
-        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ENCHANTMENT)).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+    ): RequiredArgumentBuilder<CommandSourceStack, Enchantment> {
+        return Commands.argument(argName, ArgumentTypes.resource(RegistryKey.ENCHANTMENT))
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getEnchantment(ctx: CommandContext<CommandSourceStack>, argName: String = "enchantment"): Enchantment {
+    protected fun getEnchantment(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "enchantment"
+    ): Enchantment {
         return ctx.getArgument(argName, Enchantment::class.java)
     }
 
-    protected fun getOfflinePlayer(ctx: CommandContext<CommandSourceStack>, argName: String = "player"): OfflinePlayer? {
+    protected fun getOfflinePlayer(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "player"
+    ): OfflinePlayer? {
         val player = runCatching { ctx.getArgument(argName, OfflinePlayer::class.java) }.getOrNull()
         return player
     }
@@ -355,56 +344,63 @@ abstract class CatCommand(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Player> {
-        return Commands.argument(argName, PlayerArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, PlayerArgument())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun players(
         argName: String = "players",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, PlayerSelectorArgumentResolver> {
-        return Commands.argument(argName, ArgumentTypes.players()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.players())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun entity(
         argName: String = "entity",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, EntitySelectorArgumentResolver> {
-        return Commands.argument(argName, ArgumentTypes.entity()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.entity())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun entities(
         argName: String = "entities",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, EntitySelectorArgumentResolver> {
-        return Commands.argument(argName, ArgumentTypes.entities()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.entities())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun worldType(
         argName: String = "world type",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, World> {
-        return Commands.argument(argName, ArgumentTypes.world()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.world())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun world(
         argName: String = "world",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, World> {
-        return Commands.argument(argName, WorldArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, WorldArgument()).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun blockPosition(
         argName: String = "x y z",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockPositionResolver> {
-        return Commands.argument(argName, ArgumentTypes.blockPosition()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.blockPosition())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun position(
         argName: String = "x y z",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, FinePositionResolver> {
-        return Commands.argument(argName, ArgumentTypes.finePosition()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.finePosition())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     // extras
@@ -413,14 +409,16 @@ abstract class CatCommand(
         argName: String = "block state",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockState> {
-        return Commands.argument(argName, ArgumentTypes.blockState()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.blockState())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun material(
         argName: String = "material",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockState> {
-        return Commands.argument(argName, ArgumentTypes.blockState()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, ArgumentTypes.blockState())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getBlockState(
@@ -441,7 +439,8 @@ abstract class CatCommand(
         argName: String = "time zone",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, ZoneId> {
-        return Commands.argument(argName, TimeZoneArgument()).executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        return Commands.argument(argName, TimeZoneArgument())
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getZoneId(
@@ -462,12 +461,12 @@ abstract class CatCommand(
     }
 
     protected fun noargs(executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }) {
-        executes { if(executes(it)) Command.SINGLE_SUCCESS else -1 }
+        executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
     protected fun getPlayerSender(ctx: CommandContext<CommandSourceStack>, sendError: Boolean = true): Player? {
         val sender = getSender(ctx)
-        if(sendError && sender !is Player) {
+        if (sendError && sender !is Player) {
             sender.sendMessage("You must be a player to run this command.")
         }
         return sender as? Player
@@ -476,7 +475,7 @@ abstract class CatCommand(
     protected fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
-        if(sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
+        if (sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
         sender.sendWarning("You do not have permission to run ", accent("/${ctx.input}"))
         return null
     }

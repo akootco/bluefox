@@ -2,11 +2,9 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.extensions.legacyName
-import co.akoot.plugins.bluefox.extensions.xyz
-import org.bukkit.Bukkit
 import org.bukkit.Location
 
-class LegacyHome(name: String, location: Location): LegacyWarp(name, location) {
+class LegacyHome(name: String, location: Location) : LegacyWarp(name, location) {
 
     companion object {
         fun from(string: String): LegacyHome? {
@@ -23,6 +21,7 @@ class LegacyHome(name: String, location: Location): LegacyWarp(name, location) {
             return LegacyHome(name, Location(world, x, y, z, yaw, pitch))
         }
     }
+
     override fun toString(): String {
         return "$name;${location.world.legacyName};${location.x},${location.y},${location.z};${location.yaw},${location.pitch}"
     }

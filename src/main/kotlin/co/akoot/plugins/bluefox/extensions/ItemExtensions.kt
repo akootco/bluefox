@@ -1,6 +1,5 @@
 package co.akoot.plugins.bluefox.extensions
 
-import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.economy.Coin
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -26,7 +25,7 @@ fun ItemStack.inBlocks(block: ItemStack, ratio: Int = 9): MutableList<ItemStack>
 
     if (blocks > 0) {
         val blockStack = block.also { it.amount = amount }
-        inventory +=  blockStack
+        inventory += blockStack
     }
 
     if (remainder > 0) {
@@ -37,9 +36,9 @@ fun ItemStack.inBlocks(block: ItemStack, ratio: Int = 9): MutableList<ItemStack>
 }
 
 fun ItemStack.isOf(vararg itemStack: ItemStack?): Boolean {
-    for(item in itemStack) {
-        if(item == null) continue
-        if(this.type == item.type && ((!this.hasItemMeta() && !item.hasItemMeta()) || (this.itemMeta == item.itemMeta))) {
+    for (item in itemStack) {
+        if (item == null) continue
+        if (this.type == item.type && ((!this.hasItemMeta() && !item.hasItemMeta()) || (this.itemMeta == item.itemMeta))) {
             return true
         }
     }
@@ -47,9 +46,9 @@ fun ItemStack.isOf(vararg itemStack: ItemStack?): Boolean {
 }
 
 fun ItemStack.isCoin(coin: Coin): Boolean {
-    if(coin.backing == null) return false
-    if(this.type == coin.backing.type || this.type == coin.backingBlock?.type) {
-        if(coin.backing.hasItemMeta()) {
+    if (coin.backing == null) return false
+    if (this.type == coin.backing.type || this.type == coin.backingBlock?.type) {
+        if (coin.backing.hasItemMeta()) {
             return isOf(coin.backing, coin.backingBlock)
         }
         return true
@@ -85,7 +84,7 @@ fun ItemStack.withAddedLore(vararg component: Component): ItemStack {
     return this
 }
 
-inline fun<reified T: Any> ItemStack.withPDC(key: NamespacedKey, value: T): ItemStack {
+inline fun <reified T : Any> ItemStack.withPDC(key: NamespacedKey, value: T): ItemStack {
     val meta = itemMeta
     meta.setPDC(key, value)
     setItemMeta(meta)

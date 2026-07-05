@@ -5,9 +5,8 @@ import co.akoot.plugins.bluefox.api.FoxPlugin
 import co.akoot.plugins.bluefox.util.sendError
 import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
-import com.mojang.brigadier.Command
 
-class TestCommand(plugin: FoxPlugin): CatCommand(plugin,"crest") {
+class TestCommand(plugin: FoxPlugin) : CatCommand(plugin, "crest") {
     init {
         then {
             float("amount", -1f, 2f) {

@@ -10,13 +10,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import io.papermc.paper.command.brigadier.MessageComponentSerializer
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
-import org.bukkit.World
 import java.util.concurrent.CompletableFuture
-import kotlin.text.startsWith
 
-class OfflinePlayerArgument: CustomArgumentType.Converted<OfflinePlayer, String> {
+class OfflinePlayerArgument : CustomArgumentType.Converted<OfflinePlayer, String> {
     companion object {
         val ERROR_UNKNOWN_PLAYER: DynamicCommandExceptionType = DynamicCommandExceptionType {
             MessageComponentSerializer.message().serialize(Component.text("$it has never joined!"))
@@ -36,9 +33,9 @@ class OfflinePlayerArgument: CustomArgumentType.Converted<OfflinePlayer, String>
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         val offlinePlayerNames = BlueFox.cachedOfflinePlayerNames
-        if(!builder.remainingLowerCase.startsWith(".")) offlinePlayerNames.removeIf { it.startsWith(".") }
-        for(name in offlinePlayerNames) {
-            if(name.contains(builder.remainingLowerCase, true)) {
+        if (!builder.remainingLowerCase.startsWith(".")) offlinePlayerNames.removeIf { it.startsWith(".") }
+        for (name in offlinePlayerNames) {
+            if (name.contains(builder.remainingLowerCase, true)) {
                 builder.suggest(name)
             }
         }

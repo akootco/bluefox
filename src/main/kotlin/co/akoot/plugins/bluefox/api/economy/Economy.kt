@@ -1,20 +1,12 @@
 package co.akoot.plugins.bluefox.api.economy
 
-import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.economy.Market.round
 import co.akoot.plugins.bluefox.extensions.invoke
-import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.Text
+import co.akoot.plugins.bluefox.util.*
 import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import co.akoot.plugins.bluefox.util.Text.Companion.text
-import co.akoot.plugins.bluefox.util.accent
-import co.akoot.plugins.bluefox.util.asCurrency
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.secondary
-import co.akoot.plugins.bluefox.util.text
 import net.kyori.adventure.text.Component
-import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import java.math.BigDecimal
 
@@ -37,7 +29,8 @@ class Invoice(
         return wallet.send(Wallet.BANK, coin, finalPrice)
     }
 
-    val buyMessage: MutableList<Component> = text("Spent ", Color.Number + finalPrice.asCurrency, "", secondary(coin), " on ", accent(description), ".")
+    val buyMessage: MutableList<Component> =
+        text("Spent ", Color.Number + finalPrice.asCurrency, "", secondary(coin), " on ", accent(description), ".")
 }
 
 object Economy {
@@ -68,14 +61,15 @@ object Economy {
 
     val Double.rounded: String get() = "%.9f".format(this)
     val BigDecimal.rounded: Text get() = this.round(9).text
-    val BigDecimal.isMoreThanZero: Boolean get()  {
-        return this > BigDecimal.ZERO.setScale(9)
-    }
+    val BigDecimal.isMoreThanZero: Boolean
+        get() {
+            return this > BigDecimal.ZERO.setScale(9)
+        }
 
     fun sendWallet(sender: CommandSender, wallet: Wallet, self: Boolean = true) {
         val coins = wallet.balance.keys
         if (coins.isEmpty() || wallet.balance.values.fold(BigDecimal.ZERO) { acc, it -> acc + it } == BigDecimal.ZERO) {
-            if(self) {
+            if (self) {
                 Text(sender) {
                     Kolor.WARNING("You are broke! Deposit some items for some coins!")
                 }
@@ -124,7 +118,8 @@ object Economy {
         val price = Market.prices[coin2 to coin1]
 
         Text(sender) {
-            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + (price?.rounded ?: "(unknown)"()) + " " + Kolor.ACCENT(coin2.toString())
+            Kolor.ACCENT(coin1.toString()) + Kolor.TEXT(" is worth ") + (price?.rounded
+                ?: "(unknown)"()) + " " + Kolor.ACCENT(coin2.toString())
         }
     }
 }

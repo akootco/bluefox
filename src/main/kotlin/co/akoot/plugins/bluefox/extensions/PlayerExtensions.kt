@@ -1,27 +1,11 @@
 package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.api.FoxConfig
-import co.akoot.plugins.bluefox.api.Kolor
-import co.akoot.plugins.bluefox.api.LegacyHome
-import co.akoot.plugins.bluefox.api.LegacyWarp
-import co.akoot.plugins.bluefox.api.Profile
+import co.akoot.plugins.bluefox.api.*
 import co.akoot.plugins.bluefox.api.economy.Economy
 import co.akoot.plugins.bluefox.api.economy.Invoice
 import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.Promise
-import co.akoot.plugins.bluefox.util.Text
-import co.akoot.plugins.bluefox.util.accent
-import co.akoot.plugins.bluefox.util.asCurrency
-import co.akoot.plugins.bluefox.util.open
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.secondary
-import co.akoot.plugins.bluefox.util.sendActionBarText
-import co.akoot.plugins.bluefox.util.sendText
-import co.akoot.plugins.bluefox.util.sendWarning
-import co.akoot.plugins.bluefox.util.underline
+import co.akoot.plugins.bluefox.util.*
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
@@ -111,30 +95,30 @@ fun Player.removeIncludingBlocks(item: ItemStack, block: ItemStack?, amount: Int
     var remaining = amount
 
     // remove all if the amount is null
-    if(amount == null) {
+    if (amount == null) {
         return inventory.removeAll { it != null && it.isOf(item, block) }
-    } else if(amount > total) {
+    } else if (amount > total) {
         return false // not enough items!
     }
 
     // remove items first
-    for(slot in 0 until inventory.size) {
+    for (slot in 0 until inventory.size) {
         val itemStack = inventory.getItem(slot) ?: continue
-        if(itemStack.isOf(item)) {
+        if (itemStack.isOf(item)) {
             val remove = minOf(itemStack.amount, remaining)
             itemStack.amount -= remove
             remaining -= remove
-            if(remaining <= 0) return true
+            if (remaining <= 0) return true
         }
     }
 
     // remove blocks if necessary
-    if(block == null) return true
-    for(slot in 0 until inventory.size) {
+    if (block == null) return true
+    for (slot in 0 until inventory.size) {
         val itemStack = inventory.getItem(slot) ?: continue
-        if(itemStack.isOf(block)) {
+        if (itemStack.isOf(block)) {
             val items = itemStack.amount * ratio
-            if(items <= 0) continue
+            if (items <= 0) continue
 
             val neededItems = remaining
             val neededBlocks = (neededItems + (ratio - 1)) / ratio
@@ -148,7 +132,7 @@ fun Player.removeIncludingBlocks(item: ItemStack, block: ItemStack?, amount: Int
             if (itemStack.amount <= 0) inventory.setItem(slot, null)
 
             // give back leftovers
-            if(remaining <= 0) {
+            if (remaining <= 0) {
                 val extra = -remaining
                 if (extra > 0) {
                     inventory.addItem(item.withAmount(extra))
@@ -189,7 +173,13 @@ fun Player.giveInBlocks(item: ItemStack, block: ItemStack, amount: Int, ratio: I
     }
 }
 
-fun Player.sendTitle(text: Text, subtitle: Text? = null, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5) {
+fun Player.sendTitle(
+    text: Text,
+    subtitle: Text? = null,
+    fadeIn: Double = 0.5,
+    stay: Double = 3.0,
+    fadeOut: Double = 0.5
+) {
     text.sendTitle(this, subtitle, fadeIn, stay, fadeOut)
 }
 
@@ -244,7 +234,7 @@ fun OfflinePlayer.setLegacyHome(home: LegacyHome): Boolean {
 fun OfflinePlayer.removeLegacyHome(name: String): Boolean {
     val homes = legacyHomes.toMutableList()
     val removed = homes.removeIf { it.name == name }
-    if(!removed) return false
+    if (!removed) return false
     legacyHomes = homes
     return true
 }
@@ -253,21 +243,36 @@ fun Player.teleport(legacyWarp: LegacyWarp) = teleport(legacyWarp.location)
 
 val OfflinePlayer.username: String get() = (this as? Player)?.name ?: name ?: "Unknown Player"
 val OfflinePlayer.usernamePossessive: String get() = "$username's"
-fun OfflinePlayer.text(kolor: Kolor = Kolor.PLAYER): Text = (this as? Player)?.displayName()?.let { Text(it).color(kolor) } ?: kolor(username)
-fun OfflinePlayer.textPossessive(textKolor: Kolor = Kolor.TEXT, playerKolor: Kolor = Kolor.PLAYER): Text = text(textKolor + playerKolor) + textKolor("'s")
+fun OfflinePlayer.text(kolor: Kolor = Kolor.PLAYER): Text =
+    (this as? Player)?.displayName()?.let { Text(it).color(kolor) } ?: kolor(username)
+
+fun OfflinePlayer.textPossessive(textKolor: Kolor = Kolor.TEXT, playerKolor: Kolor = Kolor.PLAYER): Text =
+    text(textKolor + playerKolor) + textKolor("'s")
 
 fun Player.sendCantAffordMessage(invoice: Invoice) {
     val coin = invoice.coin
     val balance = wallet?.balance[coin] ?: BigDecimal.ZERO
     sendWarning("You can't afford ", primary(invoice.description), ",")
-    sendWarning("You need ", Color.Number + invoice.finalPrice.asCurrency, " ", secondary(coin), ", you have ", Color.Number + Color.Tertiary + balance.asCurrency, ".")
-    sendText("Check out ", accent("akoot.co/AKC").underline().clickEvent(open("https://akoot.co/AKC")), " for more info!")
+    sendWarning(
+        "You need ",
+        Color.Number + invoice.finalPrice.asCurrency,
+        " ",
+        secondary(coin),
+        ", you have ",
+        Color.Number + Color.Tertiary + balance.asCurrency,
+        "."
+    )
+    sendText(
+        "Check out ",
+        accent("akoot.co/AKC").underline().clickEvent(open("https://akoot.co/AKC")),
+        " for more info!"
+    )
 }
 
 fun Player.canAfford(invoice: Invoice, sendMessage: Boolean = true): Boolean? {
     val purse = wallet ?: return null
-    if(!invoice.canAfford(purse)) {
-        if(sendMessage) sendCantAffordMessage(invoice)
+    if (!invoice.canAfford(purse)) {
+        if (sendMessage) sendCantAffordMessage(invoice)
         return null
     } else return true
 }
@@ -277,8 +282,16 @@ fun Player.payInvoice(invoice: Invoice): Int {
     val coin = invoice.coin
     val price = invoice.finalPrice
     val description = invoice.description
-    if(invoice.canAfford(purse)) {
-        sendActionBarText("Spent ", Color.Number + price.asCurrency, " ", secondary(coin), " on ", primary(description), ".")
+    if (invoice.canAfford(purse)) {
+        sendActionBarText(
+            "Spent ",
+            Color.Number + price.asCurrency,
+            " ",
+            secondary(coin),
+            " on ",
+            primary(description),
+            "."
+        )
         playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME).then(20) {
             playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, pitch = 1.5f)
         }
@@ -290,7 +303,7 @@ fun Player.payInvoice(invoice: Invoice): Int {
 }
 
 fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
-    return if(canAfford(invoice, false) == true) {
+    return if (canAfford(invoice, false) == true) {
         payInvoice(invoice)
         result(true)
         true

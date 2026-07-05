@@ -5,8 +5,6 @@ import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.ColorUtil
 import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 
 fun TextColor.brighten(percent: Double = 0.1): TextColor {
@@ -26,7 +24,7 @@ fun TextColor.isGray(tolerance: Double = 0.1): Boolean {
 }
 
 fun TextColor.mix(color: TextColor?, mix: Double = 0.5): TextColor {
-    if(color == null) return ColorUtil.mix(Color.White, this, mix)
+    if (color == null) return ColorUtil.mix(Color.White, this, mix)
     return ColorUtil.mix(this, color, mix)
 }
 

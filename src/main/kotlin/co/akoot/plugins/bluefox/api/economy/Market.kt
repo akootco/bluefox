@@ -15,7 +15,8 @@ object Market {
 
     val coins: MutableMap<String, Coin> = mutableMapOf()
     val prices: MutableMap<Pair<Coin, Coin>, BigDecimal> = mutableMapOf()
-    val pendingTrades: MutableMap<Pair<Wallet, Wallet>, Pair<Pair<Coin, BigDecimal>, Pair<Coin, BigDecimal>>> = mutableMapOf()
+    val pendingTrades: MutableMap<Pair<Wallet, Wallet>, Pair<Pair<Coin, BigDecimal>, Pair<Coin, BigDecimal>>> =
+        mutableMapOf()
 
     fun BigDecimal.round(decimals: Int = 9): BigDecimal {
         return this.setScale(decimals, RoundingMode.HALF_UP)
@@ -28,15 +29,19 @@ object Market {
     fun getTradeKey(parties: Pair<Wallet, Wallet>): Pair<Wallet, Wallet>? {
         val key1 = parties.first to parties.second
         val key2 = parties.second to parties.first
-        return if(pendingTrades.containsKey(key1)) key1
-        else if(pendingTrades.containsKey(key2)) key2
+        return if (pendingTrades.containsKey(key1)) key1
+        else if (pendingTrades.containsKey(key2)) key2
         else null
     }
 
-    fun requestTrade(parties: Pair<Wallet, Wallet>, price1: Pair<Coin, BigDecimal>, price2: Pair<Coin, BigDecimal>): Boolean {
+    fun requestTrade(
+        parties: Pair<Wallet, Wallet>,
+        price1: Pair<Coin, BigDecimal>,
+        price2: Pair<Coin, BigDecimal>
+    ): Boolean {
         val key = getTradeKey(parties)
         val value = price1 to price2
-        return if(key != null) {
+        return if (key != null) {
             pendingTrades[key] = value
             true
         } else {
@@ -61,18 +66,26 @@ object Market {
         statement.setString(2, coin.name)
         statement.setString(3, coin.description)
         val success = runCatching { statement.executeUpdate() }.isSuccess
-        if(success) coins[coin.ticker] = coin
+        if (success) coins[coin.ticker] = coin
         return success
     }
 
-    fun trade(buyer: Wallet, seller: Wallet, buyerCoin: Coin, sellerCoin: Coin, buyerCoinAmount: BigDecimal, sellerCoinAmount: BigDecimal): Int {
+    fun trade(
+        buyer: Wallet,
+        seller: Wallet,
+        buyerCoin: Coin,
+        sellerCoin: Coin,
+        buyerCoinAmount: BigDecimal,
+        sellerCoinAmount: BigDecimal
+    ): Int {
         val sellerBalance = seller.balance[sellerCoin] ?: BigDecimal.ZERO//return SELLER_MISSING_COIN
         val buyerBalance = buyer.balance[buyerCoin] ?: BigDecimal.ZERO//return BUYER_MISSING_COIN
-        if(!seller.hasUnlimitedMoney && sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
-        if(!buyer.hasUnlimitedMoney && buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
-        WalletAcceptTradeEvent(buyer, seller, buyerCoin, sellerCoin, buyerCoinAmount, sellerCoinAmount).fire() ?: return Economy.Error.EVENT_CANCELLED
+        if (!seller.hasUnlimitedMoney && sellerBalance < sellerCoinAmount) return INSUFFICIENT_SELLER_BALANCE
+        if (!buyer.hasUnlimitedMoney && buyerBalance < buyerCoinAmount) return INSUFFICIENT_BUYER_BALANCE
+        WalletAcceptTradeEvent(buyer, seller, buyerCoin, sellerCoin, buyerCoinAmount, sellerCoinAmount).fire()
+            ?: return Economy.Error.EVENT_CANCELLED
         val transactionId = buyer.send(seller, buyerCoin, buyerCoinAmount)
-        val sentId =  seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
+        val sentId = seller.send(buyer, sellerCoin, sellerCoinAmount, transactionId)
         val statement = BlueFox.query("UPDATE wallet_transactions SET related_transaction = ? WHERE id = ?")
         statement.setInt(1, sentId)
         statement.setInt(2, transactionId)
@@ -91,7 +104,8 @@ object Market {
     }
 
     fun loadPrices() {
-        val statement = BlueFox.query("""
+        val statement = BlueFox.query(
+            """
             SELECT
                 t1.coin_id AS coin_id1,
                 t2.coin_id AS coin_id2,
@@ -100,9 +114,10 @@ object Market {
             JOIN wallet_transactions t2 ON t1.id = t2.related_transaction
             WHERE t2.related_transaction IS NOT NULL
             GROUP BY t1.coin_id, t2.coin_id;
-        """.trimIndent())
+        """.trimIndent()
+        )
         val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
-        while(result.next()) {
+        while (result.next()) {
             try {
                 val coin1 = getCoin(result.getInt("coin_id1")) ?: continue
                 val coin2 = getCoin(result.getInt("coin_id2")) ?: continue
@@ -120,18 +135,26 @@ object Market {
         prices[Coin.AD to Coin.DIA] = prices[Coin.NTRI to Coin.DIA]!!.multiply(BigDecimal(4))
     }
 
-    private data class CoinBacking(val backing: ItemStack? = null, val backingBlock: ItemStack? = null, val backingBlockAmount: Int = 9) {
-        constructor(backing: Material, backingBlock: Material? = null, backingBlockAmount: Int = 9): this(backing.itemStack, backingBlock?.itemStack, backingBlockAmount)
+    private data class CoinBacking(
+        val backing: ItemStack? = null,
+        val backingBlock: ItemStack? = null,
+        val backingBlockAmount: Int = 9
+    ) {
+        constructor(
+            backing: Material,
+            backingBlock: Material? = null,
+            backingBlockAmount: Int = 9
+        ) : this(backing.itemStack, backingBlock?.itemStack, backingBlockAmount)
     }
 
     fun loadCoins() {
         val statement = BlueFox.query("SELECT * FROM coins")
         val result = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
-        while(result.next()) {
+        while (result.next()) {
             try {
                 val ticker = result.getString("ticker")
                 val backing = when (ticker) {
-                    "DIA" -> CoinBacking(Material.DIAMOND,  Material.DIAMOND_BLOCK)
+                    "DIA" -> CoinBacking(Material.DIAMOND, Material.DIAMOND_BLOCK)
                     "NTRI" -> CoinBacking(Material.NETHERITE_INGOT, Material.NETHERITE_BLOCK)
                     "AD" -> CoinBacking(Material.ANCIENT_DEBRIS)
                     "AMETHYST" -> CoinBacking(Coin.AMETHYST.backing, Coin.AMETHYST.backingBlock, 4)

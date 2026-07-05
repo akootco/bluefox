@@ -10,7 +10,13 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
 
-abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: String = "", defaultUsage: String = "/$id", vararg aliases: String) : BukkitCommand(id, description, defaultUsage, aliases.toList()) {
+abstract class FoxCommand(
+    val plugin: FoxPlugin,
+    val id: String,
+    description: String = "",
+    defaultUsage: String = "/$id",
+    vararg aliases: String
+) : BukkitCommand(id, description, defaultUsage, aliases.toList()) {
 
     companion object {
         private val SELECTORS = setOf("@a", "@s", "@r")
@@ -54,18 +60,31 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return A list of suggestions which contain offline player names
      */
-    fun getOfflinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
+    fun getOfflinePlayerSuggestions(
+        args: Array<out String>? = null,
+        exclude: Set<String> = setOf(),
+        prefix: String = ""
+    ): MutableList<String> {
         val offlinePlayerNames = BlueFox.cachedOfflinePlayerNames.map { "$prefix$it" }.minus(exclude).toMutableList()
         return getPlayerSuggestions(offlinePlayerNames, args, prefix)
     }
 
-    fun getOnlinePlayerSuggestions(args: Array<out String>? = null, exclude: Set<String> = setOf(), prefix: String = ""): MutableList<String> {
-        val onlinePlayerNames = plugin.server.onlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
+    fun getOnlinePlayerSuggestions(
+        args: Array<out String>? = null,
+        exclude: Set<String> = setOf(),
+        prefix: String = ""
+    ): MutableList<String> {
+        val onlinePlayerNames =
+            plugin.server.onlinePlayers.mapNotNull { "$prefix${it.name}" }.minus(exclude).toMutableList()
         return getPlayerSuggestions(onlinePlayerNames, args, prefix)
     }
 
-    fun getPlayerSuggestions(players: MutableList<String>, args: Array<out String>? = null, prefix: String = ""): MutableList<String> {
-        if (args?.last()?.startsWith("$prefix.") == false) players.removeIf {it.startsWith("$prefix.")}
+    fun getPlayerSuggestions(
+        players: MutableList<String>,
+        args: Array<out String>? = null,
+        prefix: String = ""
+    ): MutableList<String> {
+        if (args?.last()?.startsWith("$prefix.") == false) players.removeIf { it.startsWith("$prefix.") }
         if (args.isNullOrEmpty()) return players
         return players.filterNot { it in args }.toMutableList()
     }
@@ -80,9 +99,12 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return The [sender] cast to [Player] if the sender is a player, null otherwise
      */
-    fun playerCheck(sender: CommandSender, message: Text? = Kolor.ERROR("You need to be a player in order to run ") + Kolor.ERROR.accent(
-        "/$id"
-    )): Player? {
+    fun playerCheck(
+        sender: CommandSender,
+        message: Text? = Kolor.ERROR("You need to be a player in order to run ") + Kolor.ERROR.accent(
+            "/$id"
+        )
+    ): Player? {
         if (sender !is Player) {
             message?.send(sender)
             return null
@@ -101,9 +123,13 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
      *
      * @return True if the sender has permission, null otherwise
      */
-    fun permissionCheck(sender: CommandSender, node: String? = null, message: Text? = Kolor.ERROR("You do not have permission to use ") + Kolor.ERROR.accent(
-        "/$id"
-    )): Boolean? {
+    fun permissionCheck(
+        sender: CommandSender,
+        node: String? = null,
+        message: Text? = Kolor.ERROR("You do not have permission to use ") + Kolor.ERROR.accent(
+            "/$id"
+        )
+    ): Boolean? {
         if (!hasPermission(sender, node)) {
             message?.send(sender)
             return null
@@ -141,7 +167,7 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
         val suggestions = onTabComplete(sender, alias, args)
 
         // If the last argument is empty, return all suggestions
-        if(args.last().isEmpty()) return suggestions
+        if (args.last().isEmpty()) return suggestions
 
         // Return all the suggestions that contain the last argument
         return suggestions.filter { it.contains(args.last(), true) }.toMutableList()
@@ -188,13 +214,19 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
 
     fun getPlayer(name: String): Result<Player?> {
         val player = BlueFox.getPlayer(name)
-            ?: return Result.fail(null, Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" is not online!"))
+            ?: return Result.fail(
+                null,
+                Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" is not online!")
+            )
         return Result(player)
     }
 
     fun getOfflinePlayer(name: String): Result<OfflinePlayer?> {
         val player = BlueFox.getOfflinePlayer(name)
-            ?: return Result.fail(null, Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" does not exist!"))
+            ?: return Result.fail(
+                null,
+                Kolor.ERROR("Player ") + Kolor.ERROR.accent(name) + Kolor.ERROR(" does not exist!")
+            )
         return Result(player)
     }
 
@@ -217,23 +249,23 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
 
     class Result<T>(val value: T, private val message: Text? = null) {
 
-        constructor(value: T, message: Component): this(value, Text(message))
-        constructor(value: T, message: String): this(value, Text(message))
+        constructor(value: T, message: Component) : this(value, Text(message))
+        constructor(value: T, message: String) : this(value, Text(message))
 
         companion object {
 
             val FAIL = Result(false)
             val SUCCESS = Result(true)
 
-            fun<T> fail(value: T, message: Component): Result<T> {
+            fun <T> fail(value: T, message: Component): Result<T> {
                 return Result(value, message)
             }
 
-            fun<T> fail(value: T, message: Text): Result<T> {
+            fun <T> fail(value: T, message: Text): Result<T> {
                 return Result(value, message)
             }
 
-            fun<T> fail(value: T, message: String): Result<T> {
+            fun <T> fail(value: T, message: String): Result<T> {
                 return Result(value, Kolor.ERROR(message))
             }
 
@@ -246,18 +278,21 @@ abstract class FoxCommand(val plugin: FoxPlugin, val id: String, description: St
             }
 
             fun fail(message: Text): Result<Boolean> {
-                return Result(false, message.component.colorIfAbsent(Kolor.ERROR.get(message.bedrock, message.rawColor)))
+                return Result(
+                    false,
+                    message.component.colorIfAbsent(Kolor.ERROR.get(message.bedrock, message.rawColor))
+                )
             }
 
-            fun<T> success(value: T, component: Component): Result<T> {
+            fun <T> success(value: T, component: Component): Result<T> {
                 return Result(value, component)
             }
 
-            fun<T> success(value: T, message: Text): Result<T> {
+            fun <T> success(value: T, message: Text): Result<T> {
                 return Result(value, message)
             }
 
-            fun<T> success(value: T, message: String): Result<T> {
+            fun <T> success(value: T, message: String): Result<T> {
                 return Result(value, Kolor.TEXT(message))
             }
 

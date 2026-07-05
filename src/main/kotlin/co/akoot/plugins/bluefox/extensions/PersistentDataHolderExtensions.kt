@@ -1,21 +1,17 @@
 package co.akoot.plugins.bluefox.extensions
 
-import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.delegating.Delegate
 import io.papermc.paper.persistence.PersistentDataViewHolder
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
-import org.bukkit.OfflinePlayer
-import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataAdapterContext
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.UUID
-import kotlin.reflect.KClass
+import java.util.*
 
 
 /**
@@ -23,7 +19,7 @@ import kotlin.reflect.KClass
  *
  * **Only use primitive data types, there are no checks, you have to promise me!**
  */
-class PrimitiveType<T : Any>(private val primitiveType: Class<T>): PersistentDataType<T, T> {
+class PrimitiveType<T : Any>(private val primitiveType: Class<T>) : PersistentDataType<T, T> {
 
     override fun getPrimitiveType(): Class<T> {
         return primitiveType
@@ -45,7 +41,7 @@ class PrimitiveType<T : Any>(private val primitiveType: Class<T>): PersistentDat
 /**
  * [PersistentDataType] class for [Location]
  */
-class LocationDataType(): PersistentDataType<ByteArray, Location> {
+class LocationDataType() : PersistentDataType<ByteArray, Location> {
     override fun getPrimitiveType(): Class<ByteArray> {
         return ByteArray::class.java
     }
@@ -68,7 +64,7 @@ class LocationDataType(): PersistentDataType<ByteArray, Location> {
  *
  * Stolen from [Paper Docs](https://docs.papermc.io/paper/dev/pdc#custom-data-types)
  */
-class UUIDDataType(): PersistentDataType<ByteArray, UUID> {
+class UUIDDataType() : PersistentDataType<ByteArray, UUID> {
     override fun getPrimitiveType(): Class<ByteArray> {
         return ByteArray::class.java
     }
@@ -104,8 +100,8 @@ fun PersistentDataViewHolder.hasPDC(key: NamespacedKey): Boolean {
  * @param value The [Object] to check and return
  * @return [value]
  */
-inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey, value: T?): T? {
-    if(value == null) removePDC(key)
+inline fun <reified T : Any> PersistentDataHolder.removeIfNull(key: NamespacedKey, value: T?): T? {
+    if (value == null) removePDC(key)
     return value
 }
 
@@ -117,8 +113,8 @@ inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey
  * @param value The [Object] to check and return
  * @return [value]
  */
-inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey, value: List<T>?): List<T>? {
-    if(value == null) removePDC(key)
+inline fun <reified T : Any> PersistentDataHolder.removeIfNull(key: NamespacedKey, value: List<T>?): List<T>? {
+    if (value == null) removePDC(key)
     return value
 }
 
@@ -127,7 +123,7 @@ inline fun <reified T: Any> PersistentDataHolder.removeIfNull(key: NamespacedKey
  * @param key The [NamespacedKey] of the value to get from this [PersistentDataContainer]
  */
 inline fun <reified T : Any> PersistentDataViewHolder.getPDC(key: NamespacedKey): T? {
-    when(T::class) {
+    when (T::class) {
         Location::class -> return persistentDataContainer.get(key, LocationDataType()) as T?
         UUID::class -> return persistentDataContainer.get(key, UUIDDataType()) as T?
         Boolean::class -> return persistentDataContainer.get(key, PersistentDataType.BOOLEAN) as T?
@@ -142,7 +138,7 @@ inline fun <reified T : Any> PersistentDataViewHolder.getPDC(key: NamespacedKey)
  */
 @Suppress("UNCHECKED_CAST") // pesky pesky...
 inline fun <reified T : Any> PersistentDataViewHolder.getPDCList(key: NamespacedKey): List<T>? {
-    val dataType = when(T::class) {
+    val dataType = when (T::class) {
         Location::class -> LocationDataType()
         UUID::class -> UUIDDataType()
         Boolean::class -> PersistentDataType.BOOLEAN
@@ -160,7 +156,7 @@ inline fun <reified T : Any> PersistentDataViewHolder.getPDCList(key: Namespaced
  */
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: T?) {
     val v: T = removeIfNull(key, value) ?: return
-    return when(T::class) {
+    return when (T::class) {
         Location::class -> persistentDataContainer.set(key, LocationDataType(), v as Location)
         UUID::class -> persistentDataContainer.set(key, UUIDDataType(), v as UUID)
         Boolean::class -> persistentDataContainer.set(key, PersistentDataType.BOOLEAN, v as Boolean)
@@ -176,10 +172,25 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
 @Suppress("UNCHECKED_CAST") // pesky pesky...
 inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, value: List<T>?) {
     val v: List<T> = removeIfNull(key, value) ?: return
-    when(T::class) {
-        Location::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(LocationDataType()), v as List<Location>)
-        UUID::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(UUIDDataType()), v as List<UUID>)
-        Boolean::class -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(PersistentDataType.BOOLEAN), v as List<Boolean>)
+    when (T::class) {
+        Location::class -> persistentDataContainer.set(
+            key,
+            PersistentDataType.LIST.listTypeFrom(LocationDataType()),
+            v as List<Location>
+        )
+
+        UUID::class -> persistentDataContainer.set(
+            key,
+            PersistentDataType.LIST.listTypeFrom(UUIDDataType()),
+            v as List<UUID>
+        )
+
+        Boolean::class -> persistentDataContainer.set(
+            key,
+            PersistentDataType.LIST.listTypeFrom(PersistentDataType.BOOLEAN),
+            v as List<Boolean>
+        )
+
         else -> persistentDataContainer.set(key, PersistentDataType.LIST.listTypeFrom(PrimitiveType(T::class.java)), v)
     }
 }
@@ -190,7 +201,7 @@ inline fun <reified T : Any> PersistentDataHolder.setPDC(key: NamespacedKey, val
  * @param value The [Object] to remove from the [PersistentDataContainer]
  * @return If the value was removed successfully
  */
-inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: NamespacedKey, value: T): Boolean {
+inline fun <reified T : Any> PersistentDataHolder.removeFromPDCList(key: NamespacedKey, value: T): Boolean {
     val x = getPDCList<T>(key)
     val list = x?.toMutableSet() ?: return false
     val success = list.remove(value)
@@ -204,7 +215,7 @@ inline fun <reified T : Any>  PersistentDataHolder.removeFromPDCList(key: Namesp
  * @param value The [Object] to remove from the [PersistentDataContainer]
  * @return If the value was added successfully
  */
-inline fun <reified T : Any>  PersistentDataHolder.addToPDCList(key: NamespacedKey, value: T): Boolean {
+inline fun <reified T : Any> PersistentDataHolder.addToPDCList(key: NamespacedKey, value: T): Boolean {
     val list = getPDCList<T>(key)?.toMutableSet() ?: mutableSetOf()
     val success = list.add(value)
     setPDC(key, list.toList())
@@ -282,4 +293,4 @@ operator fun NamespacedKey.plus(value: String): NamespacedKey {
     return value("${value()}.$value")
 }
 
-fun <T>PersistentDataHolder.delegate(default: T? = null) =  Delegate<T>(this)
+fun <T> PersistentDataHolder.delegate(default: T? = null) = Delegate<T>(this)

@@ -3,35 +3,26 @@ package co.akoot.plugins.bluefox.commands
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.CatCommand
 import co.akoot.plugins.bluefox.extensions.hex
-import co.akoot.plugins.bluefox.util.copy
-import co.akoot.plugins.bluefox.util.hover
-import co.akoot.plugins.bluefox.util.join
-import co.akoot.plugins.bluefox.util.palettes
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.sendMessage
-import co.akoot.plugins.bluefox.util.sendWarning
-import co.akoot.plugins.bluefox.util.text
-import net.kyori.adventure.text.Component
+import co.akoot.plugins.bluefox.util.*
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.command.CommandSender
 
-class PalettesCommand(plugin: BlueFox): CatCommand(plugin, "palettes") {
+class PalettesCommand(plugin: BlueFox) : CatCommand(plugin, "palettes") {
     init {
         noargs {
             permissionCheck(it) ?: return@noargs false
             val sender = getSender(it)
             palettes.entries.sortedBy { e -> e.value.size }
                 .associate { e -> e.toPair() }.forEach { (palette, colors) ->
-                sendPalette(sender, palette, colors)
+                    sendPalette(sender, palette, colors)
                     sender.sendMessage("")
-            }
+                }
             true
         }
     }
 }
 
-class PaletteCommand(plugin: BlueFox): CatCommand(plugin, "palette") {
+class PaletteCommand(plugin: BlueFox) : CatCommand(plugin, "palette") {
     init {
         then {
             string("palette", suggestions = { _, builder -> suggest(builder, palettes.keys.toList()) }) {

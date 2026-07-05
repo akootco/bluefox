@@ -13,7 +13,7 @@ import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
 
 
-class TimeZoneArgument: CustomArgumentType.Converted<ZoneId, String> {
+class TimeZoneArgument : CustomArgumentType.Converted<ZoneId, String> {
 
     companion object {
         val ERROR_INVALID_TIMEZONE: DynamicCommandExceptionType = DynamicCommandExceptionType {
@@ -24,7 +24,7 @@ class TimeZoneArgument: CustomArgumentType.Converted<ZoneId, String> {
     override fun convert(nativeType: String): ZoneId {
         return try {
             ZoneId.of(nativeType)
-        } catch (_: IllegalArgumentException ) {
+        } catch (_: IllegalArgumentException) {
             throw ERROR_INVALID_TIMEZONE.create(nativeType)
         }
     }
@@ -37,8 +37,8 @@ class TimeZoneArgument: CustomArgumentType.Converted<ZoneId, String> {
         context: CommandContext<S>,
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
-        for(zoneId in ZoneId.getAvailableZoneIds()) {
-            if(zoneId.startsWith(builder.remainingLowerCase)) {
+        for (zoneId in ZoneId.getAvailableZoneIds()) {
+            if (zoneId.startsWith(builder.remainingLowerCase)) {
                 builder.suggest(zoneId)
             }
         }

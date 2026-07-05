@@ -3,25 +3,26 @@ package co.akoot.plugins.bluefox.extensions
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.util.Text
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Bukkit
 import org.bukkit.World
 
-val World.legacyName: String get() {
-    return when(name) {
-        "world_nether" -> "nether"
-        "world_the_ender" -> "end"
-        else -> name
+val World.legacyName: String
+    get() {
+        return when (name) {
+            "world_nether" -> "nether"
+            "world_the_ender" -> "end"
+            else -> name
+        }
     }
-}
 
-val World.executeName: String get() {
-    return when(name) {
-        "world_the_end" -> "minecraft:the_end"
-        "world_nether" -> "minecraft:the_nether"
-        "world" -> "minecraft:overworld"
-        else -> name
+val World.executeName: String
+    get() {
+        return when (name) {
+            "world_the_end" -> "minecraft:the_end"
+            "world_nether" -> "minecraft:the_nether"
+            "world" -> "minecraft:overworld"
+            else -> name
+        }
     }
-}
 
 fun World.text(color: TextColor = Kolor.TEXT.accent): Text {
     val envColor = when (environment) {

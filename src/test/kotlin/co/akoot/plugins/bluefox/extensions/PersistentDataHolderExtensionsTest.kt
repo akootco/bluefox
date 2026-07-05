@@ -1,8 +1,6 @@
 package co.akoot.plugins.bluefox.extensions
 
 import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.World
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach

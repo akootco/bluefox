@@ -1,9 +1,6 @@
 package co.akoot.plugins.bluefox.api
 
-import co.akoot.plugins.bluefox.api.events.FoxEvent
-import co.akoot.plugins.bluefox.api.events.FoxEventCancellable
 import co.akoot.plugins.bluefox.util.IOUtil
-import io.papermc.paper.plugin.lifecycle.event.LifecycleEvent
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -24,7 +21,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     open lateinit var settings: FoxConfig
 
     override fun onEnable() {
-        if(dataFolder.mkdirs()) logger.info("Created data folder for $id")
+        if (dataFolder.mkdirs()) logger.info("Created data folder for $id")
         settings = registerConfig("settings")
         registerConfigs()
         load()
@@ -50,7 +47,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         val key = key(name)
         val shapedRecipe = ShapedRecipe(key, result)
         shapedRecipe.shape(*shape)
-        for((k,v) in recipe) {
+        for ((k, v) in recipe) {
             shapedRecipe.setIngredient(k, v)
         }
         registerRecipe(shapedRecipe)
@@ -59,7 +56,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
     fun registerRecipe(name: String, result: ItemStack, vararg recipe: Material) {
         val key = key(name)
         val shapelessRecipe = ShapelessRecipe(key, result)
-        for(ingredient in recipe) {
+        for (ingredient in recipe) {
             shapelessRecipe.addIngredient(ingredient)
         }
         registerRecipe(shapelessRecipe)

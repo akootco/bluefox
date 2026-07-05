@@ -34,8 +34,8 @@ class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
         )
     }
 
-    constructor(hex: String, char: Char? = null): this(Color.decode(hex).rgb)
-    constructor(textColor: TextColor, char: Char? = null): this(textColor.value())
+    constructor(hex: String, char: Char? = null) : this(Color.decode(hex).rgb)
+    constructor(textColor: TextColor, char: Char? = null) : this(textColor.value())
 
     val raw = TextColor.color(java)
     val bedrock = TextColor.color(bedrock)
@@ -71,7 +71,7 @@ class Kolor(java: Int, bedrock: Int = java, char: Char? = null) {
     }
 
     fun get(isBedrock: Boolean = false, rawColor: Boolean = false): TextColor {
-        return if(isBedrock) bedrock else (if(rawColor) raw else text)
+        return if (isBedrock) bedrock else (if (rawColor) raw else text)
     }
 
     fun parse(string: String): TextColor? {

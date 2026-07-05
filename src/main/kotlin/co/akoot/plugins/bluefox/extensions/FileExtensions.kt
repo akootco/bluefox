@@ -8,14 +8,14 @@ fun File.mkdirp(): File {
 }
 
 fun File.touch(mkdirs: Boolean = true): File {
-    if(mkdirs) parentFile?.mkdirs()
+    if (mkdirs) parentFile?.mkdirs()
     createNewFile()
     return this
 }
 
 fun File.touch(content: String): File {
     parentFile?.mkdirs()
-    if(!exists()) {
+    if (!exists()) {
         writeText(content)
     }
     return this

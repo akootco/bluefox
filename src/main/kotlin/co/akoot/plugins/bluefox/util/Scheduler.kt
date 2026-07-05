@@ -1,8 +1,6 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
-import org.bukkit.Bukkit
-import org.bukkit.scheduler.BukkitScheduler
 import org.bukkit.scheduler.BukkitTask
 
 fun sync(runnable: Runnable): BukkitTask {

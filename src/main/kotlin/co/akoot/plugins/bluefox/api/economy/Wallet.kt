@@ -11,14 +11,9 @@ import co.akoot.plugins.bluefox.api.economy.Economy.Error.PRICE_UNAVAILABLE
 import co.akoot.plugins.bluefox.api.economy.Economy.Error.SQL_ERROR
 import co.akoot.plugins.bluefox.api.events.PlayerDepositEvent
 import co.akoot.plugins.bluefox.api.events.PlayerWithdrawEvent
-import co.akoot.plugins.bluefox.api.events.WalletSendCoinEvent
 import co.akoot.plugins.bluefox.api.events.WalletRequestSwapEvent
-import co.akoot.plugins.bluefox.extensions.countItem
-import co.akoot.plugins.bluefox.extensions.defaultWalletAddress
-import co.akoot.plugins.bluefox.extensions.giveInBlocks
-import co.akoot.plugins.bluefox.extensions.isSurventure
-import co.akoot.plugins.bluefox.extensions.removeIncludingBlocks
-import co.akoot.plugins.bluefox.extensions.withAmount
+import co.akoot.plugins.bluefox.api.events.WalletSendCoinEvent
+import co.akoot.plugins.bluefox.extensions.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.math.BigDecimal
@@ -35,8 +30,9 @@ open class Wallet(val id: Int, val address: String) {
         fun get(address: String): Wallet? {
             val statement = BlueFox.query("SELECT id FROM wallets WHERE address = ?")
             statement.setString(1, address)
-            val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return null
-            while(resultSet.next()) {
+            val resultSet =
+                statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return null
+            while (resultSet.next()) {
                 val id = resultSet.getInt("id")
                 return Wallet(id, address)
             }
@@ -49,13 +45,13 @@ open class Wallet(val id: Int, val address: String) {
 
         fun create(address: String): Wallet? {
             val existingWallet = get(address)
-            if(existingWallet != null) return existingWallet
+            if (existingWallet != null) return existingWallet
             val statement = BlueFox.query("INSERT INTO wallets (address) VALUES (?)")
             statement.run {
                 setString(1, address)
             }
             val rows = statement.executeUpdate()//runCatching { statement.executeUpdate() }.getOrElse { 0 }
-            if(rows <= 0 ) return null
+            if (rows <= 0) return null
             return get(address)
         }
 
@@ -72,16 +68,16 @@ open class Wallet(val id: Int, val address: String) {
     val player: Player? get() = offlinePlayer?.player
 
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
-        if(!player.isOp) {
+        if (!player.isOp) {
             if (!player.isSurventure) return INVALID_GAME_MODE // best not risk it
             if (player.world.name !in BlueFox.instance.settings.getStringList("wallet.worlds")) return INVALID_WORLD
         }
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         val balance = balance[coin] ?: return INSUFFICIENT_BALANCE
         if (amount < 1) return NUMBER_TOO_SMALL
-        if(balance < BigDecimal(amount)) return INSUFFICIENT_BALANCE
+        if (balance < BigDecimal(amount)) return INSUFFICIENT_BALANCE
         PlayerWithdrawEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
-        if(coin.backingBlock == null) {
+        if (coin.backingBlock == null) {
             var remaining = amount
             while (remaining > 0) {
                 val stackSize = minOf(remaining, coin.backing.maxStackSize)
@@ -97,14 +93,14 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun deposit(player: Player, coin: Coin, amount: Int): Int {
-        if(!player.isOp) {
+        if (!player.isOp) {
             if (!player.isSurventure) return INVALID_GAME_MODE
             if (player.world.name !in BlueFox.instance.settings.getStringList("wallet.worlds")) return INVALID_WORLD
         }
         if (coin.backing == null) return COIN_HAS_NO_BACKING
         if (amount < 1) return INSUFFICIENT_ITEMS
         PlayerDepositEvent(player, coin, amount).fire() ?: return Economy.Error.EVENT_CANCELLED
-        if(coin.backingBlock == null) {
+        if (coin.backingBlock == null) {
             if (player.countItem(coin.backing) < amount) return INSUFFICIENT_ITEMS
             player.inventory.removeItemAnySlot(coin.backing.withAmount(amount))
         } else {
@@ -123,25 +119,27 @@ open class Wallet(val id: Int, val address: String) {
 
     open fun send(wallet: Wallet, coin: Coin, amount: BigDecimal, relatedId: Int? = null): Int {
         val currentBalance = balance[coin] ?: BigDecimal.ZERO//return MISSING_COIN
-        if(!hasUnlimitedMoney && currentBalance < amount) return INSUFFICIENT_BALANCE
+        if (!hasUnlimitedMoney && currentBalance < amount) return INSUFFICIENT_BALANCE
         WalletSendCoinEvent(this, wallet, coin, amount, relatedId).fire() ?: return Economy.Error.EVENT_CANCELLED
         val hasRelatedId = relatedId != null
-        val extraRelated = if(hasRelatedId) ",related_transaction" to ",?" else "" to ""
-        val statement = BlueFox.query("""
+        val extraRelated = if (hasRelatedId) ",related_transaction" to ",?" else "" to ""
+        val statement = BlueFox.query(
+            """
             INSERT INTO wallet_transactions (coin_id,sender_id,recipient_id,amount${extraRelated.first}) 
             VALUES (?,?,?,?${extraRelated.second})
-        """.trimIndent(), Statement.RETURN_GENERATED_KEYS)
+        """.trimIndent(), Statement.RETURN_GENERATED_KEYS
+        )
         statement.setInt(1, coin.id)
         statement.setInt(2, this.id)
         statement.setInt(3, wallet.id)
         statement.setBigDecimal(4, amount)
-        if(hasRelatedId) statement.setInt(5, relatedId)
+        if (hasRelatedId) statement.setInt(5, relatedId)
         val rows = runCatching { statement.executeUpdate() }.getOrElse { 0 }
-        if(rows <= 0 ) return SQL_ERROR
+        if (rows <= 0) return SQL_ERROR
         val keys = statement.generatedKeys
         val success = keys.next()
-        if(success) {
-            if(!hasUnlimitedMoney) {
+        if (success) {
+            if (!hasUnlimitedMoney) {
                 balance[coin] = currentBalance - amount
             }
             val recipientBalance = wallet.balance[coin] ?: BigDecimal.ZERO
@@ -151,16 +149,18 @@ open class Wallet(val id: Int, val address: String) {
     }
 
     fun load() {
-        val statement = BlueFox.query("""
+        val statement = BlueFox.query(
+            """
             SELECT coin_id, (
                 COALESCE(SUM(CASE WHEN recipient_id = $id THEN amount ELSE 0 END), 0) -
                 COALESCE(SUM(CASE WHEN sender_id = $id THEN amount ELSE 0 END), 0)
             ) AS balance
             FROM wallet_transactions
             GROUP BY coin_id;
-        """.trimIndent())
+        """.trimIndent()
+        )
         val resultSet = statement.executeQuery()//runCatching { statement.executeQuery() }.getOrNull() ?: return
-        while(resultSet.next()) {
+        while (resultSet.next()) {
             val coin = Market.getCoin(resultSet.getInt("coin_id")) ?: continue
             balance[coin] = resultSet.getBigDecimal("balance")
         }

@@ -3,26 +3,19 @@ package co.akoot.plugins.bluefox.util
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.XYZ
-import co.akoot.plugins.bluefox.extensions.invoke
 import co.akoot.plugins.bluefox.extensions.isBedrock
-import co.akoot.plugins.bluefox.util.Text.Companion.invoke
 import net.kyori.adventure.audience.Audience
-import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.TextComponent.Builder
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.ShadowColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.`object`.ObjectContents
-import net.kyori.adventure.text.`object`.PlayerHeadObjectContents
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
-import net.kyori.adventure.translation.Translatable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.bukkit.Material
@@ -34,7 +27,6 @@ import java.awt.Color
 import java.math.BigDecimal
 import java.net.URLEncoder
 import java.time.Duration
-import java.util.UUID
 
 val alphaNumericRegex = Regex("[^a-zA-Z0-9_ -]")
 val snakeCaseRegex = Regex("\\s|-")
@@ -42,7 +34,13 @@ fun String.snakeCase() = this.replace(snakeCaseRegex, "_").lowercase().alphaNume
 fun String.alphaNumeric() = this.replace(alphaNumericRegex, "")
 
 @Deprecated("do not use ts, deleting in v3")
-class Text(val string: String = "", val color: TextColor? = null, val bedrock: Boolean = false, val rawColor: Boolean = false, vararg decorations: TextDecoration) {
+class Text(
+    val string: String = "",
+    val color: TextColor? = null,
+    val bedrock: Boolean = false,
+    val rawColor: Boolean = false,
+    vararg decorations: TextDecoration
+) {
 
     enum class EnumOption {
         SPACES, TITLE_CASE, LOWERCASE, NO_ACCENT
@@ -53,24 +51,33 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         val newlineSpace = Text("\n  ")
         val space = Text(" ")
 
-        val Boolean.now: String get() = if(this) "now" else "no longer"
-        val Boolean.not: String get() = if(this) "is" else "is not"
-        val Boolean.yes: String get() = if(this) "yes" else "no"
-        val Boolean.enabled: String get() = if(this) "enabled" else "disabled"
-        val Boolean.on: String get() = if(this) "on" else "off"
+        val Boolean.now: String get() = if (this) "now" else "no longer"
+        val Boolean.not: String get() = if (this) "is" else "is not"
+        val Boolean.yes: String get() = if (this) "yes" else "no"
+        val Boolean.enabled: String get() = if (this) "enabled" else "disabled"
+        val Boolean.on: String get() = if (this) "on" else "off"
 
         fun Boolean.get(whetherTrue: String, whetherFalse: String): String {
-            return if(this) whetherTrue else whetherFalse
+            return if (this) whetherTrue else whetherFalse
         }
 
-        fun list(items: List<String>, separator: String = "\n", itemKolor: Kolor = Kolor.ACCENT, textKolor: Kolor = Kolor.TEXT, prefix: String = "", postfix: String = "", bedrock: Boolean = false, rawColor: Boolean = false): Text {
-            if(items.isEmpty()) return Text()
+        fun list(
+            items: List<String>,
+            separator: String = "\n",
+            itemKolor: Kolor = Kolor.ACCENT,
+            textKolor: Kolor = Kolor.TEXT,
+            prefix: String = "",
+            postfix: String = "",
+            bedrock: Boolean = false,
+            rawColor: Boolean = false
+        ): Text {
+            if (items.isEmpty()) return Text()
             val textColor = textKolor.get(bedrock, rawColor)
             val itemColor = itemKolor.get(bedrock, rawColor)
             val result = Text(prefix, textColor)
             for ((i, item) in items.withIndex()) {
                 result += Text(item, itemColor)
-                if(i == items.size - 1) break
+                if (i == items.size - 1) break
                 result += Text(separator, textColor)
             }
             return result + Text(postfix, textColor)
@@ -82,9 +89,9 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
         fun list(items: List<Text>, separator: Text = newline): Text {
             val result = Text()
-            for((i, item) in items.withIndex()) {
+            for ((i, item) in items.withIndex()) {
                 result += item
-                if(i == items.size - 1) break
+                if (i == items.size - 1) break
                 result += separator
             }
             return result
@@ -100,7 +107,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
         fun String.titleCase(delimiter: String): String {
             return split(delimiter).joinToString(delimiter) { word ->
-                word.lowercase().replaceFirstChar { char -> char.uppercaseChar()}
+                word.lowercase().replaceFirstChar { char -> char.uppercaseChar() }
             }
         }
 
@@ -119,7 +126,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
         fun String.titleCase(vararg delimiters: String): String {
             var string = this
-            for(delimiter in delimiters) {
+            for (delimiter in delimiters) {
                 string = string.titleCase(delimiter)
             }
             return string
@@ -176,10 +183,14 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         }
 
         fun String.hm(boolean: Boolean): String {
-            return if(boolean) this else ""
+            return if (boolean) this else ""
         }
 
-        operator fun String.invoke(kolor: Kolor = Kolor.TEXT, bedrock: Boolean = false, rawColor: Boolean = false): Text {
+        operator fun String.invoke(
+            kolor: Kolor = Kolor.TEXT,
+            bedrock: Boolean = false,
+            rawColor: Boolean = false
+        ): Text {
             return Text(this, kolor.get(bedrock, rawColor))
         }
 
@@ -187,17 +198,19 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
             Kolor.TEXT(this.toString()).copy(this.toString())
         }
 
-        val Number.text: Text get() {
-            val parts = this.toString().split(".")
-            if (parts.size == 1) return Kolor.NUMBER(parts[0])
-            return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
-        }
+        val Number.text: Text
+            get() {
+                val parts = this.toString().split(".")
+                if (parts.size == 1) return Kolor.NUMBER(parts[0])
+                return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
+            }
 
-        val BigDecimal.text: Text get() {
-            val parts = this.toPlainString().split(".")
-            if (parts.size == 1) return Kolor.NUMBER(parts[0])
-            return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
-        }
+        val BigDecimal.text: Text
+            get() {
+                val parts = this.toPlainString().split(".")
+                if (parts.size == 1) return Kolor.NUMBER(parts[0])
+                return Kolor.NUMBER(parts[0]) + Kolor.QUOTE(".${parts[1]}")
+            }
 
         val Material.component: Component get() = Component.translatable(translationKey())
         val Material.text: Text get() = Text(component)
@@ -309,24 +322,50 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         }
     }
 
-    constructor(char: Char, color: TextColor): this(char.toString(), color)
-    constructor(string: String, color: Int, vararg decorations: TextDecoration) : this(string, TextColor.color(color), false, true, *decorations)
-    constructor(string: String, color: Color, vararg decorations: TextDecoration) : this(string, TextColor.color(color.rgb), false, true, *decorations)
-    constructor(string: String, kolor: Kolor, bedrock: Boolean = false, rawColor: Boolean = false, vararg decorations: TextDecoration) : this(
+    constructor(char: Char, color: TextColor) : this(char.toString(), color)
+    constructor(string: String, color: Int, vararg decorations: TextDecoration) : this(
+        string,
+        TextColor.color(color),
+        false,
+        true,
+        *decorations
+    )
+
+    constructor(string: String, color: Color, vararg decorations: TextDecoration) : this(
+        string,
+        TextColor.color(color.rgb),
+        false,
+        true,
+        *decorations
+    )
+
+    constructor(
+        string: String,
+        kolor: Kolor,
+        bedrock: Boolean = false,
+        rawColor: Boolean = false,
+        vararg decorations: TextDecoration
+    ) : this(
         string,
         kolor.get(bedrock, rawColor),
         bedrock,
         rawColor,
         *decorations
     )
+
     constructor(vararg options: EnumOption) : this("") {
         enumOptions = options
     }
-    constructor(erm: (Text) -> Text): this("") {
+
+    constructor(erm: (Text) -> Text) : this("") {
         erm(this)
     }
-    constructor(sender: CommandSender?, erm: (Text) -> Text): this("", bedrock = sender is Player && sender.isBedrock) {
-        if(sender == null) return
+
+    constructor(sender: CommandSender?, erm: (Text) -> Text) : this(
+        "",
+        bedrock = sender is Player && sender.isBedrock
+    ) {
+        if (sender == null) return
         val text = erm(this)
         text.send(sender)
     }
@@ -358,6 +397,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         builder.shadowColor(shadowColor)
         return this
     }
+
     fun copy(string: String): Text {
         builder.clickEvent(ClickEvent.copyToClipboard(string))
         return this
@@ -388,11 +428,21 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
     }
 
     fun hover(string: String?, color: TextColor? = null, vararg decorations: TextDecoration): Text {
-        if(string == null) {
+        if (string == null) {
             builder.hoverEvent(null)
             return this
         }
-        builder.hoverEvent(HoverEvent.showText(Text(string, color, bedrock = false, rawColor = true, *decorations).component))
+        builder.hoverEvent(
+            HoverEvent.showText(
+                Text(
+                    string,
+                    color,
+                    bedrock = false,
+                    rawColor = true,
+                    *decorations
+                ).component
+            )
+        )
         return this
     }
 
@@ -431,22 +481,22 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun bold(enabled: Boolean = true): Text{
+    fun bold(enabled: Boolean = true): Text {
         builder.decoration(TextDecoration.BOLD, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
-    fun italic(enabled: Boolean = true): Text{
+    fun italic(enabled: Boolean = true): Text {
         builder.decoration(TextDecoration.ITALIC, TextDecoration.State.byBoolean(enabled))
         return this
     }
 
-    fun boldItalic(): Text{
+    fun boldItalic(): Text {
         builder.decorate(TextDecoration.BOLD, TextDecoration.ITALIC)
         return this
     }
 
-    fun strikethrough(enabled: Boolean = true): Text{
+    fun strikethrough(enabled: Boolean = true): Text {
         builder.decoration(TextDecoration.STRIKETHROUGH, TextDecoration.State.byBoolean(enabled))
         return this
     }
@@ -496,8 +546,8 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
     operator fun <E : Enum<E>> plus(enum: E): Text {
         var name = enum.toString()
         var kolor = Kolor.ACCENT
-        for(enumOption in enumOptions.sortedBy { it.ordinal }) {
-            when(enumOption) {
+        for (enumOption in enumOptions.sortedBy { it.ordinal }) {
+            when (enumOption) {
                 EnumOption.LOWERCASE -> name = name.lowercase()
                 EnumOption.TITLE_CASE -> name = name.titleCase("_", " ")
                 EnumOption.SPACES -> name = name.replace("_", " ")
@@ -547,7 +597,7 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
 
     operator fun times(int: Int): Text {
         val component = this.component
-        for(x in 0..int) builder.append(component)
+        for (x in 0..int) builder.append(component)
         return this
     }
 
@@ -563,7 +613,13 @@ class Text(val string: String = "", val color: TextColor? = null, val bedrock: B
         return this
     }
 
-    fun sendTitle(audience: Audience, subtitle: Text? = null, fadeIn: Double = 0.5, stay: Double = 3.0, fadeOut: Double = 0.5): Text {
+    fun sendTitle(
+        audience: Audience,
+        subtitle: Text? = null,
+        fadeIn: Double = 0.5,
+        stay: Double = 3.0,
+        fadeOut: Double = 0.5
+    ): Text {
         val times = Title.Times.times(
             Duration.ofMillis((fadeIn * 1000).toLong()), // fade in
             Duration.ofMillis((stay * 1000).toLong()), // stay

@@ -41,7 +41,8 @@ class SettingsCommand(plugin: BlueFox) : CatCommand(plugin, "settings") {
                 permissionCheck(it) ?: false
                 val player = getPlayerSender(it) ?: return@string false
                 val key = getString(it, "key")
-                getSetting(player, key)?.let { setting ->  player.sendText(setting) } ?: player.sendWarning("Value unset!")
+                getSetting(player, key)?.let { setting -> player.sendText(setting) }
+                    ?: player.sendWarning("Value unset!")
             } then {
                 string("value") {
                     permissionCheck(it) ?: false
@@ -68,7 +69,8 @@ class SettingsCommand(plugin: BlueFox) : CatCommand(plugin, "settings") {
                     val sender = getSender(it)
                     val player = getOfflinePlayer(it) ?: return@string false
                     val key = getString(it, "key")
-                    getSetting(player, key)?.let { setting -> sender.sendText(setting) } ?: sender.sendWarning("Value unset!")
+                    getSetting(player, key)?.let { setting -> sender.sendText(setting) }
+                        ?: sender.sendWarning("Value unset!")
                 } then {
                     string("value") {
                         permissionCheck(it, "player") ?: return@string false
@@ -85,7 +87,7 @@ class SettingsCommand(plugin: BlueFox) : CatCommand(plugin, "settings") {
 
     fun sendSettings(sender: CommandSender, player: OfflinePlayer): Boolean {
         val settings = getKeys(sender).map {
-            text(it, " = ",  getSetting(player, it)).join("")
+            text(it, " = ", getSetting(player, it)).join("")
         }.toMutableList()
         sender.sendText(settings.join("\n"))
         return true
@@ -107,10 +109,9 @@ class SettingsCommand(plugin: BlueFox) : CatCommand(plugin, "settings") {
 
     fun getKeys(sender: CommandSender): List<String> {
         val roles = if (sender is Player) {
-            if(sender.isOp) keys.keys
+            if (sender.isOp) keys.keys
             else sender.roles
-        }
-        else keys.keys
+        } else keys.keys
         val validKeys = mutableListOf<String>()
         for (role in roles) {
             keys[role]?.let { validKeys.addAll(it) } ?: continue

@@ -4,7 +4,7 @@ import co.akoot.plugins.bluefox.api.FoxConfig
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KType
 
-class ConfigBacking(private val backing: FoxConfig): DelegateBacking {
+class ConfigBacking(private val backing: FoxConfig) : DelegateBacking {
     override fun <T> get(plugin: Plugin, key: String, type: KType?): T? {
         @Suppress("UNCHECKED_CAST")
         return when (type?.classifier) {
@@ -21,7 +21,7 @@ class ConfigBacking(private val backing: FoxConfig): DelegateBacking {
         backing.set(key, value)
     }
 
-    override fun getList(plugin: Plugin, key: String, type: KType?): List<*>?{
+    override fun getList(plugin: Plugin, key: String, type: KType?): List<*>? {
         @Suppress("UNCHECKED_CAST")
         return when (type?.classifier) {
             String::class -> backing.getStringList(key)
@@ -46,5 +46,8 @@ class ConfigBacking(private val backing: FoxConfig): DelegateBacking {
 }
 
 infix fun <T> FoxConfig.default(default: T? = null): Delegate<T> = Delegate(this, default)
-infix fun <T> FoxConfig.of(transform: (String) -> T): Delegate<T> = Delegate(ConfigBacking(this), fromString = transform)
-infix fun <T> FoxConfig.from(parent: String?): Delegate<T> = Delegate(ConfigBacking(this), parent = parent?.takeIf { it.isNotEmpty() })
+infix fun <T> FoxConfig.of(transform: (String) -> T): Delegate<T> =
+    Delegate(ConfigBacking(this), fromString = transform)
+
+infix fun <T> FoxConfig.from(parent: String?): Delegate<T> =
+    Delegate(ConfigBacking(this), parent = parent?.takeIf { it.isNotEmpty() })

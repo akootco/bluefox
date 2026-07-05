@@ -4,10 +4,8 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URISyntaxException
 import java.net.URL
 
 object WebUtil {
@@ -23,7 +21,7 @@ object WebUtil {
     fun getConfig(url: URL): Config? {
         return try {
             ConfigFactory.parseURL(url, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        } catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }

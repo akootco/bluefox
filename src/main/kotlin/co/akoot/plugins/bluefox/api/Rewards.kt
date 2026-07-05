@@ -6,6 +6,7 @@ import co.akoot.plugins.bluefox.extensions.touch
 
 object Rewards {
     private val config = FoxConfig(BlueFox.instance.dataFolder.resolve("rewards.conf").touch("{}"))
+
     object LoginStreak {
         val dailyAmount: Double by config default 10.0 from "loginStreak"
         val minimum: Double by config default 35.0 from "streakBonus.minutesPerWeek"

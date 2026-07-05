@@ -7,29 +7,16 @@ import co.akoot.plugins.bluefox.extensions.deathMessage
 import co.akoot.plugins.bluefox.extensions.loginMessages
 import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.Text.Companion.asString
-import co.akoot.plugins.bluefox.util.accent
 import co.akoot.plugins.bluefox.util.parse
-import co.akoot.plugins.bluefox.util.secondary
-import co.akoot.plugins.bluefox.util.sendMessage
-import co.akoot.plugins.bluefox.util.sendText
-import co.akoot.plugins.bluefox.util.text
 import net.kyori.adventure.text.TextReplacementConfig
-import org.bukkit.OfflinePlayer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import java.util.Date
-import kotlin.collections.set
-import kotlin.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
-class BlueFoxListener: Listener {
+class BlueFoxListener : Listener {
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
@@ -55,10 +42,14 @@ class BlueFoxListener: Listener {
         val player = event.player
         player.deathMessage?.let {
             val message = it
-                .replaceText(TextReplacementConfig.builder()
-                    .matchLiteral("%p").replacement(player.displayName()).build())
-                .replaceText(TextReplacementConfig.builder()
-                    .matchLiteral("%k").replacement(event.entity.displayName()).build())
+                .replaceText(
+                    TextReplacementConfig.builder()
+                        .matchLiteral("%p").replacement(player.displayName()).build()
+                )
+                .replaceText(
+                    TextReplacementConfig.builder()
+                        .matchLiteral("%k").replacement(event.entity.displayName()).build()
+                )
             event.deathMessage(message)
             player.deathMessage = null
         }

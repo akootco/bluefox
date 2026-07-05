@@ -24,7 +24,13 @@ class CommandHelp(val text: Text = Text()) {
         return this
     }
 
-    fun usage(part: String, optional: Boolean = false, literal: Boolean = true, list: Boolean = false, final: Boolean = false): CommandHelp {
+    fun usage(
+        part: String,
+        optional: Boolean = false,
+        literal: Boolean = true,
+        list: Boolean = false,
+        final: Boolean = false
+    ): CommandHelp {
         val word = when {
             literal -> part
             optional -> "[$part]"
@@ -32,14 +38,14 @@ class CommandHelp(val text: Text = Text()) {
             else -> "<$part>"
         }
         text += Text(word, ColorUtil.randomColor(1f, 1f).mix(Kolor.QUOTE.raw))
-        if(!final) text += Text.space
+        if (!final) text += Text.space
         return this
     }
 
     fun example(commandLine: String, description: String? = null): CommandHelp {
         val color = ColorUtil.randomColor(1f, 1f).mix(Kolor.QUOTE.raw, 0.75)
         text += Text(commandLine, color.mix(Kolor.QUOTE))
-        if(description != null) text += Text(" - $description", color)
+        if (description != null) text += Text(" - $description", color)
         return this
     }
 }

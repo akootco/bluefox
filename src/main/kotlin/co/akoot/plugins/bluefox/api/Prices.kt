@@ -6,12 +6,14 @@ import co.akoot.plugins.bluefox.extensions.touch
 
 object Prices {
     private val config = FoxConfig(BlueFox.instance.dataFolder.resolve("prices.conf").touch("{}"))
+
     object Spells {
         val tpa: Double by config default 10.0 from "spells"
         val weather: Double by config default 20.0 from "spells"
         val lightning: Double by config default 100.0 from "spells"
         val time: Double by config default 20.0 from "spells"
     }
+
     object Commands {
         val rtp: Double by config default 20.0 from "commands"
         val tp: Double by config default 100.0 from "commands"

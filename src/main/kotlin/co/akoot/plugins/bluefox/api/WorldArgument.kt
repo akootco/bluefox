@@ -13,7 +13,7 @@ import org.bukkit.Bukkit
 import org.bukkit.World
 import java.util.concurrent.CompletableFuture
 
-class WorldArgument: CustomArgumentType.Converted<World, String> {
+class WorldArgument : CustomArgumentType.Converted<World, String> {
     companion object {
         val ERROR_INVALID_WORLD: DynamicCommandExceptionType = DynamicCommandExceptionType {
             MessageComponentSerializer.message().serialize(Component.text("$it is not a world!"))
@@ -32,9 +32,9 @@ class WorldArgument: CustomArgumentType.Converted<World, String> {
         context: CommandContext<S>,
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
-        for(world in Bukkit.getWorlds()) {
+        for (world in Bukkit.getWorlds()) {
             val name = world.name
-            if(name.startsWith(builder.remainingLowerCase)) {
+            if (name.startsWith(builder.remainingLowerCase)) {
                 builder.suggest(name)
             }
         }

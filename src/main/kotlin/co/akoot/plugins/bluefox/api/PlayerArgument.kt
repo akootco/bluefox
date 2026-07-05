@@ -10,14 +10,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import io.papermc.paper.command.brigadier.MessageComponentSerializer
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
-import org.bukkit.World
 import org.bukkit.entity.Player
 import java.util.concurrent.CompletableFuture
-import kotlin.text.startsWith
 
-class PlayerArgument: CustomArgumentType.Converted<Player, String> {
+class PlayerArgument : CustomArgumentType.Converted<Player, String> {
     companion object {
         val ERROR_UNKNOWN_PLAYER: DynamicCommandExceptionType = DynamicCommandExceptionType {
             MessageComponentSerializer.message().serialize(Component.text("$it is not online!"))
@@ -36,9 +32,10 @@ class PlayerArgument: CustomArgumentType.Converted<Player, String> {
         context: CommandContext<S>,
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
-        val playerNames = BlueFox.server.onlinePlayers.map { it.name }.filter { it.startsWith(".") && builder.remainingLowerCase.startsWith(".") || it.startsWith(".") }
-        for(name in playerNames) {
-            if(name.contains(builder.remaining, true)) {
+        val playerNames = BlueFox.server.onlinePlayers.map { it.name }
+            .filter { it.startsWith(".") && builder.remainingLowerCase.startsWith(".") || it.startsWith(".") }
+        for (name in playerNames) {
+            if (name.contains(builder.remaining, true)) {
                 builder.suggest(name)
             }
         }

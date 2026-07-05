@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigValueFactory
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 class FoxConfig(val file: File) {
 
@@ -86,24 +86,25 @@ class FoxConfig(val file: File) {
 
     // Generic function for single values
     private inline fun <reified T> get(path: String, getter: (Config, String) -> T): T? {
-        if(autoload) load()
+        if (autoload) load()
         return runCatching { getter(config, path) }.getOrNull()
     }
 
     // Generic function for list values
     private inline fun <reified T> getList(path: String, getter: (Config, String) -> List<T>): List<T> {
-        if(autoload) load()
+        if (autoload) load()
         return runCatching { getter(config, path) }.getOrDefault(emptyList())
     }
 
     // Getters for Enums
-    fun <E: Enum<E>> getEnum(enumClass: Class<E>, path: String): E? {
-        if(autoload) load()
-        return runCatching { config.getEnum(enumClass, path)}.getOrNull()
+    fun <E : Enum<E>> getEnum(enumClass: Class<E>, path: String): E? {
+        if (autoload) load()
+        return runCatching { config.getEnum(enumClass, path) }.getOrNull()
     }
-    fun <E: Enum<E>> getEnumList(enumClass: Class<E>, path: String): List<E> {
-        if(autoload) load()
-        return runCatching { config.getEnumList(enumClass, path)}.getOrNull() ?: mutableListOf()
+
+    fun <E : Enum<E>> getEnumList(enumClass: Class<E>, path: String): List<E> {
+        if (autoload) load()
+        return runCatching { config.getEnumList(enumClass, path) }.getOrNull() ?: mutableListOf()
     }
 
     // Getters for everything else
@@ -130,7 +131,7 @@ class FoxConfig(val file: File) {
         val coordinates = getDoubleList("$path.xyz")
         val target = getDoubleList("$path.target")
         if (coordinates.size != 3) return null
-        return if(target.size != 2) Location(world, coordinates[0], coordinates[1], coordinates[2])
+        return if (target.size != 2) Location(world, coordinates[0], coordinates[1], coordinates[2])
         else Location(world, coordinates[0], coordinates[1], coordinates[2], target[0].toFloat(), target[1].toFloat())
     }
 
@@ -198,7 +199,7 @@ class FoxConfig(val file: File) {
 
     inline fun <reified T : Any> append(path: String, item: T) {
         FoxConfigAppendToListEvent(this, path, item).fire() ?: return
-        val list = when(T::class) {
+        val list = when (T::class) {
             UUID::class -> getUUIDList(path)
             Long::class -> getLongList(path)
             Int::class -> getIntList(path)
@@ -211,7 +212,7 @@ class FoxConfig(val file: File) {
 
     inline fun <reified T : Any> remove(path: String, item: T) {
         FoxConfigRemoveFromListEvent(this, path, item).fire() ?: return
-        val list = when(T::class) {
+        val list = when (T::class) {
             UUID::class -> getUUIDList(path)
             Long::class -> getLongList(path)
             Int::class -> getIntList(path)
