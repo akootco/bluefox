@@ -20,7 +20,7 @@ class FoxConfig(val file: File) {
         }
     }
 
-    private var config = ConfigFactory.parseFile(file)
+    var config = ConfigFactory.parseFile(file)
     val conf: Config get() = config
     private val options = ConfigRenderOptions.concise().setFormatted(true)
     var autoload = true
@@ -30,7 +30,7 @@ class FoxConfig(val file: File) {
     /**
      * Loads the config file into memory
      */
-    private fun load() {
+    fun load() {
         config = ConfigFactory.parseFile(file)
     }
 
@@ -97,14 +97,14 @@ class FoxConfig(val file: File) {
     }
 
     // Getters for Enums
-    fun <E : Enum<E>> getEnum(enumClass: Class<E>, path: String): E? {
+    inline fun <reified E : Enum<E>> getEnum(path: String): E? {
         if (autoload) load()
-        return runCatching { config.getEnum(enumClass, path) }.getOrNull()
+        return getString(path)?.uppercase()?.runCatching { enumValueOf<E>(this) }?.getOrNull()
     }
 
-    fun <E : Enum<E>> getEnumList(enumClass: Class<E>, path: String): List<E> {
+    inline fun <reified E : Enum<E>> getEnumList(path: String): List<E> {
         if (autoload) load()
-        return runCatching { config.getEnumList(enumClass, path) }.getOrNull() ?: mutableListOf()
+        return getStringList(path).mapNotNull{ it.uppercase().runCatching { enumValueOf<E>(this) }.getOrNull() }
     }
 
     // Getters for everything else
