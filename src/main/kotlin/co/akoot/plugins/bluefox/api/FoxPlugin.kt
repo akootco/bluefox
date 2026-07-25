@@ -1,10 +1,14 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.mojang.brigadier.context.CommandContext
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.advancement.Advancement
+import org.bukkit.command.CommandSender
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
@@ -98,6 +102,8 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         if (!configFile.exists()) {
             if (IOUtil.extractFile(classLoader, conf, configFile.toPath())) {
                 logger.info("Loaded config '$name' from jar")
+            } else {
+                logger.warning("Could not extract config '$name' from jar: ${configFile.path}")
             }
         }
         val config = FoxConfig(configFile)
