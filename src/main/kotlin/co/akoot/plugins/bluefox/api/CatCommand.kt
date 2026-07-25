@@ -39,18 +39,25 @@ abstract class CatCommand(
     val plugin: FoxPlugin,
     val id: String,
     val description: String = "A ${plugin.id} command.",
-    vararg val aliases: String
+    vararg val aliases: String,
+    val onCommand: CatCommand.() -> Unit = {}
 ) : LiteralArgumentBuilder<CommandSourceStack>(id) {
 
-    protected val win = Command.SINGLE_SUCCESS
-    protected val fail = -1
+    init {
+        onCommand()
+    }
+
+    val win = Command.SINGLE_SUCCESS
+    val fail = -1
     open var help: CommandHelp = CommandHelp().description(description)
 
-    protected fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
+    fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
     }
 
-    protected fun getPlayersFromEntities(
+    val CommandContext<CommandSourceStack>.sender: CommandSender get() = source.sender
+
+    fun getPlayersFromEntities(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "entities"
     ): List<Player> {
@@ -58,14 +65,20 @@ abstract class CatCommand(
         return resolver.resolve(ctx.source).filterIsInstance<Player>()
     }
 
-    protected fun getPlayerFromEntities(
+    val CommandContext<CommandSourceStack>.playersFromEntities: List<Player> get() = getPlayersFromEntities(this)
+    fun CommandContext<CommandSourceStack>.playersFromEntities(argName: String): List<Player> = getPlayersFromEntities(this, argName)
+
+    fun getPlayerFromEntities(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "entities"
     ): Player? {
         return getPlayersFromEntities(ctx, argName).firstOrNull()
     }
 
-    protected fun getPlayer(
+    val CommandContext<CommandSourceStack>.playerFromEntities: Player? get() = getPlayerFromEntities(this)
+    fun CommandContext<CommandSourceStack>.playerFromEntities(argName: String): Player? = getPlayerFromEntities(this, argName)
+
+    fun getPlayer(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): Player {
@@ -73,14 +86,20 @@ abstract class CatCommand(
         return player ?: getPlayerSelector(ctx, argName)
     }
 
-    protected fun getPlayerSelector(
+    val CommandContext<CommandSourceStack>.player: Player get() = getPlayer(this)
+    fun CommandContext<CommandSourceStack>.player(argName: String): Player = getPlayer(this, argName)
+
+    fun getPlayerSelector(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): Player {
         return getPlayers(ctx, argName).first()
     }
 
-    protected fun getPlayers(
+    val CommandContext<CommandSourceStack>.playerFromSelector: Player get() = getPlayerSelector(this)
+    fun CommandContext<CommandSourceStack>.playerFromSelector(argName: String): Player = getPlayerSelector(this, argName)
+
+    fun getPlayers(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "players"
     ): List<Player> {
@@ -88,7 +107,10 @@ abstract class CatCommand(
         return resolver.resolve(ctx.source)
     }
 
-    protected fun getEntities(
+    val CommandContext<CommandSourceStack>.players: List<Player> get() = getPlayers(this)
+    fun CommandContext<CommandSourceStack>.players(argName: String): List<Player> = getPlayers(this, argName)
+
+    fun getEntities(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "entities"
     ): List<Entity> {
@@ -96,21 +118,30 @@ abstract class CatCommand(
         return resolver.resolve(ctx.source)
     }
 
-    protected fun getEntity(
+    val CommandContext<CommandSourceStack>.entities: List<Entity> get() = getEntities(this)
+    fun CommandContext<CommandSourceStack>.entities(argName: String) = getEntities(this, argName)
+
+    fun getEntity(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "entity"
     ): Entity {
         return getEntities(ctx, argName).first()
     }
 
-    protected fun getWorld(
+    val CommandContext<CommandSourceStack>.entity: Entity get() = getEntity(this)
+    fun CommandContext<CommandSourceStack>.entity(argName: String) = getEntity(this, argName)
+
+    fun getWorld(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "world"
     ): World {
         return ctx.getArgument(argName, World::class.java)
     }
 
-    protected fun getBlockPosition(
+    val CommandContext<CommandSourceStack>.world: World get() = getWorld(this)
+    fun CommandContext<CommandSourceStack>.world(argName: String) = getWorld(this, argName)
+
+    fun getBlockPosition(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "x y z"
     ): BlockPosition {
@@ -118,7 +149,10 @@ abstract class CatCommand(
         return resolver.resolve(ctx.source)
     }
 
-    protected fun getPosition(
+    val CommandContext<CommandSourceStack>.blockPos: BlockPosition get() = getBlockPosition(this)
+    fun CommandContext<CommandSourceStack>.blockPos(argName: String) = getBlockPosition(this, argName)
+
+    fun getPosition(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "x y z"
     ): FinePosition {
@@ -126,7 +160,10 @@ abstract class CatCommand(
         return resolver.resolve(ctx.source)
     }
 
-    protected fun getLocation(
+    val CommandContext<CommandSourceStack>.position: FinePosition get() = getPosition(this)
+    fun CommandContext<CommandSourceStack>.position(argName: String) = getPosition(this, argName)
+
+    fun getLocation(
         ctx: CommandContext<CommandSourceStack>,
         positionArgName: String = "x y z",
         worldArgName: String = "world"
@@ -136,14 +173,17 @@ abstract class CatCommand(
         return Location(world, position.x(), position.y(), position.z())
     }
 
-    protected fun subcommand(
+    val CommandContext<CommandSourceStack>.location: Location get() = getLocation(this)
+    fun CommandContext<CommandSourceStack>.location(world: World) = position.let { Location(world, it.x(), it.y(), it.z()) }
+
+    fun subcommand(
         name: String,
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): LiteralArgumentBuilder<CommandSourceStack> {
         return Commands.literal(name).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun boolean(
+    fun boolean(
         argName: String = "true or false",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Boolean> {
@@ -151,14 +191,17 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getBoolean(
+    fun getBoolean(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "true or false"
     ): Boolean {
         return BoolArgumentType.getBool(ctx, argName)
     }
 
-    protected fun word(
+    val CommandContext<CommandSourceStack>.boolean: Boolean get() = getBoolean(this)
+    fun CommandContext<CommandSourceStack>.boolean(argName: String) = getBoolean(this, argName)
+
+    fun word(
         argName: String,
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
@@ -171,7 +214,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun string(
+    fun string(
         argName: String,
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
@@ -184,7 +227,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun greedyString(
+    fun greedyString(
         argName: String,
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
@@ -197,11 +240,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getString(ctx: CommandContext<CommandSourceStack>, argName: String): String {
+    fun getString(ctx: CommandContext<CommandSourceStack>, argName: String): String {
         return StringArgumentType.getString(ctx, argName)
     }
 
-    protected fun int(
+    val CommandContext<CommandSourceStack>.string: String get() = getString(this, "string")
+    fun CommandContext<CommandSourceStack>.string(argName: String) = getString(this, argName)
+
+    fun int(
         argName: String = "value",
         min: Int? = null,
         max: Int? = null,
@@ -213,11 +259,14 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Int {
+    fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Int {
         return IntegerArgumentType.getInteger(ctx, argName)
     }
 
-    protected fun float(
+    val CommandContext<CommandSourceStack>.int: Int get() = getInt(this)
+    fun CommandContext<CommandSourceStack>.int(argName: String) = getInt(this, argName)
+
+    fun float(
         argName: String = "value",
         min: Float? = null,
         max: Float? = null,
@@ -229,11 +278,14 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getFloat(ctx: CommandContext<CommandSourceStack>, argName: String): Float {
+    fun getFloat(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Float {
         return FloatArgumentType.getFloat(ctx, argName)
     }
 
-    protected fun double(
+    val CommandContext<CommandSourceStack>.float: Float get() = getFloat(this)
+    fun CommandContext<CommandSourceStack>.float(argName: String) = getFloat(this, argName)
+
+    fun double(
         argName: String = "value",
         min: Double? = null,
         max: Double? = null,
@@ -245,11 +297,14 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Double {
+    fun getDouble(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Double {
         return DoubleArgumentType.getDouble(ctx, argName)
     }
 
-    protected fun offlinePlayer(
+    val CommandContext<CommandSourceStack>.double: Double get() = getDouble(this)
+    fun CommandContext<CommandSourceStack>.double(argName: String) = getDouble(this, argName)
+
+    fun offlinePlayer(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, OfflinePlayer> {
@@ -257,7 +312,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun sound(
+    fun sound(
         argName: String = "sound",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Sound> {
@@ -265,11 +320,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getSound(ctx: CommandContext<CommandSourceStack>, argName: String = "sound"): Sound {
+    fun getSound(ctx: CommandContext<CommandSourceStack>, argName: String = "sound"): Sound {
         return ctx.getArgument(argName, Sound::class.java)
     }
 
-    protected fun item(
+    val CommandContext<CommandSourceStack>.sound: Sound get() = getSound(this)
+    fun CommandContext<CommandSourceStack>.sound(argName: String) = getSound(this, argName)
+
+    fun item(
         argName: String = "item",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, ItemType> {
@@ -277,11 +335,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getItem(ctx: CommandContext<CommandSourceStack>, argName: String = "item"): ItemType {
+    fun getItem(ctx: CommandContext<CommandSourceStack>, argName: String = "item"): ItemType {
         return ctx.getArgument(argName, ItemType::class.java)
     }
 
-    protected fun block(
+    val CommandContext<CommandSourceStack>.item: ItemType get() = getItem(this)
+    fun CommandContext<CommandSourceStack>.item(argName: String) = getItem(this, argName)
+
+    fun block(
         argName: String = "block",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockType> {
@@ -289,11 +350,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getBlock(ctx: CommandContext<CommandSourceStack>, argName: String = "block"): BlockType {
+    fun getBlock(ctx: CommandContext<CommandSourceStack>, argName: String = "block"): BlockType {
         return ctx.getArgument(argName, BlockType::class.java)
     }
 
-    protected fun biome(
+    val CommandContext<CommandSourceStack>.block: BlockType get() = getBlock(this)
+    fun CommandContext<CommandSourceStack>.block(argName: String) = getBlock(this, argName)
+
+    fun biome(
         argName: String = "biome",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Biome> {
@@ -301,11 +365,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getBiome(ctx: CommandContext<CommandSourceStack>, argName: String = "biome"): Biome {
+    fun getBiome(ctx: CommandContext<CommandSourceStack>, argName: String = "biome"): Biome {
         return ctx.getArgument(argName, Biome::class.java)
     }
 
-    protected fun potion(
+    val CommandContext<CommandSourceStack>.biome: Biome get() = getBiome(this)
+    fun CommandContext<CommandSourceStack>.biome(argName: String) = getBiome(this, argName)
+
+    fun potion(
         argName: String = "potion",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, PotionType> {
@@ -313,11 +380,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getPotion(ctx: CommandContext<CommandSourceStack>, argName: String = "potion"): PotionType {
+    fun getPotion(ctx: CommandContext<CommandSourceStack>, argName: String = "potion"): PotionType {
         return ctx.getArgument(argName, PotionType::class.java)
     }
 
-    protected fun enchantment(
+    val CommandContext<CommandSourceStack>.potion: PotionType get() = getPotion(this)
+    fun CommandContext<CommandSourceStack>.potion(argName: String) = getPotion(this, argName)
+
+    fun enchantment(
         argName: String = "enchantment",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Enchantment> {
@@ -325,14 +395,17 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getEnchantment(
+    fun getEnchantment(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "enchantment"
     ): Enchantment {
         return ctx.getArgument(argName, Enchantment::class.java)
     }
 
-    protected fun getOfflinePlayer(
+    val CommandContext<CommandSourceStack>.enchantment: Enchantment get() = getEnchantment(this)
+    fun CommandContext<CommandSourceStack>.enchantment(argName: String) = getEnchantment(this, argName)
+
+    fun getOfflinePlayer(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): OfflinePlayer? {
@@ -340,7 +413,10 @@ abstract class CatCommand(
         return player
     }
 
-    protected fun player(
+    val CommandContext<CommandSourceStack>.offlinePlayer: OfflinePlayer? get() = getOfflinePlayer(this)
+    fun CommandContext<CommandSourceStack>.offlinePlayer(argName: String) = getOfflinePlayer(this, argName)
+
+    fun player(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, Player> {
@@ -348,7 +424,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun players(
+    fun players(
         argName: String = "players",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, PlayerSelectorArgumentResolver> {
@@ -356,7 +432,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun entity(
+    fun entity(
         argName: String = "entity",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, EntitySelectorArgumentResolver> {
@@ -364,7 +440,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun entities(
+    fun entities(
         argName: String = "entities",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, EntitySelectorArgumentResolver> {
@@ -372,7 +448,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun worldType(
+    fun worldType(
         argName: String = "world type",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, World> {
@@ -380,14 +456,14 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun world(
+    fun world(
         argName: String = "world",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, World> {
         return Commands.argument(argName, WorldArgument()).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun blockPosition(
+    fun blockPosition(
         argName: String = "x y z",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockPositionResolver> {
@@ -395,7 +471,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun position(
+    fun position(
         argName: String = "x y z",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, FinePositionResolver> {
@@ -405,7 +481,7 @@ abstract class CatCommand(
 
     // extras
 
-    protected fun blockState(
+    fun blockState(
         argName: String = "block state",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockState> {
@@ -413,7 +489,7 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun material(
+    fun material(
         argName: String = "material",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, BlockState> {
@@ -421,21 +497,24 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getBlockState(
+    fun getBlockState(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "block state"
     ): BlockState {
         return ctx.getArgument(argName, BlockState::class.java)
     }
 
-    protected fun getMaterial(
+    fun getMaterial(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "material"
     ): Material {
         return getBlockState(ctx, argName).type
     }
 
-    protected fun timeZone(
+    val CommandContext<CommandSourceStack>.material: Material get() = getMaterial(this)
+    fun CommandContext<CommandSourceStack>.material(argName: String) = getMaterial(this, argName)
+
+    fun timeZone(
         argName: String = "time zone",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, ZoneId> {
@@ -443,28 +522,31 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getZoneId(
+    fun getZoneId(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "time zone"
     ): ZoneId {
         return ctx.getArgument(argName, ZoneId::class.java)
     }
 
-    protected fun success(ctx: CommandContext<CommandSourceStack>, message: Text): Boolean {
+    val CommandContext<CommandSourceStack>.timeZone: ZoneId get() = getZoneId(this)
+    fun CommandContext<CommandSourceStack>.timeZone(argName: String) = getZoneId(this, argName)
+
+    fun success(ctx: CommandContext<CommandSourceStack>, message: Text): Boolean {
         message.send(getSender(ctx))
         return true
     }
 
-    protected fun fail(ctx: CommandContext<CommandSourceStack>, message: Text): Boolean {
+    fun fail(ctx: CommandContext<CommandSourceStack>, message: Text): Boolean {
         message.send(getSender(ctx))
         return false
     }
 
-    protected fun noargs(executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }) {
+    fun noargs(executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }) {
         executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
-    protected fun getPlayerSender(ctx: CommandContext<CommandSourceStack>, sendError: Boolean = true): Player? {
+    fun getPlayerSender(ctx: CommandContext<CommandSourceStack>, sendError: Boolean = true): Player? {
         val sender = getSender(ctx)
         if (sendError && sender !is Player) {
             sender.sendMessage("You must be a player to run this command.")
@@ -472,7 +554,9 @@ abstract class CatCommand(
         return sender as? Player
     }
 
-    protected fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
+    val CommandContext<CommandSourceStack>.playerSender: Player? get() = getPlayerSender(this)
+
+    fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
         if (sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
@@ -480,27 +564,29 @@ abstract class CatCommand(
         return null
     }
 
-    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<String>) {
+    fun CommandContext<CommandSourceStack>.permissionCheck(node: String? = null) = permissionCheck(this, node)
+
+    fun suggest(builder: SuggestionsBuilder, suggestions: List<String>) {
         suggestions.stream()
             .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
             .forEach(builder::suggest)
     }
 
     @JvmName("suggestInt")
-    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Int>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: List<Int>) {
         suggestions.stream()
             .forEach(builder::suggest)
     }
 
     @JvmName("suggestText")
-    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
         suggestions.stream()
             .filter { entry -> entry.first.startsWith(builder.remainingLowerCase) }
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
     @JvmName("suggestComponent")
-    protected fun suggest(builder: SuggestionsBuilder, suggestions: Map<String, Component>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: Map<String, Component>) {
         suggestions.filter { entry -> entry.key.startsWith(builder.remainingLowerCase) }
             .forEach { (string, component) ->
                 builder.suggest(string, MessageComponentSerializer.message().serialize(component))
@@ -508,41 +594,41 @@ abstract class CatCommand(
     }
 
     @JvmName("suggestIntText")
-    protected fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
         suggestions.stream()
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
-    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<String>) {
+    fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<String>) {
         suggestions.stream()
             .filter { entry -> entry.contains(builder.remaining, true) }
             .forEach(builder::suggest)
     }
 
     @JvmName("suggestIntRaw")
-    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Int>) {
+    fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Int>) {
         suggestions.stream()
             .forEach(builder::suggest)
     }
 
     @JvmName("suggestTextRaw")
-    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
+    fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<String, Text>>) {
         suggestions.stream()
             .filter { entry -> entry.first.contains(builder.remaining, true) }
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
     @JvmName("suggestIntTextRaw")
-    protected fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
+    fun suggestRaw(builder: SuggestionsBuilder, suggestions: List<Pair<Int, Text>>) {
         suggestions.stream()
             .forEach { builder.suggest(it.first, MessageComponentSerializer.message().serialize(it.second.component)) }
     }
 
-    protected fun then(something: (LiteralArgumentBuilder<CommandSourceStack>) -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
+    fun then(something: (LiteralArgumentBuilder<CommandSourceStack>) -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
         return then(something(this))
     }
 
-    protected infix fun ArgumentBuilder<CommandSourceStack, *>.then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
+    infix fun ArgumentBuilder<CommandSourceStack, *>.then(something: () -> ArgumentBuilder<CommandSourceStack, *>): ArgumentBuilder<CommandSourceStack, *> {
         return then(something())
     }
 }
