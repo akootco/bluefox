@@ -51,6 +51,7 @@ abstract class CatCommand(
     val fail = -1
     open var help: CommandHelp = CommandHelp().description(description)
 
+    @JvmName("leGetSender")
     fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
     }
@@ -183,6 +184,11 @@ abstract class CatCommand(
         return Commands.literal(name).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun SubCommand(
+        name: String,
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { subcommand(name, executes) }
+
     fun boolean(
         argName: String = "true or false",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
@@ -190,6 +196,11 @@ abstract class CatCommand(
         return Commands.argument(argName, BoolArgumentType.bool())
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
+
+    fun Boolean(
+        argName: String = "true or false",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { boolean(argName, executes)}
 
     fun getBoolean(
         ctx: CommandContext<CommandSourceStack>,
@@ -227,6 +238,12 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun String(
+        argName: String,
+        suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { string(argName, suggestions, executes) }
+
     fun greedyString(
         argName: String,
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
@@ -239,6 +256,12 @@ abstract class CatCommand(
             }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
+
+    fun GreedyString(
+        argName: String,
+        suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { greedyString(argName, suggestions, executes) }
 
     fun getString(ctx: CommandContext<CommandSourceStack>, argName: String): String {
         return StringArgumentType.getString(ctx, argName)
@@ -259,6 +282,13 @@ abstract class CatCommand(
         return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun Int(
+        argName: String = "value",
+        min: Int? = null,
+        max: Int? = null,
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { int(argName, min, max, executes) }
+
     fun getInt(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Int {
         return IntegerArgumentType.getInteger(ctx, argName)
     }
@@ -277,6 +307,13 @@ abstract class CatCommand(
         else FloatArgumentType.floatArg()
         return Commands.argument(argName, type).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
+
+    fun Float(
+        argName: String = "value",
+        min: Float? = null,
+        max: Float? = null,
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ) = then { float(argName, min, max, executes) }
 
     fun getFloat(ctx: CommandContext<CommandSourceStack>, argName: String = "value"): Float {
         return FloatArgumentType.getFloat(ctx, argName)
@@ -546,6 +583,8 @@ abstract class CatCommand(
         executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun NoArgs(executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }) = noargs(executes)
+
     fun getPlayerSender(ctx: CommandContext<CommandSourceStack>, sendError: Boolean = true): Player? {
         val sender = getSender(ctx)
         if (sendError && sender !is Player) {
@@ -556,6 +595,7 @@ abstract class CatCommand(
 
     val CommandContext<CommandSourceStack>.playerSender: Player? get() = getPlayerSender(this)
 
+    @JvmName("lePermissionCheck")
     fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
