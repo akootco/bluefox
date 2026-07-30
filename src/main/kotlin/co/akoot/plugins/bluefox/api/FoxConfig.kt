@@ -3,6 +3,7 @@ package co.akoot.plugins.bluefox.api
 import co.akoot.plugins.bluefox.api.events.FoxConfigAppendToListEvent
 import co.akoot.plugins.bluefox.api.events.FoxConfigRemoveFromListEvent
 import co.akoot.plugins.bluefox.api.events.FoxConfigSetEvent
+import co.akoot.plugins.bluefox.util.sync
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
@@ -73,7 +74,7 @@ class FoxConfig(val file: File) {
     }
 
     fun set(path: String, value: Any?) {
-        FoxConfigSetEvent(this, path, value).fire() ?: return
+        sync { FoxConfigSetEvent(this, path, value).fire() }
         config = config.withValue(path, ConfigValueFactory.fromAnyRef(value))
         if (autosave) save()
     }
