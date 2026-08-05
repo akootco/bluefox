@@ -3,9 +3,7 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.extensions.withDisplayName
-import co.akoot.plugins.bluefox.util.Text.Companion.asString
 import co.akoot.plugins.bluefox.util.error
-import co.akoot.plugins.bluefox.util.parse
 import co.akoot.plugins.bluefox.util.text
 import co.akoot.plugins.bluefox.util.width
 import io.papermc.paper.dialog.Dialog
@@ -31,6 +29,7 @@ fun dialog(block: DialogBuilder.() -> Unit): Dialog {
 }
 
 data class Pixels(val value: Int)
+
 val Int.px: Pixels get() = Pixels(this)
 
 class DialogBuilder {
@@ -45,6 +44,8 @@ class DialogBuilder {
     private var columns: Int = 3
 
     private var defaultPadding: Pixels = 12.px
+    private var defaultIconWidth: Int = 16
+    private var defaultIconHeight: Int = 16
 
     fun title(title: Component): DialogBuilder {
         this.title = title
@@ -61,21 +62,33 @@ class DialogBuilder {
         return this
     }
 
-    fun message(width: Int = 600, component: Component): DialogBuilder {
+    fun defaultIconWidth(width: Int): DialogBuilder {
+        this.defaultIconWidth = width
+        return this
+    }
+
+    fun defaultIconHeight(height: Int): DialogBuilder {
+        this.defaultIconHeight = height
+        return this
+    }
+
+    fun message(width: Int, component: Component): DialogBuilder {
         bodies.add(DialogBody.plainMessage(component, width.coerceIn(1, 1024)))
         return this
     }
 
-    fun message(width: Int = 600, text: String): DialogBuilder {
+    fun message(width: Int, text: String): DialogBuilder {
         message(width, text(text))
         return this
     }
 
     @JvmName("componentMessageWithPadding")
-    fun message(component: Component, padding: Pixels = defaultPadding): DialogBuilder = message(component.width(padding.value), component)
+    fun message(component: Component, padding: Pixels = defaultPadding): DialogBuilder =
+        message(component.width(padding.value), component)
 
     @JvmName("textMessageWithPadding")
-    fun message(text: String, padding: Pixels = defaultPadding): DialogBuilder = message(text.width(padding.value), text)
+    fun message(text: String, padding: Pixels = defaultPadding): DialogBuilder =
+        message(text.width(padding.value), text)
 
     fun externalTitle(title: Component): DialogBuilder {
         externalTitle = title
@@ -98,14 +111,15 @@ class DialogBuilder {
     }
 
     fun slider(
-        width: Int = 200,
-        label: String,
+        width: Int,
+        key: String,
+        label: Component,
         range: ClosedFloatingPointRange<Float>,
         initial: Float = 1f,
         step: Float = 1f,
     ): DialogBuilder {
         inputs.add(
-            DialogInput.numberRange(label.lowercase(), text(label), range.start, range.endInclusive)
+            DialogInput.numberRange(key, label, range.start, range.endInclusive)
                 .initial(initial)
                 .step(step.coerceAtLeast(0f))
                 .width(width.coerceIn(1, 1024))
@@ -116,30 +130,31 @@ class DialogBuilder {
 
     @JvmName("sliderWithPadding")
     fun slider(
-        label: String,
+        key: String,
+        label: Component,
         range: ClosedFloatingPointRange<Float>,
         initial: Float = 1f,
         step: Float = 1f,
-        padding: Pixels,
+        padding: Pixels = defaultPadding,
     ): DialogBuilder = slider(
-        label.width(padding.value), label, range, initial, step
+        label.width(padding.value) + "${range.endInclusive}".width(padding.value), key, label, range, initial, step
     )
 
     // why ts not a drop down??
     fun select(
         key: String,
         label: Component,
-        options: List<String>,
+        options: Map<String, Component>,
         initial: String? = null
     ): DialogBuilder {
         inputs.add(
             DialogInput.singleOption(
                 key,
                 label,
-                options.map { option ->
+                options.map { (option, display) ->
                     SingleOptionDialogInput.OptionEntry.create(
                         option,
-                        option.parse(),
+                        display,
                         option == initial
                     )
                 }
@@ -147,6 +162,15 @@ class DialogBuilder {
         )
         return this
     }
+
+    fun select(
+        key: String,
+        label: Component,
+        options: List<String>,
+        initial: String? = null,
+    ): DialogBuilder = select(
+        key, label, options.associateWith { it.text }, initial
+    )
 
     // idk what ts means by value in template, oh well
     fun toggle(
@@ -161,7 +185,7 @@ class DialogBuilder {
     }
 
     fun textInput(
-        width: Int = 300,
+        width: Int,
         key: String,
         label: Component,
         initial: String = "",
@@ -197,8 +221,8 @@ class DialogBuilder {
     )
 
     fun icon(
-        width: Int = 16,
-        height: Int = 16,
+        width: Int,
+        height: Int,
         item: ItemStack?,
         description: Component? = null,
         showDecorations: Boolean = true,
@@ -221,7 +245,15 @@ class DialogBuilder {
         showTooltip: Boolean = true,
         errorItem: ItemStack = ItemStack(Material.BARRIER)
             .withDisplayName(error("oops, this item doesn't exist!"))
-    ): DialogBuilder  = icon(16 + horizontalPadding.value, 16 + verticalPadding.value, item, description, showDecorations, showTooltip, errorItem)
+    ): DialogBuilder = icon(
+        defaultIconWidth + horizontalPadding.value,
+        defaultIconHeight + verticalPadding.value,
+        item,
+        description,
+        showDecorations,
+        showTooltip,
+        errorItem
+    )
 
     @JvmName("iconWithPadding")
     fun icon(
@@ -232,7 +264,8 @@ class DialogBuilder {
         showTooltip: Boolean = true,
         errorItem: ItemStack = ItemStack(Material.BARRIER)
             .withDisplayName(error("oops, this item doesn't exist!"))
-    ): DialogBuilder  = icon(16 + padding.value, 16 + padding.value, item, description, showDecorations, showTooltip, errorItem)
+    ): DialogBuilder =
+        icon(defaultIconWidth + padding.value, defaultIconHeight + padding.value, item, description, showDecorations, showTooltip, errorItem)
 
     fun item(material: Material, displayName: Component? = null): ItemStack {
         return ItemStack(material).apply {
@@ -242,7 +275,7 @@ class DialogBuilder {
 
     // apparently this is the method to avoid using the CustomClickEvent
     fun button(
-        width: Int = 100,
+        width: Int,
         label: Component,
         action: (Player, DialogResponseView) -> Unit
     ): DialogBuilder {
@@ -271,7 +304,9 @@ class DialogBuilder {
         action: (Player, DialogResponseView) -> Unit
     ): DialogBuilder = button(label.width(padding.value), label, action)
 
-    fun cancelButton(label: Component = error("Cancel"), padding: Pixels = defaultPadding, action: (Player, DialogResponseView) -> Unit) = button(label, padding) { _, _ -> }
+    fun cancelButton(label: Component = error("Cancel"), padding: Pixels = defaultPadding) =
+        button(label, padding) { _, _ -> }
+
     fun cancelButton(label: Component = error("Cancel"), width: Int) = button(width, label) { _, _ -> }
     fun cancelButton(label: String, padding: Pixels = defaultPadding) = button(error(label), padding) { _, _ -> }
     fun cancelButton(label: String, width: Int) = button(width, error(label)) { _, _ -> }
@@ -279,14 +314,17 @@ class DialogBuilder {
     fun build(): Dialog {
         return Dialog.create { builder ->
             builder.empty()
-                .base(DialogBase.create(title,
-                    externalTitle,
-                    closeWithEscape,
-                    false,
-                    afterAction,
-                    bodies,
-                    inputs
-                )).apply {
+                .base(
+                    DialogBase.create(
+                        title,
+                        externalTitle,
+                        closeWithEscape,
+                        false,
+                        afterAction,
+                        bodies,
+                        inputs
+                    )
+                ).apply {
                     if (buttons.isNotEmpty()) {
                         type(DialogType.multiAction(buttons).columns(columns).build())
                     } else {
