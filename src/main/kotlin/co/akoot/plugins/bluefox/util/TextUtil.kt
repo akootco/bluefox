@@ -1,10 +1,10 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.extensions.executeName
 import co.akoot.plugins.bluefox.extensions.mix
 import co.akoot.plugins.bluefox.extensions.username
 import co.akoot.plugins.bluefox.util.ColorUtil.randomColor
+import co.akoot.plugins.bluefox.util.Text.Companion.asString
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
@@ -151,6 +151,7 @@ fun MutableList<Component>.join(
 }
 
 fun MutableList<Component>.join(separator: String = " "): Component = this.join(Component.text(separator))
+val MutableList<Component>.zip: Component get() = join("")
 
 fun CommandSender.sendMessage(
     components: MutableList<Component>,
@@ -623,3 +624,71 @@ infix fun String.or(string: String): String = ifEmpty { string }
 fun String.ifNotEmpty(block: () -> String): String = if (isEmpty()) this else block()
 fun String.ifNotEmpty(string: String): String = if (isEmpty()) this else string
 infix fun String.prefix(prefix: String): String = ifNotEmpty("$prefix$this")
+
+val String.text: Component get() = text(this)
+val String.primary: Component get() = primary(this)
+val String.secondary: Component get() = secondary(this)
+val String.tertiary: Component get() = tertiary(this)
+val String.error: Component get() = error(this)
+val String.quote: Component get() = quote(this)
+val String.warning: Component get() = warning(this)
+
+// Stolen from PaperMC Discord - https://discord.com/channels/289587909051416579/555462289851940864/1318351329839681567
+val String.width: Int get() {
+    val parts = replace("(&[\\da-fmnlko])", "$1§§").split("§§")
+
+    //The width of this str in pixels.
+    var pixel = 0f
+
+    //Iterating over the parts of the str.
+    for (part in parts) {
+        var part = part
+        var modifier = 0
+        if (part.startsWith("&l")) modifier = 2
+
+        part = stripColor(part)
+        //Iterating over the chars of word i - 1.
+        for (c in part.toCharArray()) {
+            pixel += when (c) {
+                'i', '!', '.', ',', ':', ';', '|' -> {
+                    4.0f + modifier
+                }
+                'l', '\'', '`' -> {
+                    6.0f + modifier
+                }
+                ' ', 'I', 't' -> {
+                    8.0f + modifier
+                }
+                'f', 'k', '"', '(', ')', '{', '}', '[', ']', '*', '<', '>' -> {
+                    10.0f + modifier
+                }
+                '~', '@' -> {
+                    14.0f + modifier
+                }
+                '\\', '/' -> {
+                    12.25f + modifier
+                }
+                else -> {
+                    12.0f + modifier
+                }
+            }
+        }
+    }
+
+    return (pixel / 2.0).toInt()
+}
+
+fun String.width(padding: Int = 10): Int = width + padding
+
+val Component.width: Int get() = asString().width
+
+fun Component.width(padding: Int = 10): Int = width + padding
+
+@JvmName("randString")
+fun rand(vararg values: String) = values.random()
+@JvmName("randComponent")
+fun rand(vararg values: Component) = values.random()
+@JvmName("randStringPair")
+fun rand(vararg values: Pair<String, String>) = values.random()
+@JvmName("randComponentPair")
+fun rand(vararg values: Pair<Component, Component>) = values.random()
