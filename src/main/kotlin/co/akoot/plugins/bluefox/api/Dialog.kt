@@ -3,7 +3,9 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.extensions.withDisplayName
+import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.error
+import co.akoot.plugins.bluefox.util.plus
 import co.akoot.plugins.bluefox.util.text
 import co.akoot.plugins.bluefox.util.width
 import io.papermc.paper.dialog.Dialog
@@ -172,6 +174,22 @@ class DialogBuilder {
         key, label, options.associateWith { it.text }, initial
     )
 
+    fun booleanSelect(
+        key: String,
+        label: Component,
+        initial: Boolean = false,
+        trueLabel: String = "Enabled",
+        falseLabel: String = "Disabled",
+    ): DialogBuilder = select(
+        key,
+        label,
+        mapOf(
+            "true" to (Color.May + trueLabel),
+            "false" to falseLabel.error
+        ),
+        initial.toString()
+    )
+
     // idk what ts means by value in template, oh well
     fun toggle(
         key: String,
@@ -325,7 +343,7 @@ class DialogBuilder {
                         inputs
                     )
                 ).apply {
-                    if (buttons.isNotEmpty()) {
+                    if (buttons.isNotEmpty() || inputs.isNotEmpty()) {
                         type(DialogType.multiAction(buttons).columns(columns).build())
                     } else {
                         type(DialogType.notice())
