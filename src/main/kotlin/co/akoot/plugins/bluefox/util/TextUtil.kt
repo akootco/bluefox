@@ -247,33 +247,17 @@ fun clickable(
     return clickable(string, color, underline, ClickEvent.callback { onClick(it) })
 }
 
-fun clickable(
-    string: String,
-    color: TextColor = Color.Tertiary + Color.Month,
-    underline: Boolean = true,
-    clickEvent: ClickEvent
-): Component {
+// 26.2
+fun clickable(string: String, color: TextColor = Color.Tertiary + Color.Month, underline: Boolean = true, clickEvent: ClickEvent<*>): Component {
     return (color + string)
         .underline(underline)
         .clickEvent(clickEvent)
 }
 
-fun execute(command: String): ClickEvent = ClickEvent.runCommand(command)
-fun suggest(command: String): ClickEvent = ClickEvent.suggestCommand(command)
-fun open(url: String): ClickEvent = ClickEvent.openUrl(url)
-fun copy(text: String): ClickEvent = ClickEvent.copyToClipboard(text)
-
-// 26.2
-//fun clickable(string: String, color: TextColor = Color.Tertiary + Color.Month, underline: Boolean = true, clickEvent: ClickEvent<*>): Component {
-//    return (color + string)
-//        .underline(underline)
-//        .clickEvent(clickEvent)
-//}
-//
-//fun execute(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.runCommand(command)
-//fun suggest(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.suggestCommand(command)
-//fun open(url: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.openUrl(url)
-//fun copy(text: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.copyToClipboard(text)
+fun execute(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.runCommand(command)
+fun suggest(command: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.suggestCommand(command)
+fun open(url: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.openUrl(url)
+fun copy(text: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.copyToClipboard(text)
 
 private val df = DecimalFormat("#.################")
 
