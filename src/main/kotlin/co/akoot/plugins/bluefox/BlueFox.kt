@@ -42,6 +42,7 @@ class BlueFox : FoxPlugin("bluefox") {
         val geyser: GeyserApiBase? get() = instance.getGeyser()
         val co: CoreProtectAPI? get() = instance.getCoreProtect()
 
+        val consoleId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
         var cachedOfflinePlayerNames = mutableSetOf<String>()
         val profiles = mutableMapOf<UUID, Profile>()

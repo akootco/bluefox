@@ -11,6 +11,7 @@ import org.bukkit.GameMode
 import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
 import org.bukkit.Statistic
+import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.io.File
@@ -329,3 +330,5 @@ fun OfflinePlayer.removeLoginMessage(message: String) {
 val OfflinePlayer.loginMessages: List<String> get() = settings.getStringList("loginMessages")
 
 fun OfflinePlayer.clearLoginMessages() = settings.set("loginMessages", null)
+
+fun OfflinePlayer.owns(block: Block): Boolean = block.isOwner(this)

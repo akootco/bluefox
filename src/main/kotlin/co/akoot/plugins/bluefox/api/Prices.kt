@@ -23,5 +23,6 @@ object Prices {
         val setWarp: Double by config default 1000.0 from "commands"
         val setHome: Double by config default 10.0 from "commands"
         val back: Double by config default 10.0 from "commands"
+        val cmd: Double by config default 20.0 from "commands"
     }
 }

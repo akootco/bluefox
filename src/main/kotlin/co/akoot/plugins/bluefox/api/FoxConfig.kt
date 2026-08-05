@@ -73,9 +73,13 @@ class FoxConfig(val file: File) {
         block()
     }
 
-    fun set(path: String, value: Any?) {
+    fun set(path: String, value: Any?, forceNull: Boolean = false) {
         sync { FoxConfigSetEvent(this, path, value).fire() }
-        config = config.withValue(path, ConfigValueFactory.fromAnyRef(value))
+        config = if(!forceNull && value == null) {
+            config.withoutPath(path)
+        } else {
+            config.withValue(path, ConfigValueFactory.fromAnyRef(value))
+        }
         if (autosave) save()
     }
 

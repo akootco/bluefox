@@ -599,10 +599,12 @@ abstract class CatCommand(
     fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
         val sender = getSender(ctx)
         val finalNode = node?.let { ".$it" } ?: ""
-        if (sender.hasPermission("${plugin.id}.command.$id$finalNode")) return true
+        if (sender.hasPermission(permissionNode(finalNode))) return true
         sender.sendWarning("You do not have permission to run ", accent("/${ctx.input}"))
         return null
     }
+
+    fun permissionNode(node: String): String = "${plugin.id}.command.$id$node"
 
     fun CommandContext<CommandSourceStack>.permissionCheck(node: String? = null) = permissionCheck(this, node)
 
