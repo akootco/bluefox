@@ -19,7 +19,7 @@ object Market {
         mutableMapOf()
 
     fun BigDecimal.round(decimals: Int = 9): BigDecimal {
-        return this.setScale(decimals, RoundingMode.HALF_UP)
+        return this.setScale(decimals, RoundingMode.HALF_UP).stripTrailingZeros()
     }
 
     fun getCoin(name: String): Coin? {

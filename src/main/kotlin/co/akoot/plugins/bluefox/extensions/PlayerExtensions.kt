@@ -332,3 +332,4 @@ val OfflinePlayer.loginMessages: List<String> get() = settings.getStringList("lo
 fun OfflinePlayer.clearLoginMessages() = settings.set("loginMessages", null)
 
 fun OfflinePlayer.owns(block: Block): Boolean = block.isOwner(this)
+fun OfflinePlayer.canModify(block: Block): Boolean = isOp || block.isFreeRealEstate || owns(block)

@@ -1,8 +1,14 @@
 package co.akoot.plugins.bluefox.api
 
+import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.CommandHelp
+import co.akoot.plugins.bluefox.api.economy.Coin
+import co.akoot.plugins.bluefox.api.economy.Market
+import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.extensions.wallet
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.secondary
 import co.akoot.plugins.bluefox.util.sendWarning
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.*
@@ -83,7 +89,7 @@ abstract class CatCommand(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): Player {
-        val player = runCatching { ctx.getArgument(argName, Player::class.java) }.getOrNull()
+        val player = BlueFox.getPlayer(getString(ctx, argName))
         return player ?: getPlayerSelector(ctx, argName)
     }
 
@@ -257,6 +263,29 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun coin(
+        argName: String = "coin",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ): RequiredArgumentBuilder<CommandSourceStack, String> {
+        return Commands.argument(argName, StringArgumentType.string())
+            .suggests { ctx, builder ->
+                suggest(builder, Market.coins.keys)
+                builder.buildFuture()
+            }
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    fun getCoin(
+        ctx: CommandContext<CommandSourceStack>,
+        argName: String = "coin"
+    ): Coin? {
+        val coinName = getString(ctx, argName)
+        return Market.getCoin(coinName)
+    }
+
+    fun CommandContext<CommandSourceStack>.coin(argName: String): Coin? = getCoin(this, argName)
+    val CommandContext<CommandSourceStack>.coin: Coin? get() = getCoin(this, "coin")
+
     fun GreedyString(
         argName: String,
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
@@ -344,8 +373,12 @@ abstract class CatCommand(
     fun offlinePlayer(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ): RequiredArgumentBuilder<CommandSourceStack, OfflinePlayer> {
-        return Commands.argument(argName, OfflinePlayerArgument())
+    ): RequiredArgumentBuilder<CommandSourceStack, String> {
+        return Commands.argument(argName, StringArgumentType.word())
+            .suggests { _, builder ->
+                suggest(builder, BlueFox.cachedOfflinePlayerNames)
+                builder.buildFuture()
+            }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
@@ -446,7 +479,7 @@ abstract class CatCommand(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "player"
     ): OfflinePlayer? {
-        val player = runCatching { ctx.getArgument(argName, OfflinePlayer::class.java) }.getOrNull()
+        val player = BlueFox.getOfflinePlayer(getString(ctx, argName))
         return player
     }
 
@@ -456,8 +489,12 @@ abstract class CatCommand(
     fun player(
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ): RequiredArgumentBuilder<CommandSourceStack, Player> {
-        return Commands.argument(argName, PlayerArgument())
+    ): RequiredArgumentBuilder<CommandSourceStack, String> {
+        return Commands.argument(argName, StringArgumentType.word())
+            .suggests { _, builder ->
+                suggest(builder, BlueFox.onlinePlayerNames)
+                builder.buildFuture()
+            }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
@@ -559,6 +596,26 @@ abstract class CatCommand(
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
     }
 
+    fun wallet(
+        argName: String = "wallet",
+        executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
+    ): RequiredArgumentBuilder<CommandSourceStack, String> {
+        return Commands.argument(argName, StringArgumentType.word())
+            .suggests { _, builder ->
+                suggest(builder, BlueFox.cachedOfflinePlayerNames.associateWith { secondary("@$it") })
+                builder.buildFuture()
+            }
+            .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    fun getWallet(ctx: CommandContext<CommandSourceStack>, argName: String = "wallet"): Wallet? {
+        val string = getString(ctx, argName)
+        return Wallet.find(string)
+    }
+
+    val CommandContext<CommandSourceStack>.wallet: Wallet? get() = getWallet(this)
+    fun CommandContext<CommandSourceStack>.wallet(argName: String): Wallet? = getWallet(this, argName)
+
     fun getZoneId(
         ctx: CommandContext<CommandSourceStack>,
         argName: String = "time zone"
@@ -609,6 +666,20 @@ abstract class CatCommand(
     fun CommandContext<CommandSourceStack>.permissionCheck(node: String? = null) = permissionCheck(this, node)
 
     fun suggest(builder: SuggestionsBuilder, suggestions: List<String>) {
+        suggestions.stream()
+            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestMutableList")
+    fun suggest(builder: SuggestionsBuilder, suggestions: MutableList<String>) {
+        suggestions.stream()
+            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .forEach(builder::suggest)
+    }
+
+    @JvmName("suggestMutableSet")
+    fun suggest(builder: SuggestionsBuilder, suggestions: MutableSet<String>) {
         suggestions.stream()
             .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
             .forEach(builder::suggest)

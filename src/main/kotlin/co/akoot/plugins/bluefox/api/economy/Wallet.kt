@@ -27,6 +27,14 @@ open class Wallet(val id: Int, val address: String) {
         var BANK = Wallet(2, "BANK")
         val playerWallets: MutableMap<OfflinePlayer, Wallet> = mutableMapOf()
 
+        val allUsernames: List<String> get() = BlueFox.cachedOfflinePlayerNames.map { "@$it" }
+
+        fun find(string: String): Wallet? {
+            return if(string.startsWith("0x")) get(string)
+            else if (string.startsWith("@")) BlueFox.getOfflinePlayer(string.substring(1), true)?.let { create(it.defaultWalletAddress)?.apply { displayName = string } }
+            else BlueFox.getOfflinePlayer(string)?.let { create(it.defaultWalletAddress)?.apply { displayName = "@${it.username}" } }
+        }
+
         fun get(address: String): Wallet? {
             val statement = BlueFox.query("SELECT id FROM wallets WHERE address = ?")
             statement.setString(1, address)
@@ -40,7 +48,7 @@ open class Wallet(val id: Int, val address: String) {
         }
 
         fun get(offlinePlayer: OfflinePlayer): Wallet? {
-            return get(offlinePlayer.defaultWalletAddress)
+            return get(offlinePlayer.defaultWalletAddress)?.apply { displayName = "@${offlinePlayer.username}" }
         }
 
         fun create(address: String): Wallet? {
@@ -58,7 +66,7 @@ open class Wallet(val id: Int, val address: String) {
         fun create(offlinePlayer: OfflinePlayer): Wallet? {
             val wallet = create(offlinePlayer.defaultWalletAddress) ?: return null
             playerWallets[offlinePlayer] = wallet
-            return wallet
+            return wallet.apply { displayName = "@${offlinePlayer.username}" }
         }
     }
 
@@ -66,6 +74,7 @@ open class Wallet(val id: Int, val address: String) {
     val hasUnlimitedMoney get() = this == WORLD || this == BANK
     val offlinePlayer: OfflinePlayer? get() = playerWallets.entries.find { it.value == this }?.key
     val player: Player? get() = offlinePlayer?.player
+    var displayName: String = address
 
     fun withdraw(player: Player, coin: Coin, amount: Int): Int {
         if (!player.isOp) {

@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.util
 
 import co.akoot.plugins.bluefox.BlueFox
+import co.akoot.plugins.bluefox.api.economy.Market.round
 import co.akoot.plugins.bluefox.extensions.mix
 import co.akoot.plugins.bluefox.extensions.username
 import co.akoot.plugins.bluefox.util.ColorUtil.randomColor
@@ -262,7 +263,7 @@ fun copy(text: String): ClickEvent<ClickEvent.Payload.Text> = ClickEvent.copyToC
 
 private val df = DecimalFormat("#.################")
 
-val BigDecimal.asCurrency: String get() = stripTrailingZeros().toPlainString()
+val BigDecimal.asCurrency: String get() = round().toPlainString()
 val Double.asCurrency: String get() = df.format(this)
 
 fun String.s(n: Number) = if (n == 1) this else "${this}s"

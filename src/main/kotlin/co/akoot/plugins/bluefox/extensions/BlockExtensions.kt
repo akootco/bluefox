@@ -7,6 +7,7 @@ import net.coreprotect.api.LookupOptions
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.OfflinePlayer
+import org.bukkit.Tag
 import org.bukkit.block.Block
 import java.util.UUID
 import kotlin.time.Duration
@@ -37,3 +38,5 @@ fun Block.isOwner(player: OfflinePlayer): Boolean {
 }
 
 val Block.isFreeRealEstate get() = owner == null
+
+val Block.isSign: Boolean get() = Tag.ALL_SIGNS.isTagged(type)
