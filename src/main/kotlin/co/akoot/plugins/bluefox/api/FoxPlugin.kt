@@ -79,13 +79,8 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         server.commandMap.register(id, command)
     }
 
-    fun registerCommand(command: CatCommand) {
-        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
-            val aliases = it.registrar().register(command.build(), command.description, command.aliases.toSet())
-            for(alias in aliases) {
-                server.getPluginCommand(alias)?.setUsage(command.help.asString())
-            }
-        }
+    fun registerCommand(command: CatCommand) = lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
+        it.registrar().register(command.build(), command.description, command.aliases.toSet())
     }
 
     fun registerEventListener(listener: Listener) {

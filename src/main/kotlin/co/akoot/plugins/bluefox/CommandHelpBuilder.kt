@@ -7,8 +7,8 @@ import co.akoot.plugins.bluefox.util.hover
 import co.akoot.plugins.bluefox.util.italic
 import co.akoot.plugins.bluefox.util.parse
 import co.akoot.plugins.bluefox.util.plus
+import co.akoot.plugins.bluefox.util.primary
 import co.akoot.plugins.bluefox.util.quote
-import co.akoot.plugins.bluefox.util.stripColor
 import co.akoot.plugins.bluefox.util.suggest
 import co.akoot.plugins.bluefox.util.text
 import co.akoot.plugins.bluefox.util.zip
@@ -51,17 +51,25 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
 
     fun resetColor() { colorIndex = 0 }
 
+    fun title(string: String): CommandHelpBuilder {
+        resetColor()
+        text += quote("\n -= [ ")
+        text += Component.text(string)
+        text += quote(" ] =-\n\n")
+        return this
+    }
+
     fun message(string: String): CommandHelpBuilder {
         text += string.parse()
         return this
     }
 
-    fun bullet(string: String, quote: Boolean = false, color: Boolean = false): CommandHelpBuilder {
+    fun bullet(string: String = "", quote: Boolean = false, color: Boolean = false): CommandHelpBuilder {
         val finalColor = if(color && quote) nextColor().mix(Color.Quote)
         else if (!color && quote) Color.Quote
         else if (!color) null
         else nextColor()
-        text += "• $string".parse().color(finalColor)
+        text += "• $string\n".parse().color(finalColor)
         return this
     }
 
@@ -70,10 +78,8 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         return this
     }
 
-    fun newLine(multiplier: Int = 1): CommandHelpBuilder {
-        for(i in 1..multiplier) {
-            text += Component.newline()
-        }
+    fun newline(lines: Int = 1): CommandHelpBuilder {
+        text += Component.text("\n".repeat(lines))
         return this
     }
 
@@ -88,7 +94,8 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         optional: Boolean = false,
         literal: Boolean = false,
         list: Boolean = false,
-        final: Boolean = false,
+        last: Boolean = false,
+        first: Boolean = false
     ): CommandHelpBuilder {
         val word = when {
             literal -> part
@@ -99,15 +106,18 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         val color = nextColor()
         var component: Component = Component.text(word, color)
         if(hover != null) component = component.hover(color + hover)
+        if(first) text += Component.text("• ").color(color)
         text += component
-        if (!final) text += Component.text(" ")
+        text += if (last) Component.newline()
+        else Component.space()
         return this
     }
 
-    fun example(commandLine: String, description: String? = null): CommandHelpBuilder {
+    fun example(commandLine: String, description: String? = null, last: Boolean = false): CommandHelpBuilder {
         val color = nextColor().mix(Color.White, 0.75)
         if (description != null) text += Component.text("• $description\n", color)
         text += color(commandLine)
+        newline(if(last)1 else 2)
         return this
     }
 

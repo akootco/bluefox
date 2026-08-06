@@ -168,13 +168,11 @@ class HomesCommand(plugin: BlueFox) : CatCommand(plugin, "homes") {
             subcommand("clean") {
                 permissionCheck(it, "clean") ?: return@subcommand false
                 val player = getPlayerSender(it) ?: return@subcommand false
-                player.sendMessage(cleanHelp())
                 false
             } then {
                 word("query mode", { ctx, builder -> suggest(builder, queryModes) }) {
                     permissionCheck(it, "clean") ?: return@word false
                     val player = getPlayerSender(it) ?: return@word false
-                    player.sendMessage(cleanHelp())
                     false
                 } then {
                     greedyString(
@@ -288,13 +286,11 @@ class UserHomesCommand(plugin: BlueFox) : CatCommand(plugin, "userhomes", aliase
                 subcommand("clean") {
                     permissionCheck(it, "clean") ?: return@subcommand false
                     val sender = getSender(it)
-                    sender.sendMessage(cleanUserHelp())
                     true
                 } then {
                     word("query mode", suggestions = { ctx, builder -> suggest(builder, queryModes) }) {
                         permissionCheck(it, "clean") ?: return@word false
                         val sender = getSender(it)
-                        sender.sendMessage(cleanUserHelp())
                         true
                     } then {
                         greedyString(
@@ -327,28 +323,6 @@ class UserHomesCommand(plugin: BlueFox) : CatCommand(plugin, "userhomes", aliase
             }
         }
     }
-}
-
-private fun cleanHelp(): Component {
-    return CommandHelpBuilder("Usage: ")
-        .usage("/homes").usage("clean").usage("query mode", literal = false)
-        .usage("query", literal = false, final = true)
-        .newLine()
-        .example("/homes clean startsWith test", "removed all homes that start with \"test\"")
-        .newLine()
-        .example("/homes clean in world_the_end", "removes all homes in the end")
-        .build()
-}
-
-private fun cleanUserHelp(): Component {
-    return CommandHelpBuilder("Usage: ")
-        .usage("/userhomes").usage("player", literal = false).usage("clean").usage("query mode", literal = false)
-        .usage("query", literal = false, final = true)
-        .newLine()
-        .example("/userhome Akoot_ clean startsWith test", "removed all homes that start with \"test\"")
-        .newLine()
-        .example("/userhome Akoot_ clean in world_the_end", "removes all homes in the end")
-        .build()
 }
 
 private enum class QueryMode(val argument: String, val description: String) {
