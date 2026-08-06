@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
+import co.akoot.plugins.bluefox.util.Text.Companion.asString
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import io.papermc.paper.command.brigadier.CommandSourceStack
@@ -80,7 +81,10 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
 
     fun registerCommand(command: CatCommand) {
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
-            it.registrar().register(command.build(), command.description, command.aliases.toSet())
+            val aliases = it.registrar().register(command.build(), command.description, command.aliases.toSet())
+            for(alias in aliases) {
+                server.getPluginCommand(alias)?.setUsage(command.help.asString())
+            }
         }
     }
 

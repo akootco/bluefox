@@ -1,12 +1,13 @@
 package co.akoot.plugins.bluefox.commands
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.CommandHelp
+import co.akoot.plugins.bluefox.CommandHelpBuilder
 import co.akoot.plugins.bluefox.api.CatCommand
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.extensions.*
 import co.akoot.plugins.bluefox.util.Text
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
@@ -328,26 +329,26 @@ class UserHomesCommand(plugin: BlueFox) : CatCommand(plugin, "userhomes", aliase
     }
 }
 
-private fun cleanHelp(): Text {
-    return CommandHelp("Usage: ")
+private fun cleanHelp(): Component {
+    return CommandHelpBuilder("Usage: ")
         .usage("/homes").usage("clean").usage("query mode", literal = false)
         .usage("query", literal = false, final = true)
         .newLine()
         .example("/homes clean startsWith test", "removed all homes that start with \"test\"")
         .newLine()
         .example("/homes clean in world_the_end", "removes all homes in the end")
-        .text
+        .build()
 }
 
-private fun cleanUserHelp(): Text {
-    return CommandHelp("Usage: ")
+private fun cleanUserHelp(): Component {
+    return CommandHelpBuilder("Usage: ")
         .usage("/userhomes").usage("player", literal = false).usage("clean").usage("query mode", literal = false)
         .usage("query", literal = false, final = true)
         .newLine()
         .example("/userhome Akoot_ clean startsWith test", "removed all homes that start with \"test\"")
         .newLine()
         .example("/userhome Akoot_ clean in world_the_end", "removes all homes in the end")
-        .text
+        .build()
 }
 
 private enum class QueryMode(val argument: String, val description: String) {

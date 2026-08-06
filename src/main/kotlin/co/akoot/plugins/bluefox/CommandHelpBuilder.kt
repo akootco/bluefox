@@ -1,0 +1,115 @@
+package co.akoot.plugins.bluefox
+
+import co.akoot.plugins.bluefox.extensions.mix
+import co.akoot.plugins.bluefox.util.Color
+import co.akoot.plugins.bluefox.util.colorCodes
+import co.akoot.plugins.bluefox.util.hover
+import co.akoot.plugins.bluefox.util.italic
+import co.akoot.plugins.bluefox.util.parse
+import co.akoot.plugins.bluefox.util.plus
+import co.akoot.plugins.bluefox.util.quote
+import co.akoot.plugins.bluefox.util.stripColor
+import co.akoot.plugins.bluefox.util.suggest
+import co.akoot.plugins.bluefox.util.text
+import co.akoot.plugins.bluefox.util.zip
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
+
+fun commandHelp(block: CommandHelpBuilder.() -> Unit): Component {
+    return CommandHelpBuilder()
+        .apply(block)
+        .build()
+}
+
+class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
+
+    constructor(string: String) : this(mutableListOf(text(string))) {}
+    val colors = listOf(
+        colorCodes["7"],
+        colorCodes["b"],
+        colorCodes["e"],
+        colorCodes["a"],
+        colorCodes["d"],
+        colorCodes["6"]
+    )
+
+    private var colorIndex = 0
+    fun nextColor(): TextColor {
+        if(colorIndex >= colors.size) colorIndex = 0
+        return colors[colorIndex++] ?: Color.White
+    }
+
+    fun color(commandLine: String): Component {
+        val builder = Component.text("  ").toBuilder()
+        val parts = commandLine.split(" ")
+        for((i, part) in parts.withIndex()) {
+            builder.append(colors[i % colors.size] + part.replace("\\", " "))
+            builder.append(Component.space())
+        }
+        return builder.build().clickEvent(suggest(commandLine.replace("\\", " "))).italic()
+    }
+
+    fun resetColor() { colorIndex = 0 }
+
+    fun message(string: String): CommandHelpBuilder {
+        text += string.parse()
+        return this
+    }
+
+    fun bullet(string: String, quote: Boolean = false, color: Boolean = false): CommandHelpBuilder {
+        val finalColor = if(color && quote) nextColor().mix(Color.Quote)
+        else if (!color && quote) Color.Quote
+        else if (!color) null
+        else nextColor()
+        text += "• $string".parse().color(finalColor)
+        return this
+    }
+
+    fun description(description: String): CommandHelpBuilder {
+        text += quote(description)
+        return this
+    }
+
+    fun newLine(multiplier: Int = 1): CommandHelpBuilder {
+        for(i in 1..multiplier) {
+            text += Component.newline()
+        }
+        return this
+    }
+
+    fun newLineSpace(): CommandHelpBuilder {
+        text += Component.text(" \n")
+        return this
+    }
+
+    fun usage(
+        part: String,
+        hover: String? = null,
+        optional: Boolean = false,
+        literal: Boolean = false,
+        list: Boolean = false,
+        final: Boolean = false,
+    ): CommandHelpBuilder {
+        val word = when {
+            literal -> part
+            optional -> "[$part]"
+            list -> "[$part...]"
+            else -> "<$part>"
+        }
+        val color = nextColor()
+        var component: Component = Component.text(word, color)
+        if(hover != null) component = component.hover(color + hover)
+        text += component
+        if (!final) text += Component.text(" ")
+        return this
+    }
+
+    fun example(commandLine: String, description: String? = null): CommandHelpBuilder {
+        val color = nextColor().mix(Color.White, 0.75)
+        if (description != null) text += Component.text("• $description\n", color)
+        text += color(commandLine)
+        return this
+    }
+
+    fun build(): Component = text.zip
+}

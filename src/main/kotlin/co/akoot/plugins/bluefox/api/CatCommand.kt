@@ -1,15 +1,17 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.CommandHelp
+import co.akoot.plugins.bluefox.CommandHelpBuilder
 import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.extensions.wallet
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.accent
+import co.akoot.plugins.bluefox.util.italic
+import co.akoot.plugins.bluefox.util.quote
 import co.akoot.plugins.bluefox.util.secondary
 import co.akoot.plugins.bluefox.util.sendWarning
+import co.akoot.plugins.bluefox.util.warning
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.*
 import com.mojang.brigadier.builder.ArgumentBuilder
@@ -55,7 +57,7 @@ abstract class CatCommand(
 
     val win = Command.SINGLE_SUCCESS
     val fail = -1
-    open var help: CommandHelp = CommandHelp().description(description)
+    open var help: Component = quote("No help provided :(").italic()
 
     @JvmName("leGetSender")
     fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
@@ -193,7 +195,7 @@ abstract class CatCommand(
     fun SubCommand(
         name: String,
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ) = then { subcommand(name, executes) }
+    ) = then { subcommand(name, executes = executes) }
 
     fun boolean(
         argName: String = "true or false",
