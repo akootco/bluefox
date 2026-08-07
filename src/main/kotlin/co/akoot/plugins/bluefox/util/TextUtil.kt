@@ -293,6 +293,7 @@ val Double.oneZero: String get() = String.format("%.1f", this)
 val Double.twoZeros: String get() = String.format("%.2f", this)
 
 val Double.percent: String get() = String.format("%.2f", this * 100)
+val Double.percentWhole: String get() = "${(this * 100).toInt()}"
 
 fun <T> Boolean.get(whenTrue: T, whenFalse: T) = if (this) whenTrue else whenFalse
 

@@ -25,4 +25,9 @@ object Prices {
         val back: Double by config default 10.0 from "commands"
         val cmd: Double by config default 20.0 from "commands"
     }
+
+    object Stuff {
+        val vaults: Double by config default 100.0 from "stuff"
+        val vaultDiscount: Double by config default 0.2 from "stuff"
+    }
 }
