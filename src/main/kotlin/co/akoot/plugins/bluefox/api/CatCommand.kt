@@ -10,6 +10,7 @@ import co.akoot.plugins.bluefox.util.accent
 import co.akoot.plugins.bluefox.util.italic
 import co.akoot.plugins.bluefox.util.quote
 import co.akoot.plugins.bluefox.util.secondary
+import co.akoot.plugins.bluefox.util.sendText
 import co.akoot.plugins.bluefox.util.sendWarning
 import co.akoot.plugins.bluefox.util.warning
 import com.mojang.brigadier.Command
@@ -57,7 +58,6 @@ abstract class CatCommand(
 
     val win = Command.SINGLE_SUCCESS
     val fail = -1
-    open var help: Component = quote("No help provided :(").italic()
 
     @JvmName("leGetSender")
     fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
@@ -190,6 +190,17 @@ abstract class CatCommand(
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): LiteralArgumentBuilder<CommandSourceStack> {
         return Commands.literal(name).executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
+    }
+
+    fun help(block: CommandHelpBuilder.() -> Unit): ArgumentBuilder<CommandSourceStack, *> {
+        val builder = CommandHelpBuilder().apply(block)
+        return then {
+            subcommand("?") {
+                it.permissionCheck("help") ?: return@subcommand false
+                it.sender.sendMessage(builder.build())
+                true
+            }
+        }
     }
 
     fun SubCommand(

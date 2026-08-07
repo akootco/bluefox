@@ -95,7 +95,6 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         literal: Boolean = false,
         list: Boolean = false,
         last: Boolean = false,
-        first: Boolean = false
     ): CommandHelpBuilder {
         val word = when {
             literal -> part
@@ -103,6 +102,8 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
             list -> "[$part...]"
             else -> "<$part>"
         }
+        val first = part.startsWith("/")
+        if(first) resetColor()
         val color = nextColor()
         var component: Component = Component.text(word, color)
         if(hover != null) component = component.hover(color + hover)
