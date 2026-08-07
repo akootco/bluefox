@@ -5,9 +5,14 @@ import co.akoot.plugins.bluefox.CommandHelpBuilder
 import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
+import co.akoot.plugins.bluefox.extensions.canModify
+import co.akoot.plugins.bluefox.extensions.isSign
+import co.akoot.plugins.bluefox.extensions.owner
+import co.akoot.plugins.bluefox.extensions.username
 import co.akoot.plugins.bluefox.util.Text
 import co.akoot.plugins.bluefox.util.accent
 import co.akoot.plugins.bluefox.util.italic
+import co.akoot.plugins.bluefox.util.primary
 import co.akoot.plugins.bluefox.util.quote
 import co.akoot.plugins.bluefox.util.secondary
 import co.akoot.plugins.bluefox.util.sendText
@@ -34,6 +39,7 @@ import io.papermc.paper.registry.RegistryKey
 import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.block.Biome
+import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.block.BlockType
 import org.bukkit.command.CommandSender
@@ -62,6 +68,24 @@ abstract class CatCommand(
     @JvmName("leGetSender")
     fun getSender(ctx: CommandContext<CommandSourceStack>): CommandSender {
         return ctx.source.sender
+    }
+
+    fun Player.targetBlock(maxDistance: Double = 3.0): Block? {
+        val block = rayTraceBlocks(maxDistance)?.hitBlock
+        if(block == null) {
+            sendWarning("Look at a sign first!")
+            return null
+        }
+        if(!block.isSign) {
+            sendWarning("Look at a sign first!")
+            return null
+        }
+        val owner = block.owner?.let { uuid -> BlueFox.getOfflinePlayer(uuid) }?.username ?: "CONSOLE"
+        if(!canModify(block)) {
+            sendWarning("This sign already belongs to ", primary(owner), "!")
+            return null
+        }
+        return block
     }
 
     val CommandContext<CommandSourceStack>.sender: CommandSender get() = source.sender

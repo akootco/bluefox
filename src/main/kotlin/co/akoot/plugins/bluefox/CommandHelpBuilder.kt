@@ -21,10 +21,10 @@ fun commandHelp(block: CommandHelpBuilder.() -> Unit): Component {
         .build()
 }
 
-class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
+class CommandHelpBuilder {
+    private val text: MutableList<Component> = mutableListOf()
 
-    constructor(string: String) : this(mutableListOf(text(string))) {}
-    val colors = listOf(
+    private val colors = listOf(
         colorCodes["7"],
         colorCodes["b"],
         colorCodes["e"],
@@ -64,7 +64,7 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         return this
     }
 
-    fun bullet(string: String = "", quote: Boolean = false, color: Boolean = false): CommandHelpBuilder {
+    fun bullet(string: String = "", quote: Boolean = true, color: Boolean = true): CommandHelpBuilder {
         val finalColor = if(color && quote) nextColor().mix(Color.Quote)
         else if (!color && quote) Color.Quote
         else if (!color) null
@@ -83,11 +83,6 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         return this
     }
 
-    fun newLineSpace(): CommandHelpBuilder {
-        text += Component.text(" \n")
-        return this
-    }
-
     fun usage(
         part: String,
         hover: String? = null,
@@ -96,13 +91,13 @@ class CommandHelpBuilder(val text: MutableList<Component> = mutableListOf()) {
         list: Boolean = false,
         last: Boolean = false,
     ): CommandHelpBuilder {
+        val first = part.startsWith("/")
         val word = when {
-            literal -> part
+            literal || first -> part
             optional -> "[$part]"
             list -> "[$part...]"
             else -> "<$part>"
         }
-        val first = part.startsWith("/")
         if(first) resetColor()
         val color = nextColor()
         var component: Component = Component.text(word, color)
