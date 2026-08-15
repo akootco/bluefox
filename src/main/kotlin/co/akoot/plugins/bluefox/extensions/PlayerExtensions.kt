@@ -315,9 +315,9 @@ fun Player.buy(invoice: Invoice, result: (success: Boolean) -> Unit): Boolean {
     }
 }
 
-val Player.ticksPlayed: Int get() = runCatching { getStatistic(Statistic.PLAY_ONE_MINUTE) }.getOrElse { 0 }
+val OfflinePlayer.ticksPlayed: Int get() = runCatching { getStatistic(Statistic.PLAY_ONE_MINUTE) }.getOrElse { 0 }
 
-val Player.playtime: Int get() = ticksPlayed / 20
+val OfflinePlayer.playtime: Int get() = ticksPlayed / 20
 
 fun OfflinePlayer.addLoginMessage(message: String) {
     settings.append("loginMessages", message)

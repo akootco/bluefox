@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -173,4 +174,6 @@ val Number.seconds: Long get() = this.toDouble().times(20).toLong()
 val Number.minutes: Long get() = this.toDouble().times(1200).toLong()
 val Number.hours: Long get() = this.toDouble().times(72000).toLong()
 
-fun today(): Long = LocalDate.now().toEpochDay()
+fun now(): Long = today().toEpochDay()
+
+fun today(): LocalDate = LocalDate.now(ZoneId.of("America/New_York"))
