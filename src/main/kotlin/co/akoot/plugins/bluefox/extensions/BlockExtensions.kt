@@ -14,6 +14,7 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
 fun Block.isNatural(since: Duration): Boolean? {
+    BlueFox.co ?: return null
     val options = LookupOptions.builder()
         .time(since.toInt(DurationUnit.SECONDS))
         .build()
