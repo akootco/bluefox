@@ -222,15 +222,8 @@ fun Component.hover(items: Array<ItemStack>, title: Component = Component.text("
     return this.hoverEvent(item)
 }
 
-/**
- * Texture atlases were split in snapshot `25w45a` :(
- * * Use `<namespace>:item/<name>` or `<namespace>:block/<name>`
- * * Note: The namespace is optional. but is required for custom textures.
- */
-fun sprite(location: String): Component {
-    val atlas = location.substringAfter(":").substringBefore("/")
-    return Component.`object`(ObjectContents.sprite(Key.key("${atlas}s"), Key.key(location)))
-}
+fun sprite(location: String, atlas: String = "blocks"): Component =
+    Component.`object`(ObjectContents.sprite(Key.key("minecraft:$atlas"), Key.key(location)))
 
 fun head(name: String): Component = Component.`object`(ObjectContents.playerHead(name))
 fun head(uuid: UUID): Component = Component.`object`(ObjectContents.playerHead(uuid))
