@@ -32,7 +32,7 @@ class MetaBacking(private val backing: Metadatable) : DelegateBacking {
 }
 
 infix fun <T> Metadatable.default(default: T? = null): Delegate<T> = Delegate(this, default)
-infix fun <T> Metadatable.of(transform: (String) -> T): Delegate<T> =
+infix fun <T> Metadatable.deserialize(transform: (String) -> T): Delegate<T> =
     Delegate(MetaBacking(this), null, fromString = transform)
 
 infix fun <T> Metadatable.from(parent: String): Delegate<T> = Delegate(MetaBacking(this), parent = parent)

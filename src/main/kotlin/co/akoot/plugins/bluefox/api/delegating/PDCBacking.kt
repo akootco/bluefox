@@ -47,7 +47,7 @@ class PDCBacking(private val backing: PersistentDataHolder) : DelegateBacking {
 }
 
 infix fun <T> PersistentDataHolder.default(default: T? = null): Delegate<T> = Delegate(this, default)
-infix fun <T> PersistentDataHolder.of(transform: (String) -> T): Delegate<T> =
+infix fun <T> PersistentDataHolder.deserialize(transform: (String) -> T): Delegate<T> =
     Delegate(PDCBacking(this), null, fromString = transform)
 
 infix fun <T> PersistentDataHolder.from(parent: String): Delegate<T> = Delegate(PDCBacking(this), parent = parent)

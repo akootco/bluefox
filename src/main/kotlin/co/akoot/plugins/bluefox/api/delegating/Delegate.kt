@@ -85,20 +85,10 @@ class Delegate<T>(
         annotations.filterIsInstance<Key>().firstOrNull()?.path
             ?: "${parent?.let { "$it." } ?: ""}$name"
 
-    infix fun <R> of(fromString: (String) -> R): Delegate<R> =
-        Delegate(
-            backend = backend,
-            parent = parent,
-            fromString = fromString
-        )
-
-    infix fun <R> from(toString: (R) -> String): Delegate<R> =
-        Delegate(
-            backend = backend,
-            toString = toString
-        )
-
     infix fun default(default: T): Delegate<T> = this.apply { this.default = default }
 
     infix fun from(parent: String): Delegate<T> = this.apply { this.parent = parent }
+
+    infix fun serialize(transform: (T) -> String): Delegate<T> = Delegate(backend, default, parent, fromString, transform)
+    infix fun deserialize(transform: (String) -> T): Delegate<T> = Delegate(backend, default, parent, transform, toString)
 }

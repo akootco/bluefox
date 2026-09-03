@@ -46,8 +46,10 @@ class ConfigBacking(private val backing: FoxConfig) : DelegateBacking {
 }
 
 infix fun <T> FoxConfig.default(default: T? = null): Delegate<T> = Delegate(this, default)
-infix fun <T> FoxConfig.of(transform: (String) -> T): Delegate<T> =
+infix fun <T> FoxConfig.deserialize(transform: (String) -> T): Delegate<T> =
     Delegate(ConfigBacking(this), fromString = transform)
+infix fun <T> FoxConfig.serialize(transform: (T) -> String): Delegate<T> =
+    Delegate(ConfigBacking(this), toString = transform)
 
 infix fun <T> FoxConfig.from(parent: String?): Delegate<T> =
     Delegate(ConfigBacking(this), parent = parent?.takeIf { it.isNotEmpty() })
