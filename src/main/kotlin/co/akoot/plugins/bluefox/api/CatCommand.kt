@@ -688,6 +688,7 @@ abstract class CatCommand(
     }
 
     val CommandContext<CommandSourceStack>.playerSender: Player? get() = getPlayerSender(this)
+    fun CommandContext<CommandSourceStack>.playerSender(sendError: Boolean = true) = getPlayerSender(this, sendError)
 
     @JvmName("lePermissionCheck")
     fun permissionCheck(ctx: CommandContext<CommandSourceStack>, node: String? = null): Boolean? {
@@ -713,6 +714,14 @@ abstract class CatCommand(
         suggestions.stream()
             .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
             .forEach(builder::suggest)
+    }
+
+    fun SuggestionsBuilder.suggestIfHasPermission(ctx: CommandContext<CommandSourceStack>, permissionMap: Map<String, String>) {
+        for((string, permission) in permissionMap) {
+            if(!string.startsWith(remainingLowerCase)) continue
+            if(!ctx.sender.hasPermission(permissionNode(permission))) continue
+            suggest(string)
+        }
     }
 
     @JvmName("suggestMutableSet")
