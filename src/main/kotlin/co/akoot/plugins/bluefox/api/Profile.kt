@@ -2,7 +2,7 @@ package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.api.delegating.default
-import co.akoot.plugins.bluefox.api.delegating.of
+import co.akoot.plugins.bluefox.api.delegating.deserialize
 import co.akoot.plugins.bluefox.extensions.mkdirp
 import co.akoot.plugins.bluefox.extensions.touch
 import co.akoot.plugins.bluefox.extensions.username
@@ -15,7 +15,6 @@ import org.bukkit.OfflinePlayer
 import java.io.File
 import java.sql.Date
 import java.sql.SQLIntegrityConstraintViolationException
-import java.sql.Types
 import java.time.LocalDate
 import java.util.*
 
@@ -97,7 +96,7 @@ class Profile(val uuid: String, val username: String) {
     var nickname: String by settings default ""
     var title: String by settings default "Guest"
     var status: String by settings default ""
-    var titleStyle: TitleStyle by settings of TitleStyle::valueOf default TitleStyle.NORMAL
+    var titleStyle: TitleStyle by settings deserialize TitleStyle::valueOf default TitleStyle.NORMAL
     var heartSymbol: String by settings default "❤"
     var lastWords: String by data default ""
     var lastChangelogVersion: String by data default ""
@@ -142,7 +141,8 @@ class Profile(val uuid: String, val username: String) {
     var dateFormat: String by settings default ""
     var timeFormat: String by settings default ""
 
-    var timeZone: TimeZone by settings of TimeZone::getTimeZone from TimeZone::getID default TimeZone.getDefault()
+    var timeZone: TimeZone by settings deserialize TimeZone::getTimeZone serialize TimeZone::getID default TimeZone.getDefault()
+    var pronouns: Pronouns by settings deserialize Pronouns::deserialize serialize Pronouns::serialized default Pronouns.default
 
     var id: Int? = getId() ?: setId()
         set(value) {
@@ -154,12 +154,6 @@ class Profile(val uuid: String, val username: String) {
         get() = getToken()
         set(value) {
             setToken(value)
-            field = value
-        }
-
-    var bio: Bio? = getBio()
-        set(value) {
-            setBio(value)
             field = value
         }
 
@@ -175,26 +169,29 @@ class Profile(val uuid: String, val username: String) {
         val themself: String = "themself",
     ) {
         companion object {
-            val values: List<Pronouns> = BlueFox.query("SELECT * FROM pronouns")
-                .executeQuery()
-                .use { rs ->
-                    buildList {
-                        while (rs.next()) {
-                            add(
-                                Pronouns(
-                                    name = rs.getString("name"),
-                                    they = rs.getString("they"),
-                                    them = rs.getString("them"),
-                                    their = rs.getString("their"),
-                                    theirs = rs.getString("theirs"),
-                                    theyAre = rs.getString("they_are"),
-                                    were = rs.getString("were"),
-                                    themself = rs.getString("themself"),
-                                )
-                            )
-                        }
-                    }
-                }
+
+            val default: Pronouns = Pronouns("default")
+
+            val values: List<Pronouns> = listOf(
+                default,
+                from("male", "he/him/his/his/he's/was/himself"),
+                from("female", "she/her/hers/hers/she's/was/herself"),
+                from("maleMajesty", "his majesty/his majesty/his majesty's/his majesty's/his majesty is/was/himself"),
+                from("femaleMajesty", "her majesty/her majesty/her majesty's/her majesty's/her majesty is/was/herself"),
+                from("majesty", "their majesty/their majesty/their majesty's/their majesty's/their majesty is/was/themself"),
+            )
+
+            fun deserialize(string: String): Pronouns {
+                if (string.isEmpty()) return default
+                if(!string.contains("/")) return values.find { it.name == string } ?: default
+                return from("custom", string)
+            }
+
+            fun from(name: String, string: String): Pronouns {
+                val parts = string.split("/")
+                if(parts.size != 7) return default
+                return Pronouns(name, parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6])
+            }
         }
 
         val id get() = values.indexOf(this)
@@ -208,25 +205,29 @@ class Profile(val uuid: String, val username: String) {
                 .replace("#were", were)
                 .replace("#themself", themself)
         }
+
+        val serialized: String get() {
+            return if(name == "custom")
+                listOf(they, them, their, theirs, theyAre, were, themself)
+                    .joinToString("/")
+            else name
+        }
     }
 
     open class Generation(val name: String, val yearMin: Int, val yearMax: Int) {
         companion object {
-            val values: List<Generation> = BlueFox.query("SELECT * FROM generation")
-                .executeQuery()
-                .use { rs ->
-                    buildList {
-                        while (rs.next()) {
-                            add(
-                                Generation(
-                                    name = rs.getString("name"),
-                                    yearMin = rs.getInt("year_min"),
-                                    yearMax = rs.getInt("year_max"),
-                                )
-                            )
-                        }
-                    }
-                }
+            val values: List<Generation> = listOf(
+                Generation("The Lost Generation", 1883, 1910),
+                Generation("The Greatest Generation", 1901, 1927),
+                Generation("The Silent Generation"	 ,1928 ,1945),
+                Generation("Boomer"	 ,1946 ,1964),
+                Generation("X",1965, 1980),
+                Generation( "Millennial", 1981, 1996),
+                Generation("Zoomer"	 ,1997 ,2010),
+                Generation("Gen Alpha", 2010, 2024),
+                Generation("Gen Beta", 2025, 2039),
+                Generation("Gen Gamma", 2040, 2054),
+            )
         }
 
         val id get() = values.indexOf(this)
@@ -238,71 +239,6 @@ class Profile(val uuid: String, val username: String) {
         val generation: Generation? = null,
         val about: String? = null
     )
-
-    @JvmName("getLeBio")
-    fun getBio(): Bio? {
-        val id = id ?: return null
-        BlueFox.query(
-            """
-            select * from player_bio where player = ?;
-        """
-        ).use { statement ->
-            statement.setInt(1, id)
-            statement.executeQuery().use { result ->
-                return if (result.next()) {
-                    Bio(
-                        Birthday(
-                            result.getInt("birth_month").takeIf { it != 0 },
-                            result.getInt("birth_day").takeIf { it != 0 },
-                            result.getInt("birth_year").takeIf { it != 0 }),
-                        Pronouns.values.getOrNull(result.getInt("pronouns").takeIf { it != 0 } ?: -1),
-                        Generation.values.getOrNull(result.getInt("generation").takeIf { it != 0 } ?: -1),
-                        result.getString("about")
-                    )
-                } else {
-                    null
-                }
-            }
-        }
-    }
-
-    @JvmName("setLeBio")
-    fun setBio(bio: Bio?): Bio? {
-        val id = id ?: return null
-        if (bio == null) {
-            BlueFox.query("delete FROM player_bio where player = ?").use { statement ->
-                statement.setInt(1, id)
-                statement.executeUpdate()
-            }
-            return null
-        }
-        return try {
-            BlueFox.query(
-                """
-                INSERT INTO player_bio (player, birth_month, birth_day, birth_year, generation, pronouns, about) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                    birthday = VALUES(birthday),
-                    generation = VALUES(generation),
-                    pronouns = VALUES(pronouns),
-                    about = VALUES(about);
-            """
-            ).use { stmt ->
-                stmt.setInt(1, id)
-                bio.birthday?.month?.let { month -> stmt.setInt(2, month) } ?: stmt.setInt(2, Types.INTEGER)
-                bio.birthday?.day?.let { day -> stmt.setInt(3, day) } ?: stmt.setInt(3, Types.INTEGER)
-                bio.birthday?.year?.let { year -> stmt.setInt(4, year) } ?: stmt.setInt(4, Types.INTEGER)
-                bio.generation?.let { generation -> stmt.setInt(5, generation.id) } ?: stmt.setInt(5, Types.INTEGER)
-                bio.pronouns?.let { pronouns -> stmt.setInt(6, pronouns.id) } ?: stmt.setInt(6, Types.INTEGER)
-                bio.about?.let { about -> stmt.setString(7, about) } ?: stmt.setInt(7, Types.VARCHAR)
-                stmt.executeUpdate()
-            }
-            bio
-        } catch (e: SQLIntegrityConstraintViolationException) {
-            e.printStackTrace()
-            null
-        }
-    }
 
     @JvmName("getLeId")
     fun getId(): Int? {
