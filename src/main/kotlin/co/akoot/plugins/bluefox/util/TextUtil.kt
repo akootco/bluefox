@@ -614,6 +614,11 @@ fun color(text: String, vararg colors: TextColor?): TextComponent {
     return component.build()
 }
 
+fun swatches(palette: List<TextColor>): Component {
+    val text = "█".repeat(palette.size)
+    return color(text, *palette.toTypedArray())
+}
+
 infix fun String.or(block: () -> String): String = ifEmpty { block() }
 infix fun String.or(string: String): String = ifEmpty { string }
 fun String.ifNotEmpty(block: () -> String): String = if (isEmpty()) this else block()

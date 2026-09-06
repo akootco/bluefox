@@ -103,9 +103,9 @@ class Profile(val uuid: String, val username: String) {
     var chatFormat: String by settings default ""
     var chatTint: String by settings default ""
     var chatTintIntensity: Double by settings default -1.0
-    var universalChatFormat: String by settings default ""
-    var universalChatTint: String by settings default ""
-    var universalChatTintIntensity: Double by settings default -1.0
+    var globalChatFormat: String by settings default ""
+    var globalChatTint: String by settings default ""
+    var globalChatTintIntensity: Double by settings default -1.0
 
     var favColor: String by settings default ""
     var skullColor: String by settings default ""
@@ -157,7 +157,18 @@ class Profile(val uuid: String, val username: String) {
             field = value
         }
 
-    data class Birthday(val month: Int? = null, val day: Int? = null, val year: Int? = null)
+    data class Birthday(val month: Int? = null, val day: Int? = null, val year: Int? = null) {
+        companion object {
+            val default = Birthday()
+            fun deserialize(string: String): Birthday {
+                val date = string.split("/")
+                if(date.size == 1) return Birthday(month = date[0].toIntOrNull())
+                if(date.size == 2) return Birthday(month = date[0].toIntOrNull(), day = date[1].toIntOrNull())
+                if(date.size == 3) return Birthday(month = date[0].toIntOrNull(), day = date[1].toIntOrNull(), year = date[2].toIntOrNull())
+                return default
+            }
+        }
+    }
     open class Pronouns(
         val name: String,
         val they: String = "they",

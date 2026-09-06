@@ -178,16 +178,30 @@ class DialogBuilder {
         key: String,
         label: Component,
         initial: Boolean = false,
-        trueLabel: String = "Enabled",
-        falseLabel: String = "Disabled",
+        trueLabel: Component,
+        falseLabel: Component,
     ): DialogBuilder = select(
         key,
         label,
         mapOf(
-            "true" to (Color.May + trueLabel),
-            "false" to falseLabel.error
+            "true" to trueLabel,
+            "false" to falseLabel
         ),
         initial.toString()
+    )
+
+    fun booleanSelect(
+        key: String,
+        label: Component,
+        initial: Boolean = false,
+        trueLabel: String = "Enabled",
+        falseLabel: String = "Disabled",
+    ): DialogBuilder = booleanSelect(
+        key,
+        label,
+        initial,
+        Color.May + trueLabel,
+        falseLabel.error,
     )
 
     // idk what ts means by value in template, oh well
