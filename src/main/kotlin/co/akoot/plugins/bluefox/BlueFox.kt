@@ -100,7 +100,7 @@ class BlueFox : FoxPlugin("bluefox") {
         }
     }
 
-    val legacyWarps: MutableSet<LegacyWarp> = mutableSetOf()
+    val legacyWarps get() = loadLegacyWarps()
     private val palettesConfig = registerConfig("palettes")
     private val colorsConfig = registerConfig("colors")
     val palettes = palettesConfig.getKeys().associateWith {
@@ -277,14 +277,16 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     private val legacyWarpsFolder = File("warps")
-    fun loadLegacyWarps() {
+    fun loadLegacyWarps(): MutableList<LegacyWarp> {
+        val warps = mutableListOf<LegacyWarp>()
         val warpFiles = legacyWarpsFolder.listFiles {
             it.isFile && it.name.endsWith(".json")
-        } ?: return
+        } ?: return mutableListOf()
         for (file in warpFiles) {
             val warp = getLegacyWarp(file.name.substringBeforeLast('.')) ?: continue
-            legacyWarps += warp
+            warps += warp
         }
+        return warps
     }
 
     fun getLegacyWarp(name: String): LegacyWarp? {
