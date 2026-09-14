@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.api.Profile
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.commands.*
 import co.akoot.plugins.bluefox.extensions.legacyName
+import co.akoot.plugins.bluefox.extensions.mightBeUser
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
 import co.akoot.plugins.bluefox.util.Color
 import co.akoot.plugins.bluefox.util.IOUtil
@@ -52,7 +53,7 @@ class BlueFox : FoxPlugin("bluefox") {
 
         fun getPlayer(name: String, exact: Boolean = false): Player? {
             return if (exact) server.onlinePlayers.find { it.name.equals(name, true) }
-            else server.onlinePlayers.find { it.name.contains(name, true) }
+            else server.onlinePlayers.find { it.name.mightBeUser(name) }
         }
 
         fun getPlayers(playerNames: String, exact: Boolean = false): List<Player> {
@@ -64,7 +65,7 @@ class BlueFox : FoxPlugin("bluefox") {
         fun getOfflinePlayer(name: String, exact: Boolean = false): OfflinePlayer? {
             return if (exact) cachedOfflinePlayerNames.find { it.equals(name, true) }
                 ?.let { server.getOfflinePlayer(it) }
-            else cachedOfflinePlayerNames.find { it.contains(name, true) }?.let { server.getOfflinePlayer(it) }
+            else cachedOfflinePlayerNames.find { it.mightBeUser(name) }?.let { server.getOfflinePlayer(it) }
         }
 
         fun key(key: String): NamespacedKey {

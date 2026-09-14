@@ -49,6 +49,8 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemType
 import org.bukkit.potion.PotionType
 import java.time.ZoneId
+import kotlin.text.contains
+import kotlin.text.startsWith
 
 abstract class CatCommand(
     val plugin: FoxPlugin,
@@ -413,7 +415,7 @@ abstract class CatCommand(
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
         return Commands.argument(argName, StringArgumentType.word())
             .suggests { _, builder ->
-                suggest(builder, BlueFox.cachedOfflinePlayerNames)
+                suggest(builder, BlueFox.cachedOfflinePlayerNames, usernames = true)
                 builder.buildFuture()
             }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
@@ -529,7 +531,7 @@ abstract class CatCommand(
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
         return Commands.argument(argName, StringArgumentType.word())
             .suggests { _, builder ->
-                suggest(builder, BlueFox.onlinePlayerNames)
+                suggest(builder, BlueFox.onlinePlayerNames, usernames = true)
                 builder.buildFuture()
             }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
@@ -703,16 +705,16 @@ abstract class CatCommand(
 
     fun CommandContext<CommandSourceStack>.permissionCheck(node: String? = null) = permissionCheck(this, node)
 
-    fun suggest(builder: SuggestionsBuilder, suggestions: List<String>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: List<String>, ignoreCase: Boolean = true) {
         suggestions.stream()
-            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .filter { entry -> entry.startsWith(builder.remaining, ignoreCase) }
             .forEach(builder::suggest)
     }
 
     @JvmName("suggestMutableList")
-    fun suggest(builder: SuggestionsBuilder, suggestions: MutableList<String>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: MutableList<String>, ignoreCase: Boolean = true) {
         suggestions.stream()
-            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .filter { entry -> entry.startsWith(builder.remaining, ignoreCase) }
             .forEach(builder::suggest)
     }
 
@@ -725,9 +727,16 @@ abstract class CatCommand(
     }
 
     @JvmName("suggestMutableSet")
-    fun suggest(builder: SuggestionsBuilder, suggestions: MutableSet<String>) {
+    fun suggest(builder: SuggestionsBuilder, suggestions: Collection<String>, ignoreCase: Boolean = true, usernames: Boolean = false) {
         suggestions.stream()
-            .filter { entry -> entry.startsWith(builder.remainingLowerCase) }
+            .filter { entry ->
+                if(usernames) {
+                    val fragment = builder.remaining
+                    entry.startsWith('.', ignoreCase) == fragment.startsWith('.') && entry.contains(fragment, true)
+                } else {
+                    entry.startsWith(builder.remaining, ignoreCase)
+                }
+            }
             .forEach(builder::suggest)
     }
 
