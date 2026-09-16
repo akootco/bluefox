@@ -95,7 +95,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         HandlerList.unregisterAll(listener)
     }
 
-    fun registerConfig(name: String, path: String? = null): FoxConfig {
+    fun registerConfig(name: String, path: String? = null, onLoad: (FoxConfig) -> Unit = {}): FoxConfig {
         val conf = path ?: "$name.conf"
         val configFile = File(dataFolder, conf)
         if (!configFile.exists()) {
@@ -106,6 +106,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
             }
         }
         val config = FoxConfig(configFile)
+        config.onLoad = onLoad
         configs[name] = config
         return config
     }

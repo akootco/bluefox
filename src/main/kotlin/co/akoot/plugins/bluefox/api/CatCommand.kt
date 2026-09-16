@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
 import co.akoot.plugins.bluefox.extensions.canModify
 import co.akoot.plugins.bluefox.extensions.isSign
+import co.akoot.plugins.bluefox.extensions.mightBeUser
 import co.akoot.plugins.bluefox.extensions.owner
 import co.akoot.plugins.bluefox.extensions.username
 import co.akoot.plugins.bluefox.util.Text
@@ -731,8 +732,7 @@ abstract class CatCommand(
         suggestions.stream()
             .filter { entry ->
                 if(usernames) {
-                    val fragment = builder.remaining
-                    entry.startsWith('.', ignoreCase) == fragment.startsWith('.') && entry.contains(fragment, true)
+                    entry.mightBeUser(builder.remaining)
                 } else {
                     entry.startsWith(builder.remaining, ignoreCase)
                 }
