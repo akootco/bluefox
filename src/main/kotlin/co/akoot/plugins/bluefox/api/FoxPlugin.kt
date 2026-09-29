@@ -108,6 +108,7 @@ abstract class FoxPlugin(val id: String) : JavaPlugin() {
         val config = FoxConfig(configFile)
         config.onLoad = onLoad
         configs[name] = config
+        config.onLoad?.invoke(config)
         return config
     }
 
