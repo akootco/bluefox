@@ -614,6 +614,31 @@ fun color(text: String, vararg colors: TextColor?): TextComponent {
     return component.build()
 }
 
+fun String.colors(): List<TextColor> {
+    var state = FormatState()
+    val colors = mutableListOf<TextColor>()
+
+    for (token in tokenize(this)) {
+        when (token) {
+            is Token.ColorCode -> {
+                state = applyColorCode(token, state)
+                colors += state.colors.filterNotNull()
+            }
+
+            is Token.PlainText -> {
+                state = state.copy(
+                    colors = emptyList(),
+                    inverted = false
+                )
+            }
+
+            else -> Unit
+        }
+    }
+
+    return colors
+}
+
 fun swatches(palette: List<TextColor>): Component {
     val text = "█".repeat(palette.size)
     return color(text, *palette.toTypedArray())
