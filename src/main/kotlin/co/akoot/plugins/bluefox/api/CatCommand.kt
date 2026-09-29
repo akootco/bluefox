@@ -411,12 +411,15 @@ abstract class CatCommand(
     fun CommandContext<CommandSourceStack>.double(argName: String) = getDouble(this, argName)
 
     fun offlinePlayer(
+        includeSelf: Boolean = true,
         argName: String = "player",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
         return Commands.argument(argName, StringArgumentType.word())
-            .suggests { _, builder ->
-                suggest(builder, BlueFox.cachedOfflinePlayerNames, usernames = true)
+            .suggests { ctx, builder ->
+                val usernames = BlueFox.cachedOfflinePlayerNames
+                if(!includeSelf) usernames.remove(ctx.sender.name)
+                suggest(builder, usernames, usernames = true)
                 builder.buildFuture()
             }
             .executes { if (executes(it)) Command.SINGLE_SUCCESS else -1 }
