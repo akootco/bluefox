@@ -7,6 +7,7 @@ import co.akoot.plugins.bluefox.extensions.mkdirp
 import co.akoot.plugins.bluefox.extensions.touch
 import co.akoot.plugins.bluefox.extensions.username
 import co.akoot.plugins.bluefox.util.or
+import co.akoot.plugins.bluefox.util.palettes
 import co.akoot.plugins.bluefox.util.parse
 import co.akoot.plugins.bluefox.util.prefix
 import net.kyori.adventure.text.Component
@@ -56,6 +57,7 @@ class Profile(val uuid: String, val username: String) {
     fun givePalette(palette: String) = data.append("palettes", palette)
     fun removePalette(palette: String) = data.remove("palettes", palette)
     fun hasPalette(palette: String) = unlockedPalettes.contains(palette)
+    val unlockedColors: List<String> get() = unlockedPalettes.flatMap { palettes[it]?.let { p -> List(p.size) { i -> "$it$i" } } ?: listOf() }
 
     val ignoredPlayers: List<String> by data default listOf()
     fun ignorePlayer(player: OfflinePlayer) = data.append("ignoredPlayers", player.uniqueId.toString())
@@ -97,6 +99,7 @@ class Profile(val uuid: String, val username: String) {
     var title: String by settings default "Guest"
     var status: String by settings default ""
     var titleStyle: TitleStyle by settings deserialize TitleStyle::valueOf default TitleStyle.NORMAL
+    var titleColor: String by settings default ""
     var heartSymbol: String by settings default "❤"
     var lastWords: String by data default ""
     var lastChangelogVersion: String by data default ""
