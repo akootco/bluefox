@@ -15,6 +15,7 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.`object`.ObjectContents
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
@@ -86,6 +87,13 @@ fun Component.tint(color: TextColor?, intensity: Double = 0.5): Component {
         this.color((this.color() ?: Color.White).mix(color, intensity))
     }
 }
+
+fun Component.tint(color: String, intensity: Double = 0.5): Component {
+    return tint(getColor(color), intensity)
+}
+
+fun Component.serialize(): String = JSONComponentSerializer.json().serialize(this)
+fun String.deserialize(): Component = JSONComponentSerializer.json().deserialize(this)
 
 fun <T> tint(color: TextColor, vararg components: T): MutableList<Component> {
     val list = components.map {

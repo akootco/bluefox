@@ -10,6 +10,7 @@ import co.akoot.plugins.bluefox.util.or
 import co.akoot.plugins.bluefox.util.palettes
 import co.akoot.plugins.bluefox.util.parse
 import co.akoot.plugins.bluefox.util.prefix
+import co.akoot.plugins.bluefox.util.tint
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.OfflinePlayer
@@ -109,6 +110,11 @@ class Profile(val uuid: String, val username: String) {
     var globalChatFormat: String by settings default ""
     var globalChatTint: String by settings default ""
     var globalChatTintIntensity: Double by settings default -1.0
+
+    fun tint(component: Component): Component {
+        if(!tintChat) return component
+        return component.tint(chatTint, chatTintIntensity)
+    }
 
     var favColor: String by settings default ""
     var skullColor: String by settings default ""
