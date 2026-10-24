@@ -13,6 +13,10 @@ dependencies {
     implementation 'com.typesafe:config:1.4.3'
 
     implementation 'com.squareup.okhttp3:okhttp'
+    // Discord4J but without opus-java and also use the latest version of okhttp3 pls ty
+    implementation("net.dv8tion:JDA:${project.jda_version}") {
+        exclude module: 'opus-java'
+    }
     constraints {
         implementation('com.squareup.okhttp3:okhttp:4.12.0') {
             because 'L'
