@@ -272,7 +272,7 @@ abstract class CatCommand(
     }
 
     fun string(
-        argName: String,
+        argName: String = "string",
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {
@@ -285,13 +285,13 @@ abstract class CatCommand(
     }
 
     fun String(
-        argName: String,
+        argName: String = "string",
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ) = then { string(argName, suggestions, executes) }
 
     fun greedyString(
-        argName: String,
+        argName: String = "string",
         suggestions: (ctx: CommandContext<CommandSourceStack>, builder: SuggestionsBuilder) -> Unit = { _, _ -> },
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
     ): RequiredArgumentBuilder<CommandSourceStack, String> {

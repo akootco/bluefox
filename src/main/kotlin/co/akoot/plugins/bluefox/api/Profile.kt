@@ -144,6 +144,8 @@ class Profile(val uuid: String, val username: String) {
     var alwaysHungry: Boolean by settings default false
     var chatDisabled: Boolean by settings default false
     var tintChat: Boolean by settings default true
+    var discordEnabled: Boolean by settings default true
+    var chatEnabled: Boolean by settings default true
 
     var incomingChatLanguage: String by settings default ""
     var outgoingChatLanguage: String by settings default ""
@@ -402,4 +404,33 @@ class Profile(val uuid: String, val username: String) {
         bracketColor = profile.bracketColor,
         chatColor = profile.chatColor
     )
+
+    fun setDiscordId(discordId: Long) {
+        val id = id ?: return
+        BlueFox.query("""
+            INSERT INTO discord_id (player, id)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE
+                id = VALUES(id)
+                """
+        ).use { stmt ->
+            stmt.setInt(1, id)
+            stmt.setLong(2, discordId)
+            stmt.executeUpdate()
+        }
+    }
+
+    fun getDiscordId(): Long? {
+        val id = id ?: return null
+        return BlueFox.query("SELECT id from discord_id where player = ?").use {
+            it.setInt(1, id)
+            it.executeQuery().use { result ->
+                if (result.next()) {
+                    result.getLong("id")
+                } else {
+                    return null
+                }
+            }
+        }
+    }
 }
