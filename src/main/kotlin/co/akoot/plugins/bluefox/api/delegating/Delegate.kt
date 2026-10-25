@@ -89,6 +89,9 @@ class Delegate<T>(
 
     infix fun from(parent: String): Delegate<T> = this.apply { this.parent = parent }
 
-    infix fun serialize(transform: (T) -> String): Delegate<T> = Delegate(backend, default, parent, fromString, transform)
-    infix fun deserialize(transform: (String) -> T): Delegate<T> = Delegate(backend, default, parent, transform, toString)
+    infix fun serialize(transform: (T) -> String): Delegate<T> =
+        Delegate(backend, default, parent, fromString, transform)
+
+    infix fun deserialize(transform: (String) -> T): Delegate<T> =
+        Delegate(backend, default, parent, transform, toString)
 }

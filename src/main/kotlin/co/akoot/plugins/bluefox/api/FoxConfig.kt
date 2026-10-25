@@ -75,7 +75,7 @@ class FoxConfig(val file: File) {
 
     fun set(path: String, value: Any?, forceNull: Boolean = false) {
         sync { FoxConfigSetEvent(this, path, value).fire() }
-        config = if(!forceNull && value == null) {
+        config = if (!forceNull && value == null) {
             config.withoutPath(path)
         } else {
             config.withValue(path, ConfigValueFactory.fromAnyRef(value))
@@ -109,7 +109,7 @@ class FoxConfig(val file: File) {
 
     inline fun <reified E : Enum<E>> getEnumList(path: String): List<E> {
         if (autoload) load()
-        return getStringList(path).mapNotNull{ it.uppercase().runCatching { enumValueOf<E>(this) }.getOrNull() }
+        return getStringList(path).mapNotNull { it.uppercase().runCatching { enumValueOf<E>(this) }.getOrNull() }
     }
 
     // Getters for everything else

@@ -30,9 +30,11 @@ open class Wallet(val id: Int, val address: String) {
         val allUsernames: List<String> get() = BlueFox.cachedOfflinePlayerNames.map { "@$it" }
 
         fun find(string: String): Wallet? {
-            return if(string.startsWith("0x")) get(string)
-            else if (string.startsWith("@")) BlueFox.getOfflinePlayer(string.substring(1), true)?.let { create(it.defaultWalletAddress)?.apply { displayName = string } }
-            else BlueFox.getOfflinePlayer(string)?.let { create(it.defaultWalletAddress)?.apply { displayName = "@${it.username}" } }
+            return if (string.startsWith("0x")) get(string)
+            else if (string.startsWith("@")) BlueFox.getOfflinePlayer(string.substring(1), true)
+                ?.let { create(it.defaultWalletAddress)?.apply { displayName = string } }
+            else BlueFox.getOfflinePlayer(string)
+                ?.let { create(it.defaultWalletAddress)?.apply { displayName = "@${it.username}" } }
         }
 
         fun get(address: String): Wallet? {

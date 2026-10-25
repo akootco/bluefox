@@ -6,11 +6,7 @@ import co.akoot.plugins.bluefox.api.delegating.deserialize
 import co.akoot.plugins.bluefox.extensions.mkdirp
 import co.akoot.plugins.bluefox.extensions.touch
 import co.akoot.plugins.bluefox.extensions.username
-import co.akoot.plugins.bluefox.util.or
-import co.akoot.plugins.bluefox.util.palettes
-import co.akoot.plugins.bluefox.util.parse
-import co.akoot.plugins.bluefox.util.prefix
-import co.akoot.plugins.bluefox.util.tint
+import co.akoot.plugins.bluefox.util.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.OfflinePlayer
@@ -58,7 +54,10 @@ class Profile(val uuid: String, val username: String) {
     fun givePalette(palette: String) = data.append("palettes", palette)
     fun removePalette(palette: String) = data.remove("palettes", palette)
     fun hasPalette(palette: String) = unlockedPalettes.contains(palette)
-    val unlockedColors: List<String> get() = unlockedPalettes.flatMap { palettes[it]?.let { p -> List(p.size) { i -> "$it$i" } } ?: listOf() }
+    val unlockedColors: List<String>
+        get() = unlockedPalettes.flatMap {
+            palettes[it]?.let { p -> List(p.size) { i -> "$it$i" } } ?: listOf()
+        }
 
     val ignoredPlayers: List<String> by data default listOf()
     fun ignorePlayer(player: OfflinePlayer) = data.append("ignoredPlayers", player.uniqueId.toString())
@@ -112,7 +111,7 @@ class Profile(val uuid: String, val username: String) {
     var globalChatTintIntensity: Double by settings default -1.0
 
     fun tint(component: Component): Component {
-        if(!tintChat) return component
+        if (!tintChat) return component
         return component.tint(chatTint, chatTintIntensity)
     }
 
@@ -173,13 +172,18 @@ class Profile(val uuid: String, val username: String) {
             val default = Birthday()
             fun deserialize(string: String): Birthday {
                 val date = string.split("/")
-                if(date.size == 1) return Birthday(month = date[0].toIntOrNull())
-                if(date.size == 2) return Birthday(month = date[0].toIntOrNull(), day = date[1].toIntOrNull())
-                if(date.size == 3) return Birthday(month = date[0].toIntOrNull(), day = date[1].toIntOrNull(), year = date[2].toIntOrNull())
+                if (date.size == 1) return Birthday(month = date[0].toIntOrNull())
+                if (date.size == 2) return Birthday(month = date[0].toIntOrNull(), day = date[1].toIntOrNull())
+                if (date.size == 3) return Birthday(
+                    month = date[0].toIntOrNull(),
+                    day = date[1].toIntOrNull(),
+                    year = date[2].toIntOrNull()
+                )
                 return default
             }
         }
     }
+
     open class Pronouns(
         val name: String,
         val they: String = "they",
@@ -200,18 +204,21 @@ class Profile(val uuid: String, val username: String) {
                 from("female", "she/her/hers/hers/she's/was/herself"),
                 from("maleMajesty", "his majesty/his majesty/his majesty's/his majesty's/his majesty is/was/himself"),
                 from("femaleMajesty", "her majesty/her majesty/her majesty's/her majesty's/her majesty is/was/herself"),
-                from("majesty", "their majesty/their majesty/their majesty's/their majesty's/their majesty is/was/themself"),
+                from(
+                    "majesty",
+                    "their majesty/their majesty/their majesty's/their majesty's/their majesty is/was/themself"
+                ),
             )
 
             fun deserialize(string: String): Pronouns {
                 if (string.isEmpty()) return default
-                if(!string.contains("/")) return values.find { it.name == string } ?: default
+                if (!string.contains("/")) return values.find { it.name == string } ?: default
                 return from("custom", string)
             }
 
             fun from(name: String, string: String): Pronouns {
                 val parts = string.split("/")
-                if(parts.size != 7) return default
+                if (parts.size != 7) return default
                 return Pronouns(name, parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6])
             }
         }
@@ -228,12 +235,13 @@ class Profile(val uuid: String, val username: String) {
                 .replace("#themself", themself)
         }
 
-        val serialized: String get() {
-            return if(name == "custom")
-                listOf(they, them, their, theirs, theyAre, were, themself)
-                    .joinToString("/")
-            else name
-        }
+        val serialized: String
+            get() {
+                return if (name == "custom")
+                    listOf(they, them, their, theirs, theyAre, were, themself)
+                        .joinToString("/")
+                else name
+            }
     }
 
     open class Generation(val name: String, val yearMin: Int, val yearMax: Int) {
@@ -241,11 +249,11 @@ class Profile(val uuid: String, val username: String) {
             val values: List<Generation> = listOf(
                 Generation("The Lost Generation", 1883, 1910),
                 Generation("The Greatest Generation", 1901, 1927),
-                Generation("The Silent Generation"	 ,1928 ,1945),
-                Generation("Boomer"	 ,1946 ,1964),
-                Generation("X",1965, 1980),
-                Generation( "Millennial", 1981, 1996),
-                Generation("Zoomer"	 ,1997 ,2010),
+                Generation("The Silent Generation", 1928, 1945),
+                Generation("Boomer", 1946, 1964),
+                Generation("X", 1965, 1980),
+                Generation("Millennial", 1981, 1996),
+                Generation("Zoomer", 1997, 2010),
                 Generation("Gen Alpha", 2010, 2024),
                 Generation("Gen Beta", 2025, 2039),
                 Generation("Gen Gamma", 2040, 2054),
@@ -407,7 +415,8 @@ class Profile(val uuid: String, val username: String) {
 
     fun setDiscordId(discordId: Long) {
         val id = id ?: return
-        BlueFox.query("""
+        BlueFox.query(
+            """
             INSERT INTO discord_id (player, id)
             VALUES (?, ?)
             ON DUPLICATE KEY UPDATE

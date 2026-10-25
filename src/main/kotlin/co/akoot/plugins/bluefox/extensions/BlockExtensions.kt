@@ -2,14 +2,13 @@ package co.akoot.plugins.bluefox.extensions
 
 import co.akoot.plugins.bluefox.BlueFox
 import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.Text.Companion.component
 import net.coreprotect.api.LookupOptions
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.Tag
 import org.bukkit.block.Block
-import java.util.UUID
+import java.util.*
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
@@ -19,7 +18,7 @@ fun Block.isNatural(since: Duration): Boolean? {
         .time(since.toInt(DurationUnit.SECONDS))
         .build()
     val results = BlueFox.co?.blockLookup(this, options) ?: return null
-    if(results.isEmpty()) return true
+    if (results.isEmpty()) return true
     val playerInteractions = results.filter { !it.player.startsWith("#") }
     return playerInteractions.isEmpty()
 }

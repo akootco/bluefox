@@ -1,15 +1,10 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.util.IOUtil
-import co.akoot.plugins.bluefox.util.Text.Companion.asString
-import com.mojang.brigadier.builder.LiteralArgumentBuilder
-import com.mojang.brigadier.context.CommandContext
-import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.advancement.Advancement
-import org.bukkit.command.CommandSender
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener

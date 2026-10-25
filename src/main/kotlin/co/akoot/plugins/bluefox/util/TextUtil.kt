@@ -251,7 +251,12 @@ fun clickable(
 }
 
 // 26.2
-fun clickable(string: String, color: TextColor = Color.Tertiary + Color.Month, underline: Boolean = true, clickEvent: ClickEvent<*>): Component {
+fun clickable(
+    string: String,
+    color: TextColor = Color.Tertiary + Color.Month,
+    underline: Boolean = true,
+    clickEvent: ClickEvent<*>
+): Component {
     return (color + string)
         .underline(underline)
         .clickEvent(clickEvent)
@@ -667,49 +672,56 @@ val String.quote: Component get() = quote(this)
 val String.warning: Component get() = warning(this)
 
 // Stolen from PaperMC Discord - https://discord.com/channels/289587909051416579/555462289851940864/1318351329839681567
-val String.width: Int get() {
-    val parts = replace("(&[\\da-fmnlko])", "$1§§").split("§§")
+val String.width: Int
+    get() {
+        val parts = replace("(&[\\da-fmnlko])", "$1§§").split("§§")
 
-    //The width of this str in pixels.
-    var pixel = 0f
+        //The width of this str in pixels.
+        var pixel = 0f
 
-    //Iterating over the parts of the str.
-    for (part in parts) {
-        var part = part
-        var modifier = 0
-        if (part.startsWith("&l")) modifier = 2
+        //Iterating over the parts of the str.
+        for (part in parts) {
+            var part = part
+            var modifier = 0
+            if (part.startsWith("&l")) modifier = 2
 
-        part = stripColor(part)
-        //Iterating over the chars of word i - 1.
-        for (c in part.toCharArray()) {
-            pixel += when (c) {
-                'i', '!', '.', ',', ':', ';', '|' -> {
-                    4.0f + modifier
-                }
-                'l', '\'', '`' -> {
-                    6.0f + modifier
-                }
-                ' ', 'I', 't' -> {
-                    8.0f + modifier
-                }
-                'f', 'k', '"', '(', ')', '{', '}', '[', ']', '*', '<', '>' -> {
-                    10.0f + modifier
-                }
-                '~', '@' -> {
-                    14.0f + modifier
-                }
-                '\\', '/' -> {
-                    12.25f + modifier
-                }
-                else -> {
-                    12.0f + modifier
+            part = stripColor(part)
+            //Iterating over the chars of word i - 1.
+            for (c in part.toCharArray()) {
+                pixel += when (c) {
+                    'i', '!', '.', ',', ':', ';', '|' -> {
+                        4.0f + modifier
+                    }
+
+                    'l', '\'', '`' -> {
+                        6.0f + modifier
+                    }
+
+                    ' ', 'I', 't' -> {
+                        8.0f + modifier
+                    }
+
+                    'f', 'k', '"', '(', ')', '{', '}', '[', ']', '*', '<', '>' -> {
+                        10.0f + modifier
+                    }
+
+                    '~', '@' -> {
+                        14.0f + modifier
+                    }
+
+                    '\\', '/' -> {
+                        12.25f + modifier
+                    }
+
+                    else -> {
+                        12.0f + modifier
+                    }
                 }
             }
         }
-    }
 
-    return (pixel / 2.0).toInt()
-}
+        return (pixel / 2.0).toInt()
+    }
 
 fun String.width(padding: Int = 10): Int = width + padding
 
@@ -719,9 +731,12 @@ fun Component.width(padding: Int = 10): Int = width + padding
 
 @JvmName("randString")
 fun rand(vararg values: String) = values.random()
+
 @JvmName("randComponent")
 fun rand(vararg values: Component) = values.random()
+
 @JvmName("randStringPair")
 fun rand(vararg values: Pair<String, String>) = values.random()
+
 @JvmName("randComponentPair")
 fun rand(vararg values: Pair<Component, Component>) = values.random()

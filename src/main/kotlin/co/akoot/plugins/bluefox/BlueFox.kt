@@ -9,11 +9,8 @@ import co.akoot.plugins.bluefox.commands.*
 import co.akoot.plugins.bluefox.extensions.legacyName
 import co.akoot.plugins.bluefox.extensions.mightBeUser
 import co.akoot.plugins.bluefox.listeners.BlueFoxListener
+import co.akoot.plugins.bluefox.util.*
 import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.IOUtil
-import co.akoot.plugins.bluefox.util.async
-import co.akoot.plugins.bluefox.util.loop
-import co.akoot.plugins.bluefox.util.minutes
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import net.coreprotect.CoreProtect
@@ -23,7 +20,6 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.channel.Channel
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.kyori.adventure.text.format.TextColor
@@ -37,9 +33,7 @@ import java.io.File
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.util.*
-import kotlin.collections.plusAssign
 import kotlin.random.Random
-import kotlin.text.get
 
 class BlueFox : FoxPlugin("bluefox") {
 
@@ -315,7 +309,13 @@ class BlueFox : FoxPlugin("bluefox") {
             return null
         }
         val builder = JDABuilder.createDefault(token)
-        builder.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_MESSAGE_TYPING, GatewayIntent.MESSAGE_CONTENT)
+        builder.enableIntents(
+            GatewayIntent.GUILD_MEMBERS,
+            GatewayIntent.GUILD_MESSAGES,
+            GatewayIntent.GUILD_MESSAGE_REACTIONS,
+            GatewayIntent.GUILD_MESSAGE_TYPING,
+            GatewayIntent.MESSAGE_CONTENT
+        )
         return try {
             builder.build()
         } catch (e: Exception) {
@@ -326,7 +326,8 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     fun getLuckPerms(): LuckPerms? {
-        val registration = runCatching { Bukkit.getServicesManager().getRegistration(LuckPerms::class.java) }.getOrNull()
+        val registration =
+            runCatching { Bukkit.getServicesManager().getRegistration(LuckPerms::class.java) }.getOrNull()
         return registration?.provider
     }
 

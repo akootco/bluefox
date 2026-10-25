@@ -1,17 +1,7 @@
 package co.akoot.plugins.bluefox
 
 import co.akoot.plugins.bluefox.extensions.mix
-import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.colorCodes
-import co.akoot.plugins.bluefox.util.hover
-import co.akoot.plugins.bluefox.util.italic
-import co.akoot.plugins.bluefox.util.parse
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.quote
-import co.akoot.plugins.bluefox.util.suggest
-import co.akoot.plugins.bluefox.util.text
-import co.akoot.plugins.bluefox.util.zip
+import co.akoot.plugins.bluefox.util.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 
@@ -35,21 +25,23 @@ class CommandHelpBuilder {
 
     private var colorIndex = 0
     fun nextColor(): TextColor {
-        if(colorIndex >= colors.size) colorIndex = 0
+        if (colorIndex >= colors.size) colorIndex = 0
         return colors[colorIndex++] ?: Color.White
     }
 
     fun color(commandLine: String): Component {
         val builder = Component.text("  ").toBuilder()
         val parts = commandLine.split(" ")
-        for((i, part) in parts.withIndex()) {
+        for ((i, part) in parts.withIndex()) {
             builder.append(colors[i % colors.size] + part.replace("\\", " "))
             builder.append(Component.space())
         }
         return builder.build().clickEvent(suggest(commandLine.replace("\\", " "))).italic()
     }
 
-    fun resetColor() { colorIndex = 0 }
+    fun resetColor() {
+        colorIndex = 0
+    }
 
     fun title(string: String): CommandHelpBuilder {
         resetColor()
@@ -65,7 +57,7 @@ class CommandHelpBuilder {
     }
 
     fun bullet(string: String = "", quote: Boolean = true, color: Boolean = true): CommandHelpBuilder {
-        val finalColor = if(color && quote) nextColor().mix(Color.Quote)
+        val finalColor = if (color && quote) nextColor().mix(Color.Quote)
         else if (!color && quote) Color.Quote
         else if (!color) null
         else nextColor()
@@ -98,11 +90,11 @@ class CommandHelpBuilder {
             list -> "[$part...]"
             else -> "<$part>"
         }
-        if(first) resetColor()
+        if (first) resetColor()
         val color = nextColor()
         var component: Component = Component.text(word, color)
-        if(hover != null) component = component.hover(color + hover)
-        if(first) text += Component.text("• ").color(color)
+        if (hover != null) component = component.hover(color + hover)
+        if (first) text += Component.text("• ").color(color)
         text += component
         text += if (last) Component.newline()
         else Component.space()
@@ -113,7 +105,7 @@ class CommandHelpBuilder {
         val color = nextColor().mix(Color.White, 0.75)
         if (description != null) text += Component.text("• $description\n", color)
         text += color(commandLine)
-        newline(if(last)1 else 2)
+        newline(if (last) 1 else 2)
         return this
     }
 

@@ -1,13 +1,11 @@
 package co.akoot.plugins.bluefox.commands
 
 import co.akoot.plugins.bluefox.BlueFox
-import co.akoot.plugins.bluefox.CommandHelpBuilder
 import co.akoot.plugins.bluefox.api.CatCommand
 import co.akoot.plugins.bluefox.api.Kolor
 import co.akoot.plugins.bluefox.api.LegacyHome
 import co.akoot.plugins.bluefox.extensions.*
 import co.akoot.plugins.bluefox.util.Text
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender

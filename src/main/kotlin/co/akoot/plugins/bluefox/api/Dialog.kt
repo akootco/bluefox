@@ -3,11 +3,7 @@
 package co.akoot.plugins.bluefox.api
 
 import co.akoot.plugins.bluefox.extensions.withDisplayName
-import co.akoot.plugins.bluefox.util.Color
-import co.akoot.plugins.bluefox.util.error
-import co.akoot.plugins.bluefox.util.plus
-import co.akoot.plugins.bluefox.util.text
-import co.akoot.plugins.bluefox.util.width
+import co.akoot.plugins.bluefox.util.*
 import io.papermc.paper.dialog.Dialog
 import io.papermc.paper.dialog.DialogResponseView
 import io.papermc.paper.registry.data.dialog.ActionButton
@@ -297,7 +293,15 @@ class DialogBuilder {
         errorItem: ItemStack = ItemStack(Material.BARRIER)
             .withDisplayName(error("oops, this item doesn't exist!"))
     ): DialogBuilder =
-        icon(defaultIconWidth + padding.value, defaultIconHeight + padding.value, item, description, showDecorations, showTooltip, errorItem)
+        icon(
+            defaultIconWidth + padding.value,
+            defaultIconHeight + padding.value,
+            item,
+            description,
+            showDecorations,
+            showTooltip,
+            errorItem
+        )
 
     fun item(material: Material, displayName: Component? = null): ItemStack {
         return ItemStack(material).apply {

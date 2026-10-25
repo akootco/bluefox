@@ -5,20 +5,8 @@ import co.akoot.plugins.bluefox.CommandHelpBuilder
 import co.akoot.plugins.bluefox.api.economy.Coin
 import co.akoot.plugins.bluefox.api.economy.Market
 import co.akoot.plugins.bluefox.api.economy.Wallet
-import co.akoot.plugins.bluefox.extensions.canModify
-import co.akoot.plugins.bluefox.extensions.isSign
-import co.akoot.plugins.bluefox.extensions.mightBeUser
-import co.akoot.plugins.bluefox.extensions.owner
-import co.akoot.plugins.bluefox.extensions.username
-import co.akoot.plugins.bluefox.util.Text
-import co.akoot.plugins.bluefox.util.accent
-import co.akoot.plugins.bluefox.util.italic
-import co.akoot.plugins.bluefox.util.primary
-import co.akoot.plugins.bluefox.util.quote
-import co.akoot.plugins.bluefox.util.secondary
-import co.akoot.plugins.bluefox.util.sendText
-import co.akoot.plugins.bluefox.util.sendWarning
-import co.akoot.plugins.bluefox.util.warning
+import co.akoot.plugins.bluefox.extensions.*
+import co.akoot.plugins.bluefox.util.*
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.*
 import com.mojang.brigadier.builder.ArgumentBuilder
@@ -50,8 +38,6 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemType
 import org.bukkit.potion.PotionType
 import java.time.ZoneId
-import kotlin.text.contains
-import kotlin.text.startsWith
 
 abstract class CatCommand(
     val plugin: FoxPlugin,
@@ -75,16 +61,16 @@ abstract class CatCommand(
 
     fun Player.targetBlock(maxDistance: Double = 3.0): Block? {
         val block = rayTraceBlocks(maxDistance)?.hitBlock
-        if(block == null) {
+        if (block == null) {
             sendWarning("Look at a sign first!")
             return null
         }
-        if(!block.isSign) {
+        if (!block.isSign) {
             sendWarning("Look at a sign first!")
             return null
         }
         val owner = block.owner?.let { uuid -> BlueFox.getOfflinePlayer(uuid) }?.username ?: "CONSOLE"
-        if(!canModify(block)) {
+        if (!canModify(block)) {
             sendWarning("This sign already belongs to ", primary(owner), "!")
             return null
         }
@@ -102,7 +88,8 @@ abstract class CatCommand(
     }
 
     val CommandContext<CommandSourceStack>.playersFromEntities: List<Player> get() = getPlayersFromEntities(this)
-    fun CommandContext<CommandSourceStack>.playersFromEntities(argName: String): List<Player> = getPlayersFromEntities(this, argName)
+    fun CommandContext<CommandSourceStack>.playersFromEntities(argName: String): List<Player> =
+        getPlayersFromEntities(this, argName)
 
     fun getPlayerFromEntities(
         ctx: CommandContext<CommandSourceStack>,
@@ -112,7 +99,8 @@ abstract class CatCommand(
     }
 
     val CommandContext<CommandSourceStack>.playerFromEntities: Player? get() = getPlayerFromEntities(this)
-    fun CommandContext<CommandSourceStack>.playerFromEntities(argName: String): Player? = getPlayerFromEntities(this, argName)
+    fun CommandContext<CommandSourceStack>.playerFromEntities(argName: String): Player? =
+        getPlayerFromEntities(this, argName)
 
     fun getPlayer(
         ctx: CommandContext<CommandSourceStack>,
@@ -133,7 +121,8 @@ abstract class CatCommand(
     }
 
     val CommandContext<CommandSourceStack>.playerFromSelector: Player get() = getPlayerSelector(this)
-    fun CommandContext<CommandSourceStack>.playerFromSelector(argName: String): Player = getPlayerSelector(this, argName)
+    fun CommandContext<CommandSourceStack>.playerFromSelector(argName: String): Player =
+        getPlayerSelector(this, argName)
 
     fun getPlayers(
         ctx: CommandContext<CommandSourceStack>,
@@ -210,7 +199,8 @@ abstract class CatCommand(
     }
 
     val CommandContext<CommandSourceStack>.location: Location get() = getLocation(this)
-    fun CommandContext<CommandSourceStack>.location(world: World) = position.let { Location(world, it.x(), it.y(), it.z()) }
+    fun CommandContext<CommandSourceStack>.location(world: World) =
+        position.let { Location(world, it.x(), it.y(), it.z()) }
 
     fun subcommand(
         name: String,
@@ -246,7 +236,7 @@ abstract class CatCommand(
     fun Boolean(
         argName: String = "true or false",
         executes: (ctx: CommandContext<CommandSourceStack>) -> Boolean = { false }
-    ) = then { boolean(argName, executes)}
+    ) = then { boolean(argName, executes) }
 
     fun getBoolean(
         ctx: CommandContext<CommandSourceStack>,
@@ -418,7 +408,7 @@ abstract class CatCommand(
         return Commands.argument(argName, StringArgumentType.word())
             .suggests { ctx, builder ->
                 val usernames = BlueFox.cachedOfflinePlayerNames
-                if(!includeSelf) usernames.remove(ctx.sender.name)
+                if (!includeSelf) usernames.remove(ctx.sender.name)
                 suggest(builder, usernames, usernames = true)
                 builder.buildFuture()
             }
@@ -722,19 +712,27 @@ abstract class CatCommand(
             .forEach(builder::suggest)
     }
 
-    fun SuggestionsBuilder.suggestIfHasPermission(ctx: CommandContext<CommandSourceStack>, permissionMap: Map<String, String>) {
-        for((string, permission) in permissionMap) {
-            if(!string.startsWith(remainingLowerCase)) continue
-            if(!ctx.sender.hasPermission(permissionNode(permission))) continue
+    fun SuggestionsBuilder.suggestIfHasPermission(
+        ctx: CommandContext<CommandSourceStack>,
+        permissionMap: Map<String, String>
+    ) {
+        for ((string, permission) in permissionMap) {
+            if (!string.startsWith(remainingLowerCase)) continue
+            if (!ctx.sender.hasPermission(permissionNode(permission))) continue
             suggest(string)
         }
     }
 
     @JvmName("suggestMutableSet")
-    fun suggest(builder: SuggestionsBuilder, suggestions: Collection<String>, ignoreCase: Boolean = true, usernames: Boolean = false) {
+    fun suggest(
+        builder: SuggestionsBuilder,
+        suggestions: Collection<String>,
+        ignoreCase: Boolean = true,
+        usernames: Boolean = false
+    ) {
         suggestions.stream()
             .filter { entry ->
-                if(usernames) {
+                if (usernames) {
                     entry.mightBeUser(builder.remaining)
                 } else {
                     entry.startsWith(builder.remaining, ignoreCase)
