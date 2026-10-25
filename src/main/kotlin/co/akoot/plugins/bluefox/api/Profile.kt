@@ -442,4 +442,14 @@ class Profile(val uuid: String, val username: String) {
             }
         }
     }
+
+    fun unlinkDiscordId() {
+        val id = id ?: return
+        BlueFox.query("""
+            DELETE FROM discord_id where player = ?;
+        """).use { stmt ->
+            stmt.setInt(1, id)
+            stmt.executeUpdate()
+        }
+    }
 }

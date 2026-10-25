@@ -108,6 +108,32 @@ class BlueFox : FoxPlugin("bluefox") {
         fun getOfflinePlayer(uuid: UUID): OfflinePlayer? {
             return server.getOfflinePlayer(uuid).takeIf { it.hasPlayedBefore() }
         }
+
+        fun getLinkedPlayer(id: Long): OfflinePlayer? {
+            query("""
+                SELECT player FROM discord_id WHERE id = ?
+            """).use { statement ->
+                statement.setLong(1, id)
+                statement.executeQuery().use { resultSet ->
+                    resultSet.next()
+                    val playerId =  resultSet.getInt(1)
+                    return getPlayer(playerId)
+                }
+            }
+        }
+
+        fun getPlayer(id: Int): OfflinePlayer? {
+            query("""
+                SELECT uuid from player_id WHERE id = ?
+            """).use { statement ->
+                statement.setInt(1, id)
+                statement.executeQuery().use { resultSet ->
+                    resultSet.next()
+                    val uuid =  resultSet.getString(1)?.let { UUID.fromString(it) }
+                    return uuid?.let { getOfflinePlayer(it) }
+                }
+            }
+        }
     }
 
     val legacyWarps get() = loadLegacyWarps()
@@ -288,16 +314,16 @@ class BlueFox : FoxPlugin("bluefox") {
         co = getCoreProtect()
         geyser = getGeyser()
         jda = getJDA()
+
         async {
             jda?.awaitReady()
-            guild = settings.getLong("discord.guildId")?.let { jda?.getGuildById(it) }
+            guild = settings.getLong("discord.guild")?.let { jda?.getGuildById(it) }
             guild ?: logger.severe("Invalid Guild ID in settings.conf, Discord features disabled.")
             guild?.textChannels?.forEach {
                 channels += it.name to it
             }
             logger.info("[JDA] Logged in as ${jda?.selfUser?.effectiveName}")
         }
-        guild = settings.getLong("discord.guildId")?.let { jda?.getGuildById(it) }
 
         lp = getLuckPerms()
     }
