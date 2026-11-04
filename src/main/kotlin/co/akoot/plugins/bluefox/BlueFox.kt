@@ -134,6 +134,26 @@ class BlueFox : FoxPlugin("bluefox") {
                 }
             }
         }
+
+        fun getDiscordToken(config: FoxConfig): String? {
+            val token = config.getString("discord.token")
+            if (token == null) {
+                instance.logger.severe("Invalid Discord Token in auth.conf, Discord features disabled.")
+            }
+            return token
+        }
+
+        fun getJDA(token: String, intent: GatewayIntent, vararg intents: GatewayIntent): JDA? {
+            val builder = JDABuilder.createDefault(token)
+            builder.enableIntents(intent, *intents)
+            return try {
+                builder.build()
+            } catch (e: Exception) {
+                instance.logger.severe("Could not load JDA, Discord features disabled.")
+                e.printStackTrace()
+                null
+            }
+        }
     }
 
     val legacyWarps get() = loadLegacyWarps()
@@ -329,26 +349,15 @@ class BlueFox : FoxPlugin("bluefox") {
     }
 
     private fun getJDA(): JDA? {
-        val token = auth.getString("discord.token")
-        if (token == null) {
-            logger.severe("Invalid Discord Token in auth.conf, Discord features disabled.")
-            return null
-        }
-        val builder = JDABuilder.createDefault(token)
-        builder.enableIntents(
+        val token = getDiscordToken(auth) ?: return null
+        return getJDA(
+            token,
             GatewayIntent.GUILD_MEMBERS,
             GatewayIntent.GUILD_MESSAGES,
             GatewayIntent.GUILD_MESSAGE_REACTIONS,
             GatewayIntent.GUILD_MESSAGE_TYPING,
             GatewayIntent.MESSAGE_CONTENT
         )
-        return try {
-            builder.build()
-        } catch (e: Exception) {
-            logger.severe("Could not load JDA, Discord features disabled.")
-            e.printStackTrace()
-            null
-        }
     }
 
     fun getLuckPerms(): LuckPerms? {
