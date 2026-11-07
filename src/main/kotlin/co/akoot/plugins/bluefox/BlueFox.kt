@@ -343,6 +343,7 @@ class BlueFox : FoxPlugin("bluefox") {
                 channels += it.name to it
             }
             logger.info("[JDA] Logged in as ${jda?.selfUser?.effectiveName}")
+            logger.info { "[JDA] Found ${channels.size} channels" }
         }
 
         lp = getLuckPerms()
@@ -460,6 +461,7 @@ class BlueFox : FoxPlugin("bluefox") {
         registerCommand(SettingsCommand(this))
         registerCommand(PaletteCommand(this))
         registerCommand(PalettesCommand(this))
+        registerCommand(ChangelogCommand)
 //        registerCommand(TestCommand(this))
     }
 

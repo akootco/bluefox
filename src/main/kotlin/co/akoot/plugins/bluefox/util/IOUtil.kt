@@ -1,6 +1,7 @@
 package co.akoot.plugins.bluefox.util
 
 import java.io.File
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -43,6 +44,21 @@ object IOUtil {
         val jarFile = JarFile(File(jarPath))
         jarFile.use {
             return it.getJarEntry(fileName) != null
+        }
+    }
+
+    fun downloadFile(url: String, destination: File) {
+        destination.parentFile?.mkdirs()
+
+        val connection = URI(url).toURL().openConnection().apply {
+            connectTimeout = 15_000
+            readTimeout = 30_000
+        }
+
+        connection.getInputStream().use { input ->
+            destination.outputStream().use { output ->
+                input.copyTo(output)
+            }
         }
     }
 }
